@@ -1,0 +1,67 @@
+{
+  "expo": {
+    "updates": {
+      "enabled": "false"
+    },
+    "name": "Financas",
+    "slug": "finances",
+    "version": "2.2.2",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "automatic",
+    "splash": {
+      "image": "./assets/splash.png",
+      "resizeMode": "cover",
+      "backgroundColor": "#581C87"
+    },
+    "assetBundlePatterns": ["**/*"],
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.finances",
+      "buildNumber": "2.2.2",
+      "usesIcloudStorage": true,
+      "infoPlist": {
+        "NSPhotoLibraryUsageDescription": "Permitir que $(PRODUCT_NAME) acesse suas fotos.",
+        "NSPhotoLibraryAddUsageDescription": "Permitir que $(PRODUCT_NAME) salve fotos."
+      }
+    },
+    "android": {
+      "kotlinVersion": "1.6.0",
+      "permissions": [
+        "READ_EXTERNAL_STORAGE",
+        "WRITE_EXTERNAL_STORAGE",
+        "ACCESS_MEDIA_LOCATION"
+      ],
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#581C87"
+      },
+      "package": "com.finances",
+      "versionCode": 222
+    },
+    "web": {
+      "favicon": "./assets/favicon.png"
+    },
+    "plugins": [
+      [
+        "expo-media-library",
+        {
+          "photosPermission": "Permitir que $(PRODUCT_NAME) acesse suas fotos.",
+          "savePhotosPermission": "Permitir que $(PRODUCT_NAME) salve fotos.",
+          "isAccessMediaLocationEnabled": true
+        }
+      ],
+      [
+        "expo-document-picker",
+        {
+          "iCloudContainerEnvironment": "Production"
+        }
+      ]
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "007d84b9-db5f-4e91-8537-b64bd4edafbe"
+      }
+    }
+  }
+}

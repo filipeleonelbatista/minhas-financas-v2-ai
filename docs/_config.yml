@@ -1,0 +1,27 @@
+title: Minhas Finanças v2 — App Offline-First Familiar
+description: App React Native/Expo para gestão financeira familiar offline-first. Controle finanças, estoque, combustível e metas com IA multi-provider, dízimo e compartilhamento familiar via Firebase. 100% privado.
+url: https://filipeleonelbatista.github.io
+baseurl: /minhas-financas-v2-ai
+theme: minima
+plugins:
+  - jekyll-seo-tag
+  - jekyll-sitemap
+lang: pt_BR
+author: Filipe Leonel Batista
+twitter:
+  username: filipeleonel
+logo: assets/icon.png
+exclude:
+  - README.md
+
+defaults:
+  - scope:
+      path: ""
+    values:
+      image: /minhas-financas-v2-ai/assets/og-image.png
+      seo:
+        type: WebSite
+
+markdown: kramdown
+kramdown:
+  input: GFM

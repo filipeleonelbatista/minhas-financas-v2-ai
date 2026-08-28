@@ -1,7 +1,7 @@
 {
   "expo": {
     "updates": {
-      "enabled": "false"
+      "enabled": false
     },
     "name": "Financas",
     "slug": "finances",
@@ -26,7 +26,6 @@
       }
     },
     "android": {
-      "kotlinVersion": "1.6.0",
       "permissions": [
         "READ_EXTERNAL_STORAGE",
         "WRITE_EXTERNAL_STORAGE",
@@ -43,6 +42,16 @@
       "favicon": "./assets/favicon.png"
     },
     "plugins": [
+      [
+        "expo-build-properties",
+        {
+          "android": {
+            "compileSdkVersion": 36,
+            "targetSdkVersion": 36,
+            "kotlinVersion": "2.1.0"
+          }
+        }
+      ],
       [
         "expo-media-library",
         {

@@ -1,0 +1,2 @@
+@plugin "./node_modules/nativewind/dist/module/plugin.js";
+@import "tailwindcss/theme.css";

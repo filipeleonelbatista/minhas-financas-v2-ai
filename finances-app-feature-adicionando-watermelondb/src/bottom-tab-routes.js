@@ -4,6 +4,7 @@ import { Feather, MaterialCommunityIcons } from "@expo/vector-icons";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 
 import AboutUs from "./pages/AboutUs";
+import Dashboard from "./pages/Dashboard";
 import Finances from "./pages/Finances";
 import Market from "./pages/Market";
 import Reports from "./pages/Reports";
@@ -34,7 +35,7 @@ export default function BottomTabRoutes() {
 
   return (
     <Tab.Navigator
-      initialRouteName={"Finanças"}
+      initialRouteName={"Início"}
       screenOptions={{
         tabBarHideOnKeyboard: true,
         headerShown: false,
@@ -46,6 +47,22 @@ export default function BottomTabRoutes() {
         },
       }}
     >
+      <Tab.Screen
+        name="Início"
+        component={Dashboard}
+        options={{
+          tabBarLabel: ({ focused }) => (
+            <Text color={focused ? theme.colors.purple[600] : text}>Início</Text>
+          ),
+          tabBarIcon: ({ focused }) => (
+            <Feather
+              name="home"
+              size={24}
+              color={focused ? theme.colors.purple[600] : text}
+            />
+          ),
+        }}
+      />
       <Tab.Screen
         name="Finanças"
         component={Finances}

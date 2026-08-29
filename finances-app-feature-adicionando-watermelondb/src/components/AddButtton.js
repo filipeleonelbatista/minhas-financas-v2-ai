@@ -49,6 +49,8 @@ export default function AddButton() {
   return (
     <>
       <IconButton
+        testID="add-button-fab"
+        accessibilityLabel="Adicionar"
         bgColor={"purple.600"}
         w={16}
         h={16}

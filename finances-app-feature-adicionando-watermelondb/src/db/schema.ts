@@ -87,6 +87,7 @@ export const config = sqliteTable('config', {
   tithePercent: real('tithePercent'),
   titheCategories: text('titheCategories'),
   isTitheMenuEnabled: integer('isTitheMenuEnabled'),
+  hasSeenInteractiveTour: integer('hasSeenInteractiveTour'),
 });
 
 export const tithePayments = sqliteTable('tithe_payments', {

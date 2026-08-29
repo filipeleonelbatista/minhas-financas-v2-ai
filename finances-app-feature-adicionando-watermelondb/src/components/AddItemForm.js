@@ -169,6 +169,8 @@ export default function AddItemForm({ onClose }) {
       <VStack space={2}>
         <Text color={text}>Descrição</Text>
         <Input
+          testID="tour-input-description"
+          accessibilityLabel="Descrição"
           errors={!!formik.errors.description}
           helperText={formik.errors.description}
           placeholder="Descrição"
@@ -182,6 +184,8 @@ export default function AddItemForm({ onClose }) {
       <VStack space={2}>
         <Text color={text}>Valor</Text>
         <Input
+          testID="tour-input-amount"
+          accessibilityLabel="Valor"
           errors={!!formik.errors.amount}
           helperText={formik.errors.amount}
           keyboardType="decimal-pad"

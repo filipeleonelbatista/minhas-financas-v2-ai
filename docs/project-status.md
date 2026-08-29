@@ -1,6 +1,6 @@
 # Project Status — Minhas Finanças v2
 
-> Atualizado: 2026-08-28 | Branch: `main` @ `ae034a8` → `4e6844d` | Status: **Fase 1 100% implementada (11/11 tasks) — 117 testes PASS**
+> Atualizado: 2026-08-29 | Branch: `main` | Status: **Fase 1 11/11 concluída (117 PASS) + Fase 1.1 Zustand Standard em execução (plano `app/docs/superpowers/plans/2026-08-29-zustand-standard.md`)**
 
 ---
 
@@ -30,12 +30,18 @@
 
 ---
 
-## 2. Próximos passos
+## 2. Próximos passos — Fase 1.1 Zustand Standard (em execução)
 
-### 2.1 Polimento Fase 1 antes da Play Store (curto prazo)
-- [ ] Resolver `tailwindcss@4` mismatch NativeWind (`withNativewind failed`) — downgrade para `tailwindcss@3.4` ou subir NativeWind v5 preview
-- [ ] Remover `WatermelonDB` por completo (`package.json` + provider) após estabilizar `drizzle` — eliminar `expo-doctor` warning + `android/` eject já ignorado
-- [ ] Alinhar `expo-sqlite` para `~16.0.10` (ou adicionar a `expo.install.exclude`) para zerar `expo-doctor`
+### 2.1 Fase 1.1 — Zustand sem Context (10 tasks, `app/docs/superpowers/plans/2026-08-29-zustand-standard.md`)
+- [ ] **Task 1 scaffold** `zustand` + `src/stores/index.ts`
+- [ ] **Tasks 2-7** stores `finance/market/lists/runs/goals/settings` (TDD, `filterFinances` puro, `colorModeState` → `NativeWind` `dark:`)
+- [ ] **Task 8** migrar `App.js:14`/`routes.js:9`/`bottom-tab-routes.js:12` + 34 arquivos `native-base` → `NativeWind` + `reacticx` isolado + `useShallow`
+- [ ] **Task 9** deletar `src/databases/` + `src/context/*` + `src/theme.js`, `package.json` remove `@nozbe/watermelondb`/`native-base`/decorators, `babel.config.js:7`
+- [ ] **Task 10** `yarn jest` + `expo-doctor` + `eas build preview` verdes, `dark:` QA
+
+### 2.1b Polimento Fase 1 antes da Play Store (curto prazo, pós-Zustand)
+- [x] Resolver `tailwindcss@4` mismatch NativeWind — downgrade para `3.4.17` concluído (`metro.config.js:1` sem warning)
+- [ ] Alinhar `expo-sqlite` para `~16.0.10` (ou `expo.install.exclude`) para zerar `expo-doctor` (hoje 3 fails: `react-dom` peer `native-base` + WDB NewArch + sqlite RC)
 - [ ] QA em device/emulador API 29/33/35: SAF `selectedFolderToSave`, import CSV/XLSX (5MB, `xlsm` bloqueado), biometria real, Dashboard gráficos com dados reais
 - [ ] Atualizar `app/README.md` pós-rename (ainda cita Expo 48) e `app/docs/DOSSIE.md` com nova stack
 

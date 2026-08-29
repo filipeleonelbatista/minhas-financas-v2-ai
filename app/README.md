@@ -1,9 +1,9 @@
-# Financas App v2.2.2 — WatermelonDB Edition
+# Financas App v2.3.0 — Fase 1 (NativeWind + expo-sqlite)
 
-App React Native (Expo) offline-first para gestão de finanças familiares, estoque, combustível e metas, com import/export CSV e IA (OpenAI gpt-3.5-turbo). Este é o branch `feature/adicionando-watermelondb` (superconjunto da `main` 2.0.2 publicada na Play Store como `com.finances`).
+> **Status 2026-08-28: Fase 1 11/11 implementada — 117 testes PASS** (ver `docs/project-status.md`). Branch `feature/adicionando-watermelondb` renomeado para `app/` — **A' Managed** offline-first. Ex-Play Store `com.finances` `2.2.2` → agora `2.3.0` managed.
 
-> 📚 **Dossiê completo:** `docs/DOSSIE.md` (stacks, telas, schemas, permissões por versão Android, temas, bugs conhecidos)
-> 🤖 **Guia para agentes/LLM:** `AGENTS.md` (regras de negócio, SOLID/TDD/coverage/quality gate)
+> 📚 **Dossiê:** `docs/DOSSIE.md` (stacks/telas/schemas) • **Roadmap:** `docs/ROADMAP.md` (Fase 1 ✅) • **Spec:** `docs/superpowers/specs/2026-08-28-fase1-redesign-offline-design.md` • **Status:** `docs/project-status.md`
+> 🤖 **Guia para agentes/LLM:** `AGENTS.md` (regras, SOLID/TDD, quality gate `test:security`)
 
 ---
 

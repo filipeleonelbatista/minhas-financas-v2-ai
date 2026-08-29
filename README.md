@@ -20,6 +20,8 @@ yarn && npx expo prebuild --clean && yarn android
 
 ## Docs
 
-- Dossiê: `finances-app-feature-adicionando-watermelondb/docs/DOSSIE.md`
-- Roadmap: `finances-app-feature-adicionando-watermelondb/docs/ROADMAP.md` (A' Managed, 13 decisões, hardening Excel/prompt)
-- Spec Fase 1: `finances-app-feature-adicionando-watermelondb/docs/superpowers/specs/2026-08-28-fase1-redesign-offline-design.md`
+- Dossiê: `app/docs/DOSSIE.md`
+- Roadmap: `app/docs/ROADMAP.md` (A' Managed, 13 decisões, hardening Excel/prompt) — **Fase 1 ✅ ver `docs/project-status.md`**
+- Spec Fase 1: `app/docs/superpowers/specs/2026-08-28-fase1-redesign-offline-design.md`
+- Plan Fase 1: `app/docs/superpowers/plans/2026-08-28-fase1-offline-redesign.md` (11 tasks)
+- Status: `docs/project-status.md` (implementado + próximos passos)

@@ -5,7 +5,7 @@ web-build/
 *.jks
 *.p8
 *.key
-finances-app-feature-adicionando-watermelondb/.store/
-finances-app-feature-adicionando-watermelondb/node_modules/
+app/.store/
+app/node_modules/
 .DS_Store
-finances-app-feature-adicionando-watermelondb/android/
+app/android/

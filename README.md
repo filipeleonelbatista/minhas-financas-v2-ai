@@ -4,7 +4,7 @@
 
 ## Estrutura
 
-- `finances-app-feature-adicionando-watermelondb/` — app (ver seu `README.md`, `docs/DOSSIE.md`, `docs/ROADMAP.md`, `docs/superpowers/specs/2026-08-28-fase1-redesign-offline-design.md`)
+- `app/` — app Expo (ver `app/README.md`, `app/docs/DOSSIE.md`, `app/docs/ROADMAP.md`, `app/docs/superpowers/specs/2026-08-28-fase1-redesign-offline-design.md`)
 - `docs/` — GitHub Pages (Jekyll + `jekyll-seo-tag` + `jekyll-sitemap`) → https://filipeleonelbatista.github.io/minhas-financas-v2-ai/
 
 ## GitHub Pages
@@ -14,7 +14,7 @@ Ativado em **Settings → Pages → Source: `main` / `docs`**. SEO via `_config.
 ## Rodar local (Fase 1)
 
 ```bash
-cd finances-app-feature-adicionando-watermelondb
+cd app
 yarn && npx expo prebuild --clean && yarn android
 ```
 

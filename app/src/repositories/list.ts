@@ -8,5 +8,12 @@ export const listRepo={
   async delete(id:string){ const db=getDb(); if(db){ try{ await db.delete(items).where(eq(items.list_id,id)); await db.delete(lists).where(eq(lists.id,id));}catch{}} memItems=memItems.filter(r=>r.list_id!==id); memLists=memLists.filter(r=>r.id!==id);},
   async getAll(){ const db=getDb(); if(db){ try{ return await db.select().from(lists);}catch{}} return [...memLists];},
   async getItems(listId:string){ const db=getDb(); if(db){ try{ return await db.select().from(items).where(eq(items.list_id,listId));}catch{}} return memItems.filter(r=>r.list_id===listId);},
+  async updateItem(id:string, dto:any){
+    const db=getDb();
+    if(db){ try{ await db.update(items).set(dto).where(eq(items.id,id)); }catch{}}
+    const idx=memItems.findIndex((r)=>r.id===id);
+    if(idx>=0){ memItems[idx]={ ...memItems[idx], ...dto }; return memItems[idx]; }
+    return null;
+  },
   async clearMemory(){ memLists=[]; memItems=[]; const db=getDb(); if(db){ try{ await db.delete(items); await db.delete(lists);}catch{}}},
 };

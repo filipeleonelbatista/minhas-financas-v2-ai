@@ -3,6 +3,7 @@ import { useColorMode } from "native-base";
 import React, { createContext, useCallback, useEffect, useState } from "react";
 import { Alert, Appearance, DevSettings, ToastAndroid } from "react-native";
 import { database } from "../databases";
+import { configRepo } from "../repositories/config";
 
 export const SettingsContext = createContext({});
 
@@ -41,6 +42,7 @@ export function SettingsContextProvider(props) {
   const [veiclePlate, setVeiclePlate] = useState("");
   const [veicleAutonomy, setVeicleAutonomy] = useState(0);
   const [selectedFolderToSave, setSelectedFolderToSave] = useState("");
+  const [isBiometricEnabled, setIsBiometricEnabled] = useState(false);
 
   const handleCleanStorage = async () => {
     Alert.alert(
@@ -129,6 +131,11 @@ export function SettingsContextProvider(props) {
   const handleUpdateApiKey = async (text) => {
     setApiKey(text);
     await updateConfiguration("apiKey", text);
+    // also persist securely (hardware-backed) via expo-secure-store wrapper
+    try {
+      const { saveApiKey } = require("../utils/secureStore");
+      await saveApiKey(text);
+    } catch {}
   };
 
   const handleSetIsAiEnabled = async (value) => {
@@ -174,6 +181,15 @@ export function SettingsContextProvider(props) {
   const handleSwitchViewTotalHistoryCard = async (value) => {
     setIsEnableTotalHistoryCard(value);
     await updateConfiguration("isEnableTotalHistoryCard", value ? 1 : 0);
+  };
+
+  const handleSetIsBiometricEnabled = async (value) => {
+    setIsBiometricEnabled(value);
+    await updateConfiguration("isBiometricEnabled", value ? 1 : 0);
+    // keep drizzle config repo in sync for managed path
+    try {
+      await configRepo.upsert({ id: "config-singleton", isBiometricEnabled: value ? 1 : 0 });
+    } catch {}
   };
 
   const handleVeicleName = async (value) => {
@@ -249,6 +265,11 @@ export function SettingsContextProvider(props) {
       console.log("updateConfiguration error", error);
     }
 
+    // also persist via drizzle repo (managed) best-effort
+    try {
+      await configRepo.upsert({ id: "config-singleton", [configVariable]: value });
+    } catch {}
+
     loadData();
   };
 
@@ -306,6 +327,7 @@ export function SettingsContextProvider(props) {
               data._raw.veiclePlate = veiclePlate;
               data._raw.veicleAutonomy = veicleAutonomy;
               data._raw.selectedFolderToSave = selectedFolderToSave;
+              data._raw.isBiometricEnabled = isBiometricEnabled ? 1 : 0;
             });
           });
         } catch (error) {
@@ -339,6 +361,20 @@ export function SettingsContextProvider(props) {
         setVeiclePlate(currentList[0].veiclePlate);
         setVeicleAutonomy(currentList[0].veicleAutonomy);
         setSelectedFolderToSave(currentList[0].selectedFolderToSave);
+        setIsBiometricEnabled(currentList[0].isBiometricEnabled === 1);
+        // also hydrate from drizzle repo if available (managed)
+        try {
+          const drizzleCfg = await configRepo.get();
+          if (drizzleCfg && typeof drizzleCfg.isBiometricEnabled !== "undefined") {
+            setIsBiometricEnabled(drizzleCfg.isBiometricEnabled === 1);
+          }
+        } catch {}
+        // hydrate apiKey from secure store if available
+        try {
+          const { getApiKey } = require("../utils/secureStore");
+          const secureKey = await getApiKey();
+          if (secureKey) setApiKey(secureKey);
+        } catch {}
       }
     } catch (error) {
       console.log("loadData error", error);
@@ -393,6 +429,9 @@ export function SettingsContextProvider(props) {
         handleUpdateSelectedFolderToSave,
         selectedFolderToSave,
         handleResetConfigs,
+        isBiometricEnabled,
+        handleSetIsBiometricEnabled,
+        setIsBiometricEnabled,
       }}
     >
       {props.children}

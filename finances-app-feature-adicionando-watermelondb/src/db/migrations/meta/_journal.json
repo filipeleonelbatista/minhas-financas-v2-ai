@@ -8,6 +8,13 @@
       "when": 1787961544567,
       "tag": "0000_large_clint_barton",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1787961600000,
+      "tag": "0001_add_biometric",
+      "breakpoints": true
     }
   ]
 }

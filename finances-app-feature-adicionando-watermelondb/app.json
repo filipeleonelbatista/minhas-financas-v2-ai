@@ -22,7 +22,8 @@
       "usesIcloudStorage": true,
       "infoPlist": {
         "NSPhotoLibraryUsageDescription": "Permitir que $(PRODUCT_NAME) acesse suas fotos.",
-        "NSPhotoLibraryAddUsageDescription": "Permitir que $(PRODUCT_NAME) salve fotos."
+        "NSPhotoLibraryAddUsageDescription": "Permitir que $(PRODUCT_NAME) salve fotos.",
+        "NSFaceIDUsageDescription": "Permitir que $(PRODUCT_NAME) use Face ID para desbloquear o app quando a biometria estiver ativada."
       }
     },
     "android": {

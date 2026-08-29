@@ -82,6 +82,7 @@ export const config = sqliteTable('config', {
   veiclePlate: text('veiclePlate'),
   veicleAutonomy: real('veicleAutonomy'),
   selectedFolderToSave: text('selectedFolderToSave'),
+  isBiometricEnabled: integer('isBiometricEnabled'),
 });
 
 export const tithePayments = sqliteTable('tithe_payments', {

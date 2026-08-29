@@ -75,5 +75,9 @@ export const configSchema = tableSchema({
       name: "selectedFolderToSave",
       type: "string",
     },
+    {
+      name: "isBiometricEnabled",
+      type: "number",
+    },
   ],
 });

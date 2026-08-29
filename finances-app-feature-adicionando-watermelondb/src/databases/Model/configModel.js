@@ -22,6 +22,7 @@ class ConfigModel extends Model {
   @field("veiclePlate") veiclePlate;
   @field("veicleAutonomy") veicleAutonomy;
   @field("selectedFolderToSave") selectedFolderToSave;
+  @field("isBiometricEnabled") isBiometricEnabled;
 }
 
 export default ConfigModel;

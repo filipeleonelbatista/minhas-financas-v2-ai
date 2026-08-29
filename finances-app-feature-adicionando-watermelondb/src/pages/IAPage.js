@@ -15,7 +15,7 @@ import {
   useTheme,
   VStack,
 } from "native-base";
-import React, { useEffect, useMemo, useRef, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState, useCallback } from "react";
 import { BackHandler } from "react-native";
 import { ScrollView } from "react-native-gesture-handler";
 
@@ -27,12 +27,20 @@ import {
 import { useWindowDimensions } from "react-native";
 import LoadingDots from "react-native-loading-dots";
 import Header from "../components/Header";
+import Orb from "../components/ui/Orb";
 import { useIsKeyboardOpen } from "../hooks/useIsKeyboardOpen";
 import { useMarket } from "../hooks/useMarket";
-import { useOpenAi } from "../hooks/useOpenAi";
 import { usePayments } from "../hooks/usePayments";
 import { useRuns } from "../hooks/useRuns";
-import { Configuration, OpenAIApi } from "openai";
+import { buildPrompt, canSendPrompt, registerPrompt } from "../utils/prompt";
+import { getProviderKey } from "../utils/secureStore";
+import {
+  getActiveProvider,
+  getFallbackOrder,
+  getProviderModel,
+  chatWithFallback,
+  PROVIDER_META,
+} from "../utils/aiProviders";
 
 export default function IAPage() {
   const theme = useTheme();
@@ -58,15 +66,6 @@ export default function IAPage() {
   const { FuelList, autonomy } = useRuns();
   const { filteredList: MarketList } = useMarket();
 
-  const { checkIfApiKeyExists, openaiErrorHandler, handleSaveApiKey, apiKey } =
-    useOpenAi();
-
-  const configuration = new Configuration({
-    apiKey: apiKey, //process.env.OPENAI_API_KEY,
-  });
-
-  const openai = new OpenAIApi(configuration);
-
   const isFocused = useIsFocused();
   const [inputTextApiKey, setInputTextApiKey] = useState("");
 
@@ -78,6 +77,28 @@ export default function IAPage() {
   const [inputText, setInputText] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [open, setOpen] = useState(false);
+  const [activeProvider, setActiveProvider] = useState(null);
+  const [activeModel, setActiveModel] = useState(null);
+  const [fallbackOrder, setFallbackOrder] = useState([]);
+
+  const loadProviderInfo = useCallback(async () => {
+    try {
+      const ap = await getActiveProvider();
+      const fo = await getFallbackOrder();
+      setActiveProvider(ap);
+      setFallbackOrder(fo ?? []);
+      if (ap) {
+        const m = await getProviderModel(ap);
+        setActiveModel(m);
+      } else {
+        setActiveModel(null);
+      }
+    } catch {}
+  }, []);
+
+  useEffect(() => {
+    if (isFocused) loadProviderInfo();
+  }, [isFocused, loadProviderInfo]);
 
   const financesList = useMemo(() => {
     const headers =
@@ -130,50 +151,69 @@ export default function IAPage() {
     return headers + "\n" + data;
   }, [MarketList]);
 
+  const openaiErrorHandler = (error) => {
+    const status = error?.status ?? error?.response?.status;
+    switch (status) {
+      case 400:
+        return "Não foi possivel fazer a pesquisa. (400)";
+      case 401:
+        return "Chave inválida/expirada. Verifique em Provedores IA.";
+      case 429:
+        return "Limite atingido. Tente novamente em instantes.";
+      case 500:
+        return "Erro no provedor. Tentando fallback...";
+      case 503:
+        return "Provedor indisponível. Tentando fallback...";
+      default:
+        return error?.message ?? "Não foi possivel fazer a pesquisa.";
+    }
+  };
+
+  const checkIfApiKeyExists = useCallback(async () => {
+    // Check any provider has key
+    const providers = ["openai", "gemini", "anthropic", "openrouter", "zen"];
+    for (const p of providers) {
+      const k = await getProviderKey(p);
+      if (k) return true;
+    }
+    return false;
+  }, []);
+
+  const sendWithFallback = async (promptData, userPrompt) => {
+    // Rate limit 3/60s
+    if (!canSendPrompt()) {
+      throw new Error("Muitas requisições. Aguarde 60s (limite 3/min).");
+    }
+    registerPrompt();
+
+    const injected = buildPrompt(promptData, userPrompt);
+    // If injection blocked, buildPrompt returns warning message itself — still send as prompt? but we treat as assistant warning
+    if (injected.includes("Não posso processar instruções dentro dos dados")) {
+      return injected;
+    }
+
+    const result = await chatWithFallback(injected);
+    return result.text;
+  };
+
   const handleAskForFinancialTips = async () => {
     try {
-      setInputText(
-        "De acordo com os gastos que tive esse mês, quais gastos poderiam ser melhorados?"
-      );
+      const userQ = "De acordo com os gastos que tive esse mês, quais gastos poderiam ser melhorados?";
+      setInputText(userQ);
       setIsLoading(true);
+      setError(null);
 
-      const userMessage = `
-                Use esses dados para analisar e depois me responda:
+      const dataSlice = filteredList.slice(0, 50);
+      const promptData = [{ type: "finances", csv: financesList, rows: dataSlice }];
+      const text = await sendWithFallback(promptData, userQ + " Limite-se a 1000 caracteres.");
 
-                ${financesList}
-
-                De acordo com os gastos que tive esse mês, quais gastos poderiam ser melhorados?
-
-                Limite-se a criar um texto em no máximo 1000 caracteres.
-                `;
-
-      const result = await openai.createChatCompletion({
-        model: "gpt-3.5-turbo",
-        messages: [
-          {
-            role: "user",
-            content: userMessage.replaceAll("                ", ""),
-          },
-        ],
-        temperature: 1,
-        max_tokens: 2048, //256,
-        top_p: 1,
-        frequency_penalty: 0,
-        presence_penalty: 0,
-      });
-
-      setData([
-        ...data,
-        {
-          type: "user",
-          text: "De acordo com os gastos que tive esse mês, quais gastos poderiam ser melhorados?",
-        },
-        { type: "assistant", text: result.data.choices[0].message.content },
+      setData((prev) => [
+        ...prev,
+        { type: "user", text: userQ },
+        { type: "assistant", text },
       ]);
-
       setInputText("");
     } catch (error) {
-      console.log(" handleAskForFinancialTips Erro: ", error, error.response);
       setError(openaiErrorHandler(error));
     } finally {
       setIsLoading(false);
@@ -182,43 +222,19 @@ export default function IAPage() {
 
   const handleAskForFuelCostsTips = async () => {
     try {
-      setInputText(
-        "De acordo com os abastecimentos que tive esse mês, o que posso melhorar para evitar gastos?"
-      );
+      const userQ = "De acordo com os abastecimentos que tive esse mês, o que posso melhorar para evitar gastos?";
+      setInputText(userQ);
       setIsLoading(true);
-
-      const userMessage = `
-                Use esses dados para analisar e depois me responda:
-
-                ${fuelCostsList}
-
-                De acordo com os abastecimentos que tive esse mês, o que posso melhorar para evitar gastos?
-
-                Limite-se a criar um texto em no máximo 1000 caracteres.
-                `;
-
-      const result = await openai.createChatCompletion({
-        model: "gpt-3.5-turbo",
-        messages: [{ role: "user", content: userMessage }],
-        temperature: 1,
-        max_tokens: 2048, //256,
-        top_p: 1,
-        frequency_penalty: 0,
-        presence_penalty: 0,
-      });
-
-      setData([
-        ...data,
-        {
-          type: "user",
-          text: "De acordo com os abastecimentos que tive esse mês, o que posso melhorar para evitar gastos?",
-        },
-        { type: "assistant", text: result.data.choices[0].message.content },
+      setError(null);
+      const promptData = [{ type: "fuel", csv: fuelCostsList, rows: FuelList.slice(0, 50) }];
+      const text = await sendWithFallback(promptData, userQ + " Limite-se a 1000 caracteres.");
+      setData((prev) => [
+        ...prev,
+        { type: "user", text: userQ },
+        { type: "assistant", text },
       ]);
-
       setInputText("");
     } catch (error) {
-      console.log("handleAskForFuelCostsTips Erro: ", error);
       setError(openaiErrorHandler(error));
     } finally {
       setIsLoading(false);
@@ -227,43 +243,19 @@ export default function IAPage() {
 
   const handleAskForMarketCostsTips = async () => {
     try {
-      setInputText(
-        "De acordo com as compras de mercado que tive esse mês, quais gastos poderiam ser melhorados?"
-      );
+      const userQ = "De acordo com as compras de mercado que tive esse mês, quais gastos poderiam ser melhorados?";
+      setInputText(userQ);
       setIsLoading(true);
-
-      const userMessage = `
-                Use esses dados para analisar e depois me responda:
-
-                ${marketCostsList}
-
-                De acordo com as compras de mercado que tive esse mês, quais gastos poderiam ser melhorados?
-
-                Limite-se a criar um texto em no máximo 1000 caracteres.
-                `;
-
-      const result = await openai.createChatCompletion({
-        model: "gpt-3.5-turbo",
-        messages: [{ role: "user", content: userMessage }],
-        temperature: 1,
-        max_tokens: 2048, //256,
-        top_p: 1,
-        frequency_penalty: 0,
-        presence_penalty: 0,
-      });
-
-      setData([
-        ...data,
-        {
-          type: "user",
-          text: "De acordo com as compras de mercado que tive esse mês, quais gastos poderiam ser melhorados?",
-        },
-        { type: "assistant", text: result.data.choices[0].message.content },
+      setError(null);
+      const promptData = [{ type: "market", csv: marketCostsList, rows: MarketList.slice(0, 50) }];
+      const text = await sendWithFallback(promptData, userQ + " Limite-se a 1000 caracteres.");
+      setData((prev) => [
+        ...prev,
+        { type: "user", text: userQ },
+        { type: "assistant", text },
       ]);
-
       setInputText("");
     } catch (error) {
-      console.log("handleAskForMarketCostsTips Erro: ", error);
       setError(openaiErrorHandler(error));
     } finally {
       setIsLoading(false);
@@ -273,29 +265,23 @@ export default function IAPage() {
   const handleAskToAi = async () => {
     try {
       setIsLoading(true);
+      setError(null);
 
-      const newDataForConversation = data.map((item) => ({
-        role: item.type,
-        content: item.text,
-      }));
+      const userQ = inputText;
+      // include conversation history slices + data
+      const promptData = [
+        { type: "finances", csv: financesList.slice(0, 4000) },
+        { type: "fuel", csv: fuelCostsList.slice(0, 2000) },
+        { type: "market", csv: marketCostsList.slice(0, 2000) },
+        { conversation: data.slice(-6) },
+      ];
 
-      const result = await openai.createChatCompletion({
-        model: "gpt-3.5-turbo",
-        messages: [
-          ...newDataForConversation,
-          { role: "user", content: inputText },
-        ],
-        temperature: 1,
-        max_tokens: 2048, //256,
-        top_p: 1,
-        frequency_penalty: 0,
-        presence_penalty: 0,
-      });
+      const text = await sendWithFallback(promptData, userQ);
 
-      setData([
-        ...data,
-        { type: "user", text: inputText },
-        { type: "assistant", text: result.data.choices[0].message.content },
+      setData((prev) => [
+        ...prev,
+        { type: "user", text: userQ },
+        { type: "assistant", text },
       ]);
 
       setInputText("");
@@ -315,10 +301,11 @@ export default function IAPage() {
         } else {
           setOpen(true);
         }
+        await loadProviderInfo();
       }
       executeAsync();
     }
-  }, [isFocused, checkIfApiKeyExists]);
+  }, [isFocused, checkIfApiKeyExists, loadProviderInfo]);
 
   useFocusEffect(() => {
     const backHandler = BackHandler.addEventListener(
@@ -332,23 +319,12 @@ export default function IAPage() {
     return () => backHandler.remove();
   });
 
+  const activeLabel = activeProvider ? (PROVIDER_META[activeProvider]?.label ?? activeProvider) : "Nenhum";
+  const fallbackLabel = fallbackOrder.length > 0 ? fallbackOrder.map((p) => PROVIDER_META[p]?.label ?? p).join(" → ") : "—";
+
   return (
     <KeyboardAvoidingView flex={1}>
       <VStack flex={1} bg={bg} position="relative">
-        {openai === null && (
-          <VStack
-            flex={1}
-            bgColor={"#000000AA"}
-            position={"absolute"}
-            zIndex={1000}
-            width={"100%"}
-            alignItems={"center"}
-            justifyContent={"center"}
-            h={height + 10}
-          >
-            <Spinner color={bg} size={60} />
-          </VStack>
-        )}
         <Header
           isShort
           isLeft
@@ -365,6 +341,17 @@ export default function IAPage() {
             />
           }
         />
+        {/* ORB header */}
+        <VStack alignItems="center" mt={-8} mb={2} space={2}>
+          <Orb size="lg" color="#9c44dc" testID="orb-header" />
+          <Text color={text} fontSize={12} textAlign="center">
+            Ativo: <Text bold color="purple.600">{activeLabel}</Text>{activeModel ? ` • ${activeModel}` : ""} {"\n"}
+            Fallback: <Text color={text}>{fallbackLabel}</Text>
+          </Text>
+          <Pressable testID="btn-manage-providers" onPress={() => navigation.navigate("AIProviders")} _pressed={{ opacity: 0.6 }}>
+            <Text color="purple.600" fontSize={12} underline>Mudar provider/modelo</Text>
+          </Pressable>
+        </VStack>
         <ScrollView
           ref={scrollViewRef}
           nestedScrollEnabled={true}
@@ -383,7 +370,7 @@ export default function IAPage() {
               alignItems={"center"}
               justifyContent={"center"}
               flex={1}
-              mt={10}
+              mt={4}
             >
               <Text
                 color={text}
@@ -391,7 +378,7 @@ export default function IAPage() {
                 lineHeight={24}
                 textAlign="center"
                 maxW="80%"
-                my={6}
+                my={4}
               >
                 Converse com um assistente baseado em Inteligência Artificial.
               </Text>
@@ -404,6 +391,7 @@ export default function IAPage() {
                 px={4}
                 py={2}
                 onPress={handleAskForFinancialTips}
+                testID="btn-financial-tips"
                 _pressed={{
                   bgColor: "gray.300",
                 }}
@@ -424,6 +412,7 @@ export default function IAPage() {
                 px={4}
                 py={2}
                 onPress={handleAskForFuelCostsTips}
+                testID="btn-fuel-tips"
                 _pressed={{
                   bgColor: "gray.300",
                 }}
@@ -444,6 +433,7 @@ export default function IAPage() {
                 px={4}
                 py={2}
                 onPress={handleAskForMarketCostsTips}
+                testID="btn-market-tips"
                 _pressed={{
                   bgColor: "gray.300",
                 }}
@@ -636,10 +626,12 @@ export default function IAPage() {
                 setInputText(text);
               }}
               value={inputText}
+              testID="input-ask"
             />
             <IconButton
               w={12}
               bg={theme.colors.purple[600]}
+              testID="btn-send"
               onPress={() => {
                 if (inputText.length === 0) {
                   setError("Digite uma mensagem para continuar");
@@ -657,7 +649,7 @@ export default function IAPage() {
             />
           </HStack>
           {error && (
-            <Text color="red.500">
+            <Text color="red.500" testID="error-text">
               <Feather name="alert-circle" size={14} /> {error}
             </Text>
           )}
@@ -671,47 +663,29 @@ export default function IAPage() {
         h={height * (isKeyboardOpen ? 0.9 : 1.09)}
       >
         <Actionsheet.Content pb={isKeyboardOpen ? 24 : 0}>
-          <VStack space={4} p={4}>
+          <VStack space={4} p={4} alignItems="center">
+            <Box testID="orb-sheet">
+              <Orb size="md" color="#9c44dc" />
+            </Box>
             <Text color={text} textAlign="center" bold fontSize={22}>
               Chave de api necessária
             </Text>
             <Text color={text} textAlign="center">
-              Como é um recurso limitado e a idéia do aplicativo é ser gratuito,
-              é necessario entrar no site da OpenAI e solicitar a Chave de API e
-              que você tenha créditos de uso lá para poder usar neste app.
+              Configure ao menos um provedor de IA para usar o chat. Suportamos OpenAI, Gemini, Anthropic, OpenRouter e Zen. Modelos são carregados automaticamente após salvar a chave.
             </Text>
-            <VStack space={2}>
-              <Text color={text}>Cole sua chave de api aqui.</Text>
-              <Input
-                placeholder="Chave de api"
-                onChangeText={(text) => setInputTextApiKey(text)}
-                value={inputTextApiKey}
-              />
-            </VStack>
-
-            <Link
-              href={"https://platform.openai.com/account/api-keys"}
-              _text={{ color: "purple.500" }}
-            >
-              Clique aqui para obter uma Chave de API OpenAi
-            </Link>
-
             <Button
+              testID="btn-go-providers"
               onPress={() => {
-                handleSaveApiKey(inputTextApiKey);
                 setOpen(false);
+                navigation.navigate("AIProviders");
               }}
               colorScheme="purple"
-              _text={{
-                color: "white",
-              }}
-              _pressed={{
-                bgColor: theme.colors.purple[900],
-              }}
+              w="100%"
+              _text={{ color: "white" }}
+              _pressed={{ bgColor: theme.colors.purple[900] }}
             >
-              Salvar
+              Configurar provedores
             </Button>
-
             <Button
               onPress={() => {
                 setOpen(false);
@@ -719,12 +693,9 @@ export default function IAPage() {
               }}
               borderColor="purple.600"
               variant={"outline"}
-              _text={{
-                color: "purple.600",
-              }}
-              _pressed={{
-                bgColor: theme.colors.purple[900],
-              }}
+              w="100%"
+              _text={{ color: "purple.600" }}
+              _pressed={{ bgColor: theme.colors.purple[900] }}
             >
               Voltar
             </Button>

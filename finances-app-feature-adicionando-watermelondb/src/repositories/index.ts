@@ -4,3 +4,4 @@ export * from './run';
 export * from './market';
 export * from './list';
 export * from './config';
+export * from './tithe';

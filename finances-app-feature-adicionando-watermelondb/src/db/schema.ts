@@ -83,6 +83,10 @@ export const config = sqliteTable('config', {
   veicleAutonomy: real('veicleAutonomy'),
   selectedFolderToSave: text('selectedFolderToSave'),
   isBiometricEnabled: integer('isBiometricEnabled'),
+  // Tithe JFA: % custom + base Ganhos + menu flag
+  tithePercent: real('tithePercent'),
+  titheCategories: text('titheCategories'),
+  isTitheMenuEnabled: integer('isTitheMenuEnabled'),
 });
 
 export const tithePayments = sqliteTable('tithe_payments', {

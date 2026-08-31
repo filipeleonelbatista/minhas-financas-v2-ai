@@ -1,32 +1,21 @@
 import React, { useMemo, useState } from "react";
-
+import { View, Text, TextInput, ScrollView, Pressable, TouchableOpacity, ToastAndroid, Alert } from "react-native";
 import { Feather } from "@expo/vector-icons";
 import { DateTimePickerAndroid } from "@react-native-community/datetimepicker";
 import { Picker } from "@react-native-picker/picker";
 import { useFormik } from "formik";
-import {
-  Box,
-  Button,
-  HStack,
-  IconButton,
-  Input,
-  ScrollView,
-  Text,
-  useColorModeValue,
-  useTheme,
-  VStack,
-} from "native-base";
-import { ToastAndroid } from "react-native";
 import * as Yup from "yup";
-import { useLists } from "../hooks/useLists";
-import { useSettings } from "../hooks/useSettings";
+import { useListsStore } from "../stores/lists";
+import { useSettingsStore } from "../stores/settings";
+
+const PURPLE_600 = "#9c44dc";
+const GREEN_500 = "#22c55e";
+const RED_500 = "#ef4444";
 
 export default function EditItemListItem({ onClose, selectedTransaction }) {
-  const theme = useTheme();
-  const text = useColorModeValue(
-    theme.colors.gray[600],
-    theme.colors.gray[200]
-  );
+  const colorModeState = useSettingsStore((s) => s.colorModeState);
+  const isDark = colorModeState === "dark";
+  const text = isDark ? "#e4e4e7" : "#52525b";
 
   function moeda(e) {
     let value = e;
@@ -37,10 +26,8 @@ export default function EditItemListItem({ onClose, selectedTransaction }) {
   }
 
   const [isEditable, setIsEditable] = useState(false);
-
-  const { updateItemToList, selectedList, deleteItemToList } = useLists();
-
-  const { marketSimplifiedItems } = useSettings();
+  const selectedList = useListsStore((s) => s.selectedList);
+  const marketSimplifiedItems = useSettingsStore((s) => !!s.marketSimplifiedItems);
 
   const formSchema = useMemo(() => {
     return Yup.object().shape({
@@ -62,7 +49,7 @@ export default function EditItemListItem({ onClose, selectedTransaction }) {
       amount: moeda(selectedTransaction.amount.toFixed(2)),
       category: selectedTransaction.category ?? "Mercearia",
       quantity: String(selectedTransaction.quantity),
-      quantityDesired: String(selectedTransaction.quantityDesired),
+      quantityDesired: String(selectedTransaction.quantityDesired ?? ""),
       location: selectedTransaction.location ?? "",
       date:
         selectedTransaction.date !== ""
@@ -88,7 +75,7 @@ export default function EditItemListItem({ onClose, selectedTransaction }) {
 
     const data = {
       ...selectedTransaction,
-      list_id: selectedList.id,
+      list_id: selectedList?.id ?? selectedTransaction.list_id,
       amount: parseFloat(
         formValues.amount.replaceAll(".", "").replace(",", ".")
       ),
@@ -105,14 +92,41 @@ export default function EditItemListItem({ onClose, selectedTransaction }) {
         ).getTime() + 43200000,
     };
 
-    await updateItemToList(data);
+    const { listRepo } = require("../repositories/list");
+    await listRepo.updateItem(data.id, data);
+    const store = useListsStore.getState();
+    await store.handleSelect(data.list_id);
+    await store.load();
 
     ToastAndroid.show("Item atualizado com sucesso", ToastAndroid.SHORT);
     onClose();
   }
 
+  const handleDelete = () => {
+    Alert.alert(
+      "Deseja realmente deletar esse registro?",
+      "Esta ação é irreversível! Deseja continuar?",
+      [
+        { text: "Não", style: "cancel" },
+        {
+          text: "Sim",
+          onPress: async () => {
+            const { listRepo } = require("../repositories/list");
+            await listRepo.deleteItem(selectedTransaction.id);
+            const store = useListsStore.getState();
+            await store.handleSelect(selectedTransaction.list_id);
+            await store.load();
+            ToastAndroid.show("Item removido do carrinho", ToastAndroid.SHORT);
+            onClose();
+          },
+        },
+      ]
+    );
+  };
+
   const onChange = (event, selectedDate) => {
     const currentDate = selectedDate;
+    if (!currentDate) return;
     formik.setFieldValue(
       "date",
       `${
@@ -128,72 +142,53 @@ export default function EditItemListItem({ onClose, selectedTransaction }) {
   };
 
   return (
-    <ScrollView w={"100%"} px={4}>
-      <HStack space={2} mb={2} justifyContent="space-between">
+    <ScrollView style={{ width: "100%", paddingHorizontal: 16 }} contentContainerStyle={{ paddingBottom: 32 }}>
+      <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 8, gap: 8 }}>
         {!isEditable ? (
-          <IconButton
+          <TouchableOpacity
             onPress={() => setIsEditable(true)}
-            _pressed={{
-              bgColor: "green.300",
-            }}
-            icon={
-              <Feather name="edit" size={24} color={theme.colors.green[500]} />
-            }
-            borderRadius={4}
-            borderWidth={1}
-            borderColor={theme.colors.green[500]}
-          />
+            style={{ borderRadius: 4, borderWidth: 1, borderColor: GREEN_500, padding: 8, alignItems: "center", justifyContent: "center" }}
+          >
+            <Feather name="edit" size={24} color={GREEN_500} />
+          </TouchableOpacity>
         ) : (
-          <Box w={10} />
+          <View style={{ width: 40 }} />
         )}
-        <Text bold fontSize={24} color={text}>
-          {isEditable ? "Editar" : "Visualizar"} item
-        </Text>
-        <IconButton
-          onPress={() => {
-            deleteItemToList(selectedTransaction);
-            onClose();
-          }}
-          _pressed={{
-            bgColor: "red.300",
-          }}
-          icon={
-            <Feather name="trash" size={24} color={theme.colors.red[500]} />
-          }
-          borderRadius={4}
-          borderWidth={1}
-          borderColor={theme.colors.red[500]}
-        />
-      </HStack>
-      <Text color={text} mb={4}>
-        Adicione itens para suas compras de mercado.
-      </Text>
+        <Text style={{ fontWeight: "700", fontSize: 24, color: text }}>{isEditable ? "Editar" : "Visualizar"} item</Text>
+        <TouchableOpacity
+          onPress={handleDelete}
+          style={{ borderRadius: 4, borderWidth: 1, borderColor: RED_500, padding: 8, alignItems: "center", justifyContent: "center" }}
+        >
+          <Feather name="trash" size={24} color={RED_500} />
+        </TouchableOpacity>
+      </View>
+      <Text style={{ color: text, marginBottom: 16 }}>Adicione itens para suas compras de mercado.</Text>
 
-      <VStack space={2}>
-        <VStack space={2}>
-          <Text color={text}>Descrição</Text>
-          <Input
-            isDisabled={!isEditable}
-            errors={!!formik.errors.description}
-            helperText={formik.errors.description}
+      <View style={{ gap: 8 }}>
+        <View style={{ gap: 8, marginBottom: 8 }}>
+          <Text style={{ color: text }}>Descrição</Text>
+          <TextInput
+            editable={isEditable}
             placeholder="Descrição"
-            onChangeText={(text) => formik.setFieldValue("description", text)}
+            placeholderTextColor="#a1a1aa"
+            onChangeText={(t) => formik.setFieldValue("description", t)}
             value={formik.values.description}
+            style={{ color: text, backgroundColor: isDark ? "#27272a" : "white", borderWidth: 1, borderColor: isDark ? "#3f3f46" : "#e4e4e7", borderRadius: 12, padding: 12, opacity: isEditable ? 1 : 0.6 }}
+            className="bg-white dark:bg-gray-800 rounded-xl p-3 border border-gray-200 dark:border-gray-700"
           />
           {formik.errors.description && (
-            <Text color="red.600">{formik.errors.description}</Text>
+            <Text style={{ color: "#dc2626" }}>{formik.errors.description}</Text>
           )}
-        </VStack>
-        <VStack space={2}>
-          <Text color={text}>Categoria</Text>
+        </View>
+        <View style={{ gap: 8, marginBottom: 8 }}>
+          <Text style={{ color: text }}>Categoria</Text>
           <Picker
             selectedValue={formik.values.category ?? "Mercearia"}
-            onValueChange={(itemValue, itemIndex) =>
+            onValueChange={(itemValue) =>
               formik.setFieldValue("category", itemValue)
             }
             mode="dropdown"
-            dropdownIconColor={theme.colors.purple[600]}
-            dropdownIconRippleColor={theme.colors.purple[600]}
+            dropdownIconColor={PURPLE_600}
             enabled={isEditable}
             style={{
               width: "100%",
@@ -209,134 +204,120 @@ export default function EditItemListItem({ onClose, selectedTransaction }) {
             <Picker.Item label="Outros" value="Outros" />
           </Picker>
           {formik.errors.category && (
-            <Text color="red.600">{formik.errors.category}</Text>
+            <Text style={{ color: "#dc2626" }}>{formik.errors.category}</Text>
           )}
-        </VStack>
-        <VStack space={2}>
-          <Text color={text}>Valor</Text>
-          <Input
-            isDisabled={!isEditable}
-            errors={!!formik.errors.amount}
-            helperText={formik.errors.amount}
+        </View>
+        <View style={{ gap: 8, marginBottom: 8 }}>
+          <Text style={{ color: text }}>Valor</Text>
+          <TextInput
+            editable={isEditable}
+            keyboardType="decimal-pad"
             placeholder="Valor"
-            keyboardType="decimal-pad"
-            onChangeText={(text) => formik.setFieldValue("amount", moeda(text))}
+            placeholderTextColor="#a1a1aa"
+            onChangeText={(t) => formik.setFieldValue("amount", moeda(t))}
             value={formik.values.amount}
+            style={{ color: text, backgroundColor: isDark ? "#27272a" : "white", borderWidth: 1, borderColor: isDark ? "#3f3f46" : "#e4e4e7", borderRadius: 12, padding: 12, opacity: isEditable ? 1 : 0.6 }}
+            className="bg-white dark:bg-gray-800 rounded-xl p-3 border border-gray-200 dark:border-gray-700"
           />
-
           {formik.errors.amount && (
-            <Text color="red.600">{formik.errors.amount}</Text>
+            <Text style={{ color: "#dc2626" }}>{formik.errors.amount}</Text>
           )}
-        </VStack>
-        <VStack space={2}>
-          <Text color={text}>Quantidade</Text>
-          <Input
-            isDisabled={!isEditable}
-            errors={!!formik.errors.quantity}
-            helperText={formik.errors.quantity}
-            placeholder="Quantidade"
+        </View>
+        <View style={{ gap: 8, marginBottom: 8 }}>
+          <Text style={{ color: text }}>Quantidade</Text>
+          <TextInput
+            editable={isEditable}
             keyboardType="decimal-pad"
-            onChangeText={(text) => formik.setFieldValue("quantity", text)}
+            placeholder="Quantidade"
+            placeholderTextColor="#a1a1aa"
+            onChangeText={(t) => formik.setFieldValue("quantity", t)}
             value={formik.values.quantity}
+            style={{ color: text, backgroundColor: isDark ? "#27272a" : "white", borderWidth: 1, borderColor: isDark ? "#3f3f46" : "#e4e4e7", borderRadius: 12, padding: 12, opacity: isEditable ? 1 : 0.6 }}
+            className="bg-white dark:bg-gray-800 rounded-xl p-3 border border-gray-200 dark:border-gray-700"
           />
-
           {formik.errors.quantity && (
-            <Text color="red.600">{formik.errors.quantity}</Text>
+            <Text style={{ color: "#dc2626" }}>{formik.errors.quantity}</Text>
           )}
-        </VStack>
+        </View>
         {!marketSimplifiedItems && (
           <>
-            <VStack space={2}>
-              <Text color={text}>Quantidade desejada</Text>
-              <Input
-                isDisabled={!isEditable}
-                errors={!!formik.errors.quantityDesired}
-                helperText={formik.errors.quantityDesired}
-                placeholder="Quantidade desejada"
+            <View style={{ gap: 8, marginBottom: 8 }}>
+              <Text style={{ color: text }}>Quantidade desejada</Text>
+              <TextInput
+                editable={isEditable}
                 keyboardType="decimal-pad"
-                onChangeText={(text) =>
-                  formik.setFieldValue("quantityDesired", text)
+                placeholder="Quantidade desejada"
+                placeholderTextColor="#a1a1aa"
+                onChangeText={(t) =>
+                  formik.setFieldValue("quantityDesired", t)
                 }
                 value={formik.values.quantityDesired}
+                style={{ color: text, backgroundColor: isDark ? "#27272a" : "white", borderWidth: 1, borderColor: isDark ? "#3f3f46" : "#e4e4e7", borderRadius: 12, padding: 12, opacity: isEditable ? 1 : 0.6 }}
+                className="bg-white dark:bg-gray-800 rounded-xl p-3 border border-gray-200 dark:border-gray-700"
               />
               {formik.errors.quantityDesired && (
-                <Text color="red.600">{formik.errors.quantityDesired}</Text>
+                <Text style={{ color: "#dc2626" }}>{formik.errors.quantityDesired}</Text>
               )}
-            </VStack>
+            </View>
 
-            <VStack space={2}>
-              <Text color={text}>Local de compra</Text>
-              <Input
-                isDisabled={!isEditable}
-                errors={!!formik.errors.location}
-                helperText={formik.errors.location}
+            <View style={{ gap: 8, marginBottom: 8 }}>
+              <Text style={{ color: text }}>Local de compra</Text>
+              <TextInput
+                editable={isEditable}
                 placeholder="Local de compra"
-                onChangeText={(text) => formik.setFieldValue("location", text)}
+                placeholderTextColor="#a1a1aa"
+                onChangeText={(t) => formik.setFieldValue("location", t)}
                 value={formik.values.location}
+                style={{ color: text, backgroundColor: isDark ? "#27272a" : "white", borderWidth: 1, borderColor: isDark ? "#3f3f46" : "#e4e4e7", borderRadius: 12, padding: 12, opacity: isEditable ? 1 : 0.6 }}
+                className="bg-white dark:bg-gray-800 rounded-xl p-3 border border-gray-200 dark:border-gray-700"
               />
               {formik.errors.location && (
-                <Text color="red.600">{formik.errors.location}</Text>
+                <Text style={{ color: "#dc2626" }}>{formik.errors.location}</Text>
               )}
-            </VStack>
+            </View>
 
-            <VStack space={2}>
-              <Text color={text}>Data de compra</Text>
-              <Input
-                isDisabled={!isEditable}
-                errors={!!formik.errors.date}
-                helperText={formik.errors.date}
-                placeholder="DD/MM/AAAA"
-                value={formik.values.date}
-                editable={false}
-                rightElement={
-                  <Button
-                    size="xs"
-                    rounded="none"
-                    w="1/4"
-                    p={0}
-                    h="full"
-                    bgColor={theme.colors.purple[600]}
-                    _pressed={{
-                      bgColor: "purple.800",
-                    }}
-                    onPress={() => {
-                      isEditable &&
-                        DateTimePickerAndroid.open({
-                          value: new Date(Date.now()),
-                          onChange,
-                          mode: "date",
-                          is24Hour: false,
-                        });
-                    }}
-                  >
-                    <Feather name="calendar" size={24} color="#FFF" />
-                  </Button>
-                }
-              />
+            <View style={{ gap: 8, marginBottom: 8 }}>
+              <Text style={{ color: text }}>Data de compra</Text>
+              <View style={{ flexDirection: "row", alignItems: "center", backgroundColor: isDark ? "#27272a" : "white", borderWidth: 1, borderColor: isDark ? "#3f3f46" : "#e4e4e7", borderRadius: 12, overflow: "hidden", opacity: isEditable ? 1 : 0.6 }}>
+                <TextInput
+                  placeholder="DD/MM/AAAA"
+                  placeholderTextColor="#a1a1aa"
+                  value={formik.values.date}
+                  editable={false}
+                  style={{ flex: 1, padding: 12, color: text }}
+                />
+                <TouchableOpacity
+                  onPress={() => {
+                    isEditable &&
+                      DateTimePickerAndroid.open({
+                        value: new Date(Date.now()),
+                        onChange,
+                        mode: "date",
+                        is24Hour: false,
+                      });
+                  }}
+                  style={{ backgroundColor: PURPLE_600, padding: 12, height: "100%", justifyContent: "center", alignItems: "center", width: "25%" }}
+                >
+                  <Feather name="calendar" size={24} color="#FFF" />
+                </TouchableOpacity>
+              </View>
               {formik.errors.date && (
-                <Text color="red.600">{formik.errors.date}</Text>
+                <Text style={{ color: "#dc2626" }}>{formik.errors.date}</Text>
               )}
-            </VStack>
+            </View>
           </>
         )}
         {isEditable && (
-          <Button
+          <Pressable
             onPress={formik.submitForm}
-            colorScheme="purple"
-            mt={2}
-            mb={8}
-            _text={{
-              color: "white",
-            }}
-            _pressed={{
-              bgColor: theme.colors.purple[900],
-            }}
+            style={{ backgroundColor: PURPLE_600, marginTop: 8, marginBottom: 32, padding: 12, borderRadius: 12, alignItems: "center", justifyContent: "center" }}
+            className="bg-purple-600 rounded-xl p-3 mt-2 mb-8 items-center justify-center active:bg-purple-900"
           >
-            Adicionar
-          </Button>
+            <Text style={{ color: "white", fontWeight: "600" }}>Adicionar</Text>
+          </Pressable>
         )}
-      </VStack>
-      <Box h={16} w={"100%"} />
+      </View>
+      <View style={{ height: 64, width: "100%" }} />
     </ScrollView>
   );
 }

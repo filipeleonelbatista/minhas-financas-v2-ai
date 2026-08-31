@@ -1,26 +1,27 @@
 import React, { useMemo } from "react";
-
+import { View, Text, TextInput, ScrollView, Pressable } from "react-native";
 import { useFormik } from "formik";
 import * as Yup from "yup";
-import {
-  Button,
-  Input,
-  ScrollView,
-  Text,
-  VStack,
-  useColorModeValue,
-  useTheme,
-} from "native-base";
+import { useSettingsStore } from "../stores/settings";
 import { useMarket } from "../hooks/useMarket";
 
-export default function EstimativeForm({ onClose }) {
-  const theme = useTheme();
-  const text = useColorModeValue(
-    theme.colors.gray[600],
-    theme.colors.gray[200]
-  );
+const PURPLE_600 = "#9c44dc";
 
-  const { setEstimativeValue, estimative } = useMarket();
+export default function EstimativeForm({ onClose }) {
+  const colorModeState = useSettingsStore((s) => s.colorModeState);
+  const isDark = colorModeState === "dark";
+  const text = isDark ? "#e4e4e7" : "#52525b";
+
+  // Fallback: legacy hook may not have estimative after zustand migration; provide local no-op
+  let estimative = 0;
+  let setEstimativeValue = () => {};
+  try {
+    const market = useMarket ? useMarket() : null;
+    if (market) {
+      estimative = market.estimative ?? market.estimativeValue ?? 0;
+      setEstimativeValue = market.setEstimativeValue ?? market.setEstimative ?? (() => {});
+    }
+  } catch {}
 
   function moeda(e) {
     let value = e;
@@ -38,7 +39,7 @@ export default function EstimativeForm({ onClose }) {
 
   const formik = useFormik({
     initialValues: {
-      estimative: estimative
+      estimative: Number(estimative)
         .toLocaleString("pt-BR", {
           style: "currency",
           currency: "BRL",
@@ -62,46 +63,34 @@ export default function EstimativeForm({ onClose }) {
   }
 
   return (
-    <ScrollView w={"100%"} px={4}>
-      <Text bold fontSize={24} color={text}>
-        Adicionar produto
-      </Text>
-      <Text color={text} mb={4}>
-        Adicione itens para suas compras de mercado.
-      </Text>
+    <ScrollView style={{ width: "100%", paddingHorizontal: 16 }} contentContainerStyle={{ paddingBottom: 32 }}>
+      <Text style={{ fontWeight: "700", fontSize: 24, color: text }}>Adicionar produto</Text>
+      <Text style={{ color: text, marginBottom: 16 }}>Adicione itens para suas compras de mercado.</Text>
 
-      <VStack space={2}>
-        <VStack space={2}>
-          <Text color={text}>Valor de gastos estimado</Text>
-          <Input
-            errors={!!formik.errors.estimative}
-            helperText={formik.errors.estimative}
+      <View style={{ gap: 8, marginBottom: 8 }}>
+        <View style={{ gap: 8 }}>
+          <Text style={{ color: text }}>Valor de gastos estimado</Text>
+          <TextInput
             keyboardType="decimal-pad"
             placeholder="Valor de gastos estimado"
-            onChangeText={(text) =>
-              formik.setFieldValue("estimative", moeda(text))
-            }
+            placeholderTextColor="#a1a1aa"
+            onChangeText={(t) => formik.setFieldValue("estimative", moeda(t))}
             value={formik.values.estimative}
+            style={{ color: text, backgroundColor: isDark ? "#27272a" : "white", borderWidth: 1, borderColor: isDark ? "#3f3f46" : "#e4e4e7", borderRadius: 12, padding: 12 }}
+            className="bg-white dark:bg-gray-800 rounded-xl p-3 border border-gray-200 dark:border-gray-700"
           />
           {formik.errors.estimative && (
-            <Text color="red.600">{formik.errors.estimative}</Text>
+            <Text style={{ color: "#dc2626" }}>{formik.errors.estimative}</Text>
           )}
-        </VStack>
-        <Button
+        </View>
+        <Pressable
           onPress={formik.submitForm}
-          colorScheme="purple"
-          mt={2}
-          mb={8}
-          _text={{
-            color: "white",
-          }}
-          _pressed={{
-            bgColor: theme.colors.purple[900],
-          }}
+          style={{ backgroundColor: PURPLE_600, marginTop: 8, marginBottom: 32, padding: 12, borderRadius: 12, alignItems: "center", justifyContent: "center" }}
+          className="bg-purple-600 rounded-xl p-3 mt-2 mb-8 items-center justify-center active:bg-purple-900"
         >
-          Atualizar
-        </Button>
-      </VStack>
+          <Text style={{ color: "white", fontWeight: "600" }}>Atualizar</Text>
+        </Pressable>
+      </View>
     </ScrollView>
   );
 }

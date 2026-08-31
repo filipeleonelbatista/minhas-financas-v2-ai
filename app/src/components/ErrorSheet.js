@@ -1,28 +1,26 @@
-import { Image, Text, VStack, useColorModeValue, useTheme } from "native-base";
 import React from "react";
-import { useWindowDimensions } from "react-native";
+import { View, Text, Image, useWindowDimensions } from "react-native";
+import { useSettingsStore } from "../stores/settings";
 import emptyImage from "../assets/add_notes.png";
 
 export default function ErrorSheet() {
   const { width } = useWindowDimensions();
-
-  const theme = useTheme();
-  const text = useColorModeValue(
-    theme.colors.gray[600],
-    theme.colors.gray[200]
-  );
+  const colorModeState = useSettingsStore((s) => s.colorModeState);
+  const isDark = colorModeState === "dark";
+  const text = isDark ? "#e4e4e7" : "#52525b";
 
   return (
-    <VStack alignItems="center" space={4} my={8}>
+    <View style={{ alignItems: "center", gap: 16, marginVertical: 32 }}>
       <Image
         alt="No Data"
         source={emptyImage}
         style={{ width: width * 0.6, height: width * 0.6 }}
+        resizeMode="contain"
       />
-      <Text textAlign="center" bold color={text}>
+      <Text style={{ textAlign: "center", fontWeight: "700", color: text }}>
         Houve um erro ao carregar o formulário.{"\n"}
         Tente novamente!
       </Text>
-    </VStack>
+    </View>
   );
 }

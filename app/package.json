@@ -37,7 +37,6 @@
     "expo-sqlite": "^57.0.2",
     "expo-status-bar": "~3.0.9",
     "formik": "^2.2.9",
-    "native-base": "^3.4.28",
     "nativewind": "^4.1",
     "openai": "^3.3.0",
     "react": "19.1.0",

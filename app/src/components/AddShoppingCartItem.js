@@ -1,32 +1,20 @@
 import React, { useMemo } from "react";
-
-import { Feather } from "@expo/vector-icons";
-import { DateTimePickerAndroid } from "@react-native-community/datetimepicker";
+import { View, Text, TextInput, ScrollView, Pressable } from "react-native";
 import { Picker } from "@react-native-picker/picker";
 import { useFormik } from "formik";
-import {
-  Button,
-  Input,
-  ScrollView,
-  Text,
-  useColorModeValue,
-  useTheme,
-  VStack,
-} from "native-base";
 import * as Yup from "yup";
-import { useMarket } from "../hooks/useMarket";
-import { useSettings } from "../hooks/useSettings";
+import { useMarketStore } from "../stores/market";
+import { useSettingsStore } from "../stores/settings";
+
+const PURPLE_600 = "#9c44dc";
 
 export default function AddShoppingCartItem({ onClose }) {
-  const theme = useTheme();
-  const text = useColorModeValue(
-    theme.colors.gray[600],
-    theme.colors.gray[200]
-  );
+  const colorModeState = useSettingsStore((s) => s.colorModeState);
+  const isDark = colorModeState === "dark";
+  const text = isDark ? "#e4e4e7" : "#52525b";
 
-  const { addTransaction } = useMarket();
-
-  const { marketSimplifiedItems } = useSettings();
+  const addTransaction = useMarketStore((s) => s.add);
+  const marketSimplifiedItems = useSettingsStore((s) => !!s.marketSimplifiedItems);
 
   const formSchema = useMemo(() => {
     return Yup.object().shape({
@@ -64,7 +52,7 @@ export default function AddShoppingCartItem({ onClose }) {
         ? parseInt(formValues.quantityDesired)
         : "",
     };
-    addTransaction(data);
+    await addTransaction(data);
     onClose();
   }
 
@@ -77,39 +65,35 @@ export default function AddShoppingCartItem({ onClose }) {
   }
 
   return (
-    <ScrollView w={"100%"} px={4}>
-      <Text bold fontSize={24} color={text}>
-        Adicionar produto ao estoque
-      </Text>
-      <Text color={text} mb={4}>
-        Adicione itens para suas compras de mercado.
-      </Text>
+    <ScrollView style={{ width: "100%", paddingHorizontal: 16 }} contentContainerStyle={{ paddingBottom: 32 }}>
+      <Text style={{ fontWeight: "700", fontSize: 24, color: text }}>Adicionar produto ao estoque</Text>
+      <Text style={{ color: text, marginBottom: 16 }}>Adicione itens para suas compras de mercado.</Text>
 
-      <VStack space={2}>
-        <VStack space={2}>
-          <Text color={text}>Descrição</Text>
-          <Input
-            errors={!!formik.errors.description}
-            helperText={formik.errors.description}
+      <View style={{ gap: 8 }}>
+        <View style={{ gap: 8, marginBottom: 8 }}>
+          <Text style={{ color: text }}>Descrição</Text>
+          <TextInput
             placeholder="Descrição"
-            onChangeText={(text) => formik.setFieldValue("description", text)}
+            placeholderTextColor="#a1a1aa"
+            onChangeText={(t) => formik.setFieldValue("description", t)}
             value={formik.values.description}
+            style={{ color: text, backgroundColor: isDark ? "#27272a" : "white", borderWidth: 1, borderColor: isDark ? "#3f3f46" : "#e4e4e7", borderRadius: 12, padding: 12 }}
+            className="bg-white dark:bg-gray-800 rounded-xl p-3 border border-gray-200 dark:border-gray-700"
           />
           {formik.errors.description && (
-            <Text color="red.600">{formik.errors.description}</Text>
+            <Text style={{ color: "#dc2626" }}>{formik.errors.description}</Text>
           )}
-        </VStack>
+        </View>
 
-        <VStack space={2}>
-          <Text color={text}>Categoria</Text>
+        <View style={{ gap: 8, marginBottom: 8 }}>
+          <Text style={{ color: text }}>Categoria</Text>
           <Picker
             selectedValue={formik.values.category ?? "Mercearia"}
-            onValueChange={(itemValue, itemIndex) =>
+            onValueChange={(itemValue) =>
               formik.setFieldValue("category", itemValue)
             }
             mode="dropdown"
-            dropdownIconColor={theme.colors.purple[600]}
-            dropdownIconRippleColor={theme.colors.purple[600]}
+            dropdownIconColor={PURPLE_600}
             enabled
             style={{
               width: "100%",
@@ -125,75 +109,69 @@ export default function AddShoppingCartItem({ onClose }) {
             <Picker.Item label="Outros" value="Outros" />
           </Picker>
           {formik.errors.category && (
-            <Text color="red.600">{formik.errors.category}</Text>
+            <Text style={{ color: "#dc2626" }}>{formik.errors.category}</Text>
           )}
-        </VStack>
+        </View>
 
-        <VStack space={2}>
-          <Text color={text}>Valor</Text>
-          <Input
-            errors={!!formik.errors.amount}
-            helperText={formik.errors.amount}
+        <View style={{ gap: 8, marginBottom: 8 }}>
+          <Text style={{ color: text }}>Valor</Text>
+          <TextInput
+            keyboardType="decimal-pad"
             placeholder="Valor"
-            keyboardType="decimal-pad"
-            onChangeText={(text) => formik.setFieldValue("amount", moeda(text))}
+            placeholderTextColor="#a1a1aa"
+            onChangeText={(t) => formik.setFieldValue("amount", moeda(t))}
             value={formik.values.amount}
+            style={{ color: text, backgroundColor: isDark ? "#27272a" : "white", borderWidth: 1, borderColor: isDark ? "#3f3f46" : "#e4e4e7", borderRadius: 12, padding: 12 }}
+            className="bg-white dark:bg-gray-800 rounded-xl p-3 border border-gray-200 dark:border-gray-700"
           />
-
           {formik.errors.amount && (
-            <Text color="red.600">{formik.errors.amount}</Text>
+            <Text style={{ color: "#dc2626" }}>{formik.errors.amount}</Text>
           )}
-        </VStack>
+        </View>
 
-        <VStack space={2}>
-          <Text color={text}>Quantidade</Text>
-          <Input
-            errors={!!formik.errors.quantity}
-            helperText={formik.errors.quantity}
-            placeholder="Quantidade"
+        <View style={{ gap: 8, marginBottom: 8 }}>
+          <Text style={{ color: text }}>Quantidade</Text>
+          <TextInput
             keyboardType="decimal-pad"
-            onChangeText={(text) => formik.setFieldValue("quantity", text)}
+            placeholder="Quantidade"
+            placeholderTextColor="#a1a1aa"
+            onChangeText={(t) => formik.setFieldValue("quantity", t)}
             value={formik.values.quantity}
+            style={{ color: text, backgroundColor: isDark ? "#27272a" : "white", borderWidth: 1, borderColor: isDark ? "#3f3f46" : "#e4e4e7", borderRadius: 12, padding: 12 }}
+            className="bg-white dark:bg-gray-800 rounded-xl p-3 border border-gray-200 dark:border-gray-700"
           />
-
           {formik.errors.quantity && (
-            <Text color="red.600">{formik.errors.quantity}</Text>
+            <Text style={{ color: "#dc2626" }}>{formik.errors.quantity}</Text>
           )}
-        </VStack>
+        </View>
 
         {!marketSimplifiedItems && (
-          <VStack space={2}>
-            <Text color={text}>Quantidade desejada</Text>
-            <Input
-              errors={!!formik.errors.quantityDesired}
-              helperText={formik.errors.quantityDesired}
-              placeholder="Quantidade desejada"
+          <View style={{ gap: 8, marginBottom: 8 }}>
+            <Text style={{ color: text }}>Quantidade desejada</Text>
+            <TextInput
               keyboardType="decimal-pad"
-              onChangeText={(text) =>
-                formik.setFieldValue("quantityDesired", text)
+              placeholder="Quantidade desejada"
+              placeholderTextColor="#a1a1aa"
+              onChangeText={(t) =>
+                formik.setFieldValue("quantityDesired", t)
               }
               value={formik.values.quantityDesired}
+              style={{ color: text, backgroundColor: isDark ? "#27272a" : "white", borderWidth: 1, borderColor: isDark ? "#3f3f46" : "#e4e4e7", borderRadius: 12, padding: 12 }}
+              className="bg-white dark:bg-gray-800 rounded-xl p-3 border border-gray-200 dark:border-gray-700"
             />
             {formik.errors.quantityDesired && (
-              <Text color="red.600">{formik.errors.quantityDesired}</Text>
+              <Text style={{ color: "#dc2626" }}>{formik.errors.quantityDesired}</Text>
             )}
-          </VStack>
+          </View>
         )}
-        <Button
+        <Pressable
           onPress={formik.submitForm}
-          colorScheme="purple"
-          mt={2}
-          mb={8}
-          _text={{
-            color: "white",
-          }}
-          _pressed={{
-            bgColor: theme.colors.purple[900],
-          }}
+          style={{ backgroundColor: PURPLE_600, marginTop: 8, marginBottom: 32, padding: 12, borderRadius: 12, alignItems: "center", justifyContent: "center" }}
+          className="bg-purple-600 rounded-xl p-3 mt-2 mb-8 items-center justify-center active:bg-purple-900"
         >
-          Adicionar
-        </Button>
-      </VStack>
+          <Text style={{ color: "white", fontWeight: "600" }}>Adicionar</Text>
+        </Pressable>
+      </View>
     </ScrollView>
   );
 }

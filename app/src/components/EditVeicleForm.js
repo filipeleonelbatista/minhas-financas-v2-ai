@@ -1,33 +1,30 @@
 import React, { useMemo } from "react";
-
+import { View, Text, TextInput, ScrollView, Pressable } from "react-native";
 import { useFormik } from "formik";
-import {
-  Button,
-  Input,
-  ScrollView,
-  Text,
-  useColorModeValue,
-  useTheme,
-  VStack,
-} from "native-base";
 import * as Yup from "yup";
-import { useSettings } from "../hooks/useSettings";
+import { useSettingsStore } from "../stores/settings";
+
+const PURPLE_600 = "#9c44dc";
 
 export default function EditVeicleForm({ onClose }) {
-  const theme = useTheme();
-  const text = useColorModeValue(
-    theme.colors.gray[600],
-    theme.colors.gray[200]
-  );
+  const colorModeState = useSettingsStore((s) => s.colorModeState);
+  const isDark = colorModeState === "dark";
+  const text = isDark ? "#e4e4e7" : "#52525b";
 
-  const {
-    veicleName,
-    veicleBrand,
-    veicleYear,
-    veicleColor,
-    veiclePlate,
-    updateVeicle,
-  } = useSettings();
+  const veicleName = useSettingsStore((s) => s.veicleName);
+  const veicleBrand = useSettingsStore((s) => s.veicleBrand);
+  const veicleYear = useSettingsStore((s) => s.veicleYear);
+  const veicleColor = useSettingsStore((s) => s.veicleColor);
+  const veiclePlate = useSettingsStore((s) => s.veiclePlate);
+  const update = useSettingsStore((s) => s.update);
+
+  const updateVeicle = async (info) => {
+    await update("veicleName", info.name);
+    await update("veicleBrand", info.brand);
+    await update("veicleYear", info.year);
+    await update("veicleColor", info.color);
+    await update("veiclePlate", info.plate);
+  };
 
   const formSchema = useMemo(() => {
     return Yup.object().shape({
@@ -41,11 +38,11 @@ export default function EditVeicleForm({ onClose }) {
 
   const formik = useFormik({
     initialValues: {
-      name: veicleName,
-      brand: veicleBrand,
-      year: veicleYear,
-      color: veicleColor,
-      plate: veiclePlate,
+      name: veicleName ?? "",
+      brand: veicleBrand ?? "",
+      year: veicleYear ?? "",
+      color: veicleColor ?? "",
+      plate: veiclePlate ?? "",
     },
     validationSchema: formSchema,
     onSubmit: (values) => {
@@ -59,79 +56,75 @@ export default function EditVeicleForm({ onClose }) {
   }
 
   return (
-    <ScrollView w={"100%"} px={4}>
-      <Text bold fontSize={24} color={text}>
-        Informações do veículo
-      </Text>
-      <Text color={text} mb={4}>
+    <ScrollView style={{ width: "100%", paddingHorizontal: 16 }} contentContainerStyle={{ paddingBottom: 32 }}>
+      <Text style={{ fontWeight: "700", fontSize: 24, color: text }}>Informações do veículo</Text>
+      <Text style={{ color: text, marginBottom: 16 }}>
         Adicione a Informações sobre o seu veículo para ter mais controles.
       </Text>
 
-      <VStack space={2}>
-        <Text color={text}>Modelo</Text>
-        <Input
-          errors={!!formik.errors.name}
-          helperText={formik.errors.name}
+      <View style={{ gap: 8, marginBottom: 8 }}>
+        <Text style={{ color: text }}>Modelo</Text>
+        <TextInput
           placeholder="Modelo"
-          onChangeText={(text) => formik.setFieldValue("name", text)}
+          placeholderTextColor="#a1a1aa"
+          onChangeText={(t) => formik.setFieldValue("name", t)}
           value={formik.values.name}
+          style={{ color: text, backgroundColor: isDark ? "#27272a" : "white", borderWidth: 1, borderColor: isDark ? "#3f3f46" : "#e4e4e7", borderRadius: 12, padding: 12 }}
+          className="bg-white dark:bg-gray-800 rounded-xl p-3 border border-gray-200 dark:border-gray-700"
         />
-      </VStack>
-      <VStack space={2}>
-        <Text color={text}>Marca</Text>
-        <Input
-          errors={!!formik.errors.brand}
-          helperText={formik.errors.brand}
+      </View>
+      <View style={{ gap: 8, marginBottom: 8 }}>
+        <Text style={{ color: text }}>Marca</Text>
+        <TextInput
           placeholder="Marca"
-          onChangeText={(text) => formik.setFieldValue("brand", text)}
+          placeholderTextColor="#a1a1aa"
+          onChangeText={(t) => formik.setFieldValue("brand", t)}
           value={formik.values.brand}
+          style={{ color: text, backgroundColor: isDark ? "#27272a" : "white", borderWidth: 1, borderColor: isDark ? "#3f3f46" : "#e4e4e7", borderRadius: 12, padding: 12 }}
+          className="bg-white dark:bg-gray-800 rounded-xl p-3 border border-gray-200 dark:border-gray-700"
         />
-      </VStack>
-      <VStack space={2}>
-        <Text color={text}>Ano</Text>
-        <Input
-          errors={!!formik.errors.year}
-          helperText={formik.errors.year}
+      </View>
+      <View style={{ gap: 8, marginBottom: 8 }}>
+        <Text style={{ color: text }}>Ano</Text>
+        <TextInput
           placeholder="Ano"
-          onChangeText={(text) => formik.setFieldValue("year", text)}
+          placeholderTextColor="#a1a1aa"
+          onChangeText={(t) => formik.setFieldValue("year", t)}
           value={formik.values.year}
+          style={{ color: text, backgroundColor: isDark ? "#27272a" : "white", borderWidth: 1, borderColor: isDark ? "#3f3f46" : "#e4e4e7", borderRadius: 12, padding: 12 }}
+          className="bg-white dark:bg-gray-800 rounded-xl p-3 border border-gray-200 dark:border-gray-700"
         />
-      </VStack>
-      <VStack space={2}>
-        <Text color={text}>Cor</Text>
-        <Input
-          errors={!!formik.errors.color}
-          helperText={formik.errors.color}
+      </View>
+      <View style={{ gap: 8, marginBottom: 8 }}>
+        <Text style={{ color: text }}>Cor</Text>
+        <TextInput
           placeholder="Cor"
-          onChangeText={(text) => formik.setFieldValue("color", text)}
+          placeholderTextColor="#a1a1aa"
+          onChangeText={(t) => formik.setFieldValue("color", t)}
           value={formik.values.color}
+          style={{ color: text, backgroundColor: isDark ? "#27272a" : "white", borderWidth: 1, borderColor: isDark ? "#3f3f46" : "#e4e4e7", borderRadius: 12, padding: 12 }}
+          className="bg-white dark:bg-gray-800 rounded-xl p-3 border border-gray-200 dark:border-gray-700"
         />
-      </VStack>
-      <VStack space={2}>
-        <Text color={text}>Placa</Text>
-        <Input
-          errors={!!formik.errors.plate}
-          helperText={formik.errors.plate}
+      </View>
+      <View style={{ gap: 8, marginBottom: 8 }}>
+        <Text style={{ color: text }}>Placa</Text>
+        <TextInput
           placeholder="Placa"
-          onChangeText={(text) => formik.setFieldValue("plate", text)}
+          placeholderTextColor="#a1a1aa"
+          onChangeText={(t) => formik.setFieldValue("plate", t)}
           value={formik.values.plate}
+          style={{ color: text, backgroundColor: isDark ? "#27272a" : "white", borderWidth: 1, borderColor: isDark ? "#3f3f46" : "#e4e4e7", borderRadius: 12, padding: 12 }}
+          className="bg-white dark:bg-gray-800 rounded-xl p-3 border border-gray-200 dark:border-gray-700"
         />
-      </VStack>
+      </View>
 
-      <Button
+      <Pressable
         onPress={formik.submitForm}
-        colorScheme="purple"
-        mt={2}
-        mb={8}
-        _text={{
-          color: "white",
-        }}
-        _pressed={{
-          bgColor: theme.colors.purple[900],
-        }}
+        style={{ backgroundColor: PURPLE_600, marginTop: 8, marginBottom: 32, padding: 12, borderRadius: 12, alignItems: "center", justifyContent: "center" }}
+        className="bg-purple-600 rounded-xl p-3 mt-2 mb-8 items-center justify-center active:bg-purple-900"
       >
-        Atualizar
-      </Button>
+        <Text style={{ color: "white", fontWeight: "600" }}>Atualizar</Text>
+      </Pressable>
     </ScrollView>
   );
 }

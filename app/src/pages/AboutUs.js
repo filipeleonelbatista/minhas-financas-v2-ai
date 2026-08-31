@@ -100,69 +100,8 @@ export default function AboutUs() {
   const loadTransactionsLists = listsState.load;
   const handleImportList = async () => { const { ToastAndroid } = require('react-native'); ToastAndroid.show("Importação disponível em breve", ToastAndroid.SHORT); };
 
-  // migrated from native-base useColorMode -> zustand
-  const colorModeState = useSettingsStore((s) => s.colorModeState);
-  const colorMode = colorModeState;
-  const isDark = colorModeState === "dark";
-  const bg = isDark ? "#1c1e21" : "#f5f5f4";
-  const headerText = isDark ? "#27272a" : "white";
-  const text = isDark ? "#e4e4e7" : "#52525b";
-  // keep theme colors via hardcoded map (replaces useTheme)
-// migrated duplicate theme:   const theme = {
-    colors: {
-      warmGray: { 50: "#f5f5f4" },
-      gray: { 200: "#e4e4e7", 400: "#a1a1aa", 600: "#52525b", 800: "#27272a", 900: "#1c1e21" },
-      purple: { 600: "#9c44dc", 900: "#581c87" },
-      green: { 500: "#22c55e", 600: "#16a34a" },
-      red: { 500: "#ef4444", 600: "#dc2626" },
-      yellow: { 400: "#facc15" },
-      white: "#fff",
-    },
-  };
-
-// migrated:   const navigation = useNavigation();
-
-// migrated:   const { apiKey, handleSaveApiKey } = useOpenAi();
-
   const isFocused = useIsFocused();
   const [inputOpenAiText, setInputOpenAiText] = useState("");
-
-  const { transactionsList, importTransactions, setTransactionsList } =
-    usePayments();
-
-// migrated:   const { setFuelList, handleImportRuns, handleExportRuns } = useRuns();
-
-  const { handleImportStock, handleExportStock, loadTransactions } =
-    useMarket();
-
-  const { loadTransactions: loadTransactionsLists, handleImportList } =
-    useLists();
-
-  const {
-    isEnableTitheCard,
-    handleSwitchViewTitheCard,
-    willAddFuelToTransactionList,
-    handleToggleWillAddFuel,
-    willUsePrefixToRemoveTihteSum,
-    handleWillRemovePrefixToRemove,
-    prefixTithe,
-    handleSetPrefixTithe,
-    isEnableTotalHistoryCard,
-    handleSwitchViewTotalHistoryCard,
-    handleCleanStorage,
-    simpleFinancesItem,
-    handleSetSimpleFinancesItem,
-    marketSimplifiedItems,
-    handleSetmarketSimplifiedItems,
-    isShowLabelOnNavigation,
-    handleSetIsShowLabelOnNavigation,
-    handleToggleTheme,
-    handleSetIsAiEnabled,
-    isAiEnabled,
-    selectedFolderToSave,
-    handleUpdateSelectedFolderToSave,
-    handleResetConfigs,
-  } = useSettings();
 
   async function getAllDataAsJSON() {
     try {

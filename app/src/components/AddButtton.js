@@ -1,15 +1,9 @@
 import { Feather } from "@expo/vector-icons";
-import {
-  Actionsheet,
-  Box,
-  IconButton,
-  useDisclose,
-  useTheme,
-} from "native-base";
-import { useMemo } from "react";
-import { useWindowDimensions } from "react-native";
+import { useMemo, useState } from "react";
+import { Modal, View, Pressable, useWindowDimensions } from "react-native";
 import { useIsKeyboardOpen } from "../hooks/useIsKeyboardOpen";
-import { usePages } from "../hooks/usePages";
+import { usePagesStore } from "../stores/pages";
+import { useSettingsStore } from "../stores/settings";
 import AddFuelForm from "./AddFuelForm";
 import AddGoalForm from "./AddGoalForm";
 import AddItemForm from "./AddItemForm";
@@ -18,14 +12,21 @@ import AddListForm from "./AddListForm";
 import AddShoppingCartItem from "./AddShoppingCartItem";
 import ErrorSheet from "./ErrorSheet";
 
+const PURPLE_600 = "#9c44dc";
+const PURPLE_900 = "#581C87";
+
 export default function AddButton() {
-  const theme = useTheme();
+  const colorModeState = useSettingsStore((s) => s.colorModeState);
+  const isDark = colorModeState === "dark";
+  const bg = isDark ? "#1c1e21" : "#f5f5f4";
   const { height } = useWindowDimensions();
   const isKeyboardOpen = useIsKeyboardOpen();
 
-  const { isOpen, onOpen, onClose } = useDisclose();
+  const [isOpen, setIsOpen] = useState(false);
+  const onOpen = () => setIsOpen(true);
+  const onClose = () => setIsOpen(false);
 
-  const { selectedSheet } = usePages();
+  const selectedSheet = usePagesStore((s) => s.selectedSheet);
 
   const selectedComponent = useMemo(() => {
     switch (selectedSheet) {
@@ -48,32 +49,37 @@ export default function AddButton() {
 
   return (
     <>
-      <IconButton
+      <Pressable
         testID="add-button-fab"
         accessibilityLabel="Adicionar"
-        bgColor={"purple.600"}
-        w={16}
-        h={16}
         onPress={onOpen}
-        borderRadius={"full"}
-        mt={-6}
-        shadow={4}
-        _pressed={{
-          bgColor: theme.colors.purple[900],
-        }}
-        icon={<Feather name="plus" size={26} color={theme.colors.white} />}
-      />
-      <Actionsheet
-        isOpen={isOpen}
-        onClose={onClose}
-        size="full"
-        h={height * (isKeyboardOpen ? 0.9 : 1.09)}
+        style={({ pressed }) => ({
+          backgroundColor: pressed ? PURPLE_900 : PURPLE_600,
+          width: 64,
+          height: 64,
+          borderRadius: 999,
+          marginTop: -24,
+          shadowColor: "#000",
+          shadowOpacity: 0.2,
+          shadowRadius: 4,
+          elevation: 4,
+          alignItems: "center",
+          justifyContent: "center",
+        })}
       >
-        <Actionsheet.Content pb={isKeyboardOpen ? 24 : 0}>
-          {selectedComponent}
-          <Box h={16} w={"100%"} />
-        </Actionsheet.Content>
-      </Actionsheet>
+        <Feather name="plus" size={26} color="white" />
+      </Pressable>
+      <Modal visible={isOpen} animationType="slide" onRequestClose={onClose} transparent={false}>
+        <View style={{ flex: 1, height: height * (isKeyboardOpen ? 0.9 : 1.09), paddingTop: 24, backgroundColor: bg }}>
+          <Pressable onPress={onClose} style={{ alignSelf: "flex-end", padding: 16 }}>
+            <Feather name="x" size={24} color={isDark ? "#e4e4e7" : "#52525b"} />
+          </Pressable>
+          <View style={{ flex: 1, paddingBottom: isKeyboardOpen ? 24 : 0 }}>
+            {selectedComponent}
+            <View style={{ height: 64, width: "100%" }} />
+          </View>
+        </View>
+      </Modal>
     </>
   );
 }

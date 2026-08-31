@@ -1,24 +1,15 @@
 import React from "react";
-
+import { View, Text, TextInput, ScrollView, Pressable } from "react-native";
 import { Feather } from "@expo/vector-icons";
 import { Picker } from "@react-native-picker/picker";
-import {
-  Box,
-  Button,
-  Input,
-  ScrollView,
-  Text,
-  useColorModeValue,
-  useTheme,
-  VStack,
-} from "native-base";
+import { useSettingsStore } from "../stores/settings";
+
+const PURPLE_600 = "#9c44dc";
 
 export default function ViewFuelReport({ selectedValue }) {
-  const theme = useTheme();
-  const text = useColorModeValue(
-    theme.colors.gray[600],
-    theme.colors.gray[200]
-  );
+  const colorModeState = useSettingsStore((s) => s.colorModeState);
+  const isDark = colorModeState === "dark";
+  const text = isDark ? "#e4e4e7" : "#52525b";
 
   function moeda(e) {
     return Number(e).toLocaleString("pt-BR", {
@@ -31,56 +22,63 @@ export default function ViewFuelReport({ selectedValue }) {
   }
 
   return (
-    <ScrollView w={"100%"} px={4}>
-      <Text bold fontSize={24} color={text}>
-        Visualizar abastecimento
-      </Text>
-      <Text color={text} mb={4}>
-        Informações sobre o abastecimento.
-      </Text>
+    <ScrollView style={{ width: "100%", paddingHorizontal: 16 }} contentContainerStyle={{ paddingBottom: 32 }}>
+      <Text style={{ fontWeight: "700", fontSize: 24, color: text }}>Visualizar abastecimento</Text>
+      <Text style={{ color: text, marginBottom: 16 }}>Informações sobre o abastecimento.</Text>
 
-      <VStack space={2}>
-        <Text color={text}>Local</Text>
-        <Input
+      <View style={{ gap: 8, marginBottom: 8 }}>
+        <Text style={{ color: text }}>Local</Text>
+        <TextInput
           placeholder="Local"
+          placeholderTextColor="#a1a1aa"
           value={selectedValue.location}
-          isDisabled={true}
+          editable={false}
+          style={{ color: text, backgroundColor: isDark ? "#27272a" : "white", borderWidth: 1, borderColor: isDark ? "#3f3f46" : "#e4e4e7", borderRadius: 12, padding: 12 }}
+          className="bg-white dark:bg-gray-800 rounded-xl p-3 border border-gray-200 dark:border-gray-700"
         />
-      </VStack>
+      </View>
 
-      <VStack space={2}>
-        <Text color={text}>Km Atual</Text>
-        <Input
+      <View style={{ gap: 8, marginBottom: 8 }}>
+        <Text style={{ color: text }}>Km Atual</Text>
+        <TextInput
           placeholder="Km Atual"
+          placeholderTextColor="#a1a1aa"
           value={String(selectedValue.currentDistance)}
-          isDisabled={true}
+          editable={false}
+          style={{ color: text, backgroundColor: isDark ? "#27272a" : "white", borderWidth: 1, borderColor: isDark ? "#3f3f46" : "#e4e4e7", borderRadius: 12, padding: 12 }}
+          className="bg-white dark:bg-gray-800 rounded-xl p-3 border border-gray-200 dark:border-gray-700"
         />
-      </VStack>
+      </View>
 
-      <VStack space={2}>
-        <Text color={text}>Valor do litro</Text>
-        <Input
+      <View style={{ gap: 8, marginBottom: 8 }}>
+        <Text style={{ color: text }}>Valor do litro</Text>
+        <TextInput
           placeholder="Valor do litro"
+          placeholderTextColor="#a1a1aa"
           value={moeda(selectedValue.unityAmount)}
-          isDisabled={true}
+          editable={false}
+          style={{ color: text, backgroundColor: isDark ? "#27272a" : "white", borderWidth: 1, borderColor: isDark ? "#3f3f46" : "#e4e4e7", borderRadius: 12, padding: 12 }}
+          className="bg-white dark:bg-gray-800 rounded-xl p-3 border border-gray-200 dark:border-gray-700"
         />
-      </VStack>
+      </View>
 
-      <VStack space={2}>
-        <Text color={text}>Valor pago</Text>
-        <Input
+      <View style={{ gap: 8, marginBottom: 8 }}>
+        <Text style={{ color: text }}>Valor pago</Text>
+        <TextInput
           placeholder="Valor pago"
+          placeholderTextColor="#a1a1aa"
           value={moeda(selectedValue.amount)}
-          isDisabled={true}
+          editable={false}
+          style={{ color: text, backgroundColor: isDark ? "#27272a" : "white", borderWidth: 1, borderColor: isDark ? "#3f3f46" : "#e4e4e7", borderRadius: 12, padding: 12 }}
+          className="bg-white dark:bg-gray-800 rounded-xl p-3 border border-gray-200 dark:border-gray-700"
         />
-      </VStack>
-      <VStack>
-        <Text color={text}>Tipo do combustivel</Text>
+      </View>
+      <View style={{ gap: 8, marginBottom: 8 }}>
+        <Text style={{ color: text }}>Tipo do combustivel</Text>
         <Picker
           selectedValue={selectedValue.type ?? "Gasolina comum"}
           mode="dropdown"
-          dropdownIconColor={theme.colors.purple[600]}
-          dropdownIconRippleColor={theme.colors.purple[600]}
+          dropdownIconColor={PURPLE_600}
           enabled={false}
           style={{
             width: "100%",
@@ -98,34 +96,27 @@ export default function ViewFuelReport({ selectedValue }) {
           <Picker.Item label="Dísel-S10" value="Dísel-S10" />
           <Picker.Item label="Dísel aditivado" value="Dísel aditivado" />
         </Picker>
-      </VStack>
+      </View>
 
-      <VStack space={2}>
-        <Text color={text}>Data de vencimento</Text>
-        <Input
-          placeholder="DD/MM/AAAA"
-          value={new Date(selectedValue.date).toLocaleDateString("pt-BR")}
-          editable={false}
-          isDisabled
-          rightElement={
-            <Button
-              size="xs"
-              rounded="none"
-              w="1/4"
-              p={0}
-              h="full"
-              bgColor={theme.colors.purple[600]}
-              _pressed={{
-                bgColor: "purple.800",
-              }}
-            >
-              <Feather name="calendar" size={24} color="#FFF" />
-            </Button>
-          }
-        />
-      </VStack>
+      <View style={{ gap: 8, marginBottom: 8 }}>
+        <Text style={{ color: text }}>Data de vencimento</Text>
+        <View style={{ flexDirection: "row", alignItems: "center", backgroundColor: isDark ? "#27272a" : "white", borderWidth: 1, borderColor: isDark ? "#3f3f46" : "#e4e4e7", borderRadius: 12, overflow: "hidden" }}>
+          <TextInput
+            placeholder="DD/MM/AAAA"
+            placeholderTextColor="#a1a1aa"
+            value={new Date(selectedValue.date).toLocaleDateString("pt-BR")}
+            editable={false}
+            style={{ flex: 1, padding: 12, color: text }}
+          />
+          <View
+            style={{ backgroundColor: PURPLE_600, padding: 12, height: "100%", justifyContent: "center", alignItems: "center", width: "25%" }}
+          >
+            <Feather name="calendar" size={24} color="#FFF" />
+          </View>
+        </View>
+      </View>
 
-      <Box h={16} w={"100%"} />
+      <View style={{ height: 64, width: "100%" }} />
     </ScrollView>
   );
 }

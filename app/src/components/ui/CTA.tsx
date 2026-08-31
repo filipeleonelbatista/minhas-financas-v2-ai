@@ -1,5 +1,5 @@
 import React from 'react';
-import { TouchableOpacity, Text, ViewStyle, TextStyle } from 'react-native';
+import { TouchableOpacity, Pressable, Text, ViewStyle, TextStyle, View } from 'react-native';
 
 let RacticxCTA: any = null;
 try {
@@ -10,29 +10,68 @@ try {
   RacticxCTA = null;
 }
 
+let ChromaRing: any = null;
+try {
+  // eslint-disable-next-line global-require
+  ChromaRing = require('./ChromaRing').ChromaRing ?? require('./ChromaRing').default ?? null;
+} catch {
+  ChromaRing = null;
+}
+if (!ChromaRing) {
+  try {
+    // eslint-disable-next-line global-require
+    const rx = require('reacticx');
+    ChromaRing = rx.ChromaRing ?? rx.default?.ChromaRing ?? null;
+  } catch {}
+}
+
 export interface CTAProps {
   onPress?: () => void;
   children?: React.ReactNode;
   testID?: string;
-  variant?: 'glow' | 'default';
+  variant?: 'glow' | 'default' | 'chroma';
   style?: ViewStyle;
   textStyle?: TextStyle;
   disabled?: boolean;
   accessibilityLabel?: string;
+  width?: number;
+  height?: number;
 }
 
-export default function CTA({ onPress, children, testID, variant = 'glow', style, disabled, accessibilityLabel }: CTAProps) {
-  if (RacticxCTA) {
+export default function CTA({ onPress, children, testID, variant = 'chroma', style, disabled, accessibilityLabel, width = 220, height = 52 }: CTAProps) {
+  // reacticx legacy CTAButton compat (if still present)
+  if (RacticxCTA && variant !== 'chroma') {
     try {
       return (
         <RacticxCTA testID={testID} variant={variant} onPress={onPress} style={style} disabled={disabled} accessibilityLabel={accessibilityLabel}>
           {children}
         </RacticxCTA>
       );
-    } catch {
-      // fall through
-    }
+    } catch {}
   }
+
+  const isChroma = variant === 'chroma' || variant === 'glow';
+  if (isChroma && ChromaRing) {
+    // Extract width/height from style if provided, else use defaults
+    const styleWidth = (style as any)?.width ?? width;
+    const styleHeight = (style as any)?.height ?? height;
+    const w = typeof styleWidth === 'number' ? styleWidth : width;
+    const h = typeof styleHeight === 'number' ? styleHeight : height;
+    return (
+      <Pressable testID={testID} onPress={onPress} disabled={disabled} accessibilityLabel={accessibilityLabel} accessibilityRole="button" style={({ pressed }) => [{ opacity: pressed ? 0.85 : 1 }, style]}>
+        <ChromaRing width={w} height={h} borderWidth={2} speed={1.0} base="#581C87" glow="#9c44dc" background={disabled ? '#6b7280' : '#9c44dc'} style={{ width: w, height: h, borderRadius: h / 2 }}>
+          <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', paddingHorizontal: 16 }}>
+            {typeof children === 'string' ? (
+              <Text style={{ color: 'white', fontWeight: '700', fontSize: 16 }}>{children}</Text>
+            ) : (
+              children
+            )}
+          </View>
+        </ChromaRing>
+      </Pressable>
+    );
+  }
+
   const isGlow = variant === 'glow';
   return (
     <TouchableOpacity
@@ -44,7 +83,7 @@ export default function CTA({ onPress, children, testID, variant = 'glow', style
       className={isGlow ? 'bg-purple-600 active:bg-purple-900 rounded-full items-center justify-center' : 'bg-purple-600 rounded-full items-center justify-center'}
       style={[
         {
-          backgroundColor: '#9c44dc',
+          backgroundColor: disabled ? '#6b7280' : '#9c44dc',
           paddingHorizontal: 24,
           paddingVertical: 12,
           borderRadius: 999,

@@ -2,10 +2,10 @@
   "name": "family-finances",
   "version": "1.0.0",
   "scripts": {
-    "prebuild": "expo prebuild",
-    "start": "expo start --dev-client",
+    "start": "expo start",
     "android": "expo run:android",
     "ios": "expo run:ios",
+    "prebuild": "expo prebuild",
     "build:dev": "eas build -p android --profile development",
     "build:apk": "eas build -p android --profile preview",
     "build:store": "eas build -p android --profile production",
@@ -21,12 +21,12 @@
     "@react-navigation/bottom-tabs": "^6.5.7",
     "@react-navigation/native": "^6.1.6",
     "@react-navigation/stack": "^6.3.16",
+    "@shopify/react-native-skia": "2.2.12",
     "date-fns": "^2.30.0",
     "dayjs": "^1.11.7",
     "drizzle-orm": "^0.45.2",
     "expo": "~54.0.37",
     "expo-build-properties": "~1.0.10",
-    "expo-dev-client": "~6.0.21",
     "expo-document-picker": "~14.0.8",
     "expo-file-system": "~19.0.24",
     "expo-linear-gradient": "~15.0.7",
@@ -71,11 +71,15 @@
   "private": true,
   "expo": {
     "install": {
-      "exclude": ["expo-sqlite"]
+      "exclude": [
+        "expo-sqlite"
+      ]
     },
     "doctor": {
       "reactNativeDirectoryCheck": {
-        "exclude": ["react-native-css-interop"]
+        "exclude": [
+          "react-native-css-interop"
+        ]
       }
     }
   }

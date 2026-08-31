@@ -12,6 +12,17 @@ import AddListForm from "./AddListForm";
 import AddShoppingCartItem from "./AddShoppingCartItem";
 import ErrorSheet from "./ErrorSheet";
 
+let ChromaRing: any = null;
+try {
+  // eslint-disable-next-line global-require
+  ChromaRing = require('./ui/ChromaRing').ChromaRing ?? require('./ui/ChromaRing').default ?? null;
+} catch {
+  try {
+    // eslint-disable-next-line global-require
+    ChromaRing = require('reacticx').ChromaRing ?? null;
+  } catch {}
+}
+
 const PURPLE_600 = "#9c44dc";
 const PURPLE_900 = "#581C87";
 
@@ -47,28 +58,43 @@ export default function AddButton() {
     }
   }, [selectedSheet]);
 
+  const fabSize = 64;
+  const FabContent = (
+    <View style={{ width: fabSize, height: fabSize, alignItems: 'center', justifyContent: 'center' }}>
+      <Feather name="plus" size={26} color="white" />
+    </View>
+  );
+
   return (
     <>
-      <Pressable
-        testID="add-button-fab"
-        accessibilityLabel="Adicionar"
-        onPress={onOpen}
-        style={({ pressed }) => ({
-          backgroundColor: pressed ? PURPLE_900 : PURPLE_600,
-          width: 64,
-          height: 64,
-          borderRadius: 999,
-          marginTop: -24,
-          shadowColor: "#000",
-          shadowOpacity: 0.2,
-          shadowRadius: 4,
-          elevation: 4,
-          alignItems: "center",
-          justifyContent: "center",
-        })}
-      >
-        <Feather name="plus" size={26} color="white" />
-      </Pressable>
+      {ChromaRing ? (
+        <Pressable testID="add-button-fab" accessibilityLabel="Adicionar" onPress={onOpen} style={{ marginTop: -24 }}>
+          <ChromaRing width={fabSize} height={fabSize} borderWidth={2} speed={1.0} base={PURPLE_900} glow={PURPLE_600} background={PURPLE_600} style={{ width: fabSize, height: fabSize, borderRadius: fabSize / 2 }}>
+            {FabContent}
+          </ChromaRing>
+        </Pressable>
+      ) : (
+        <Pressable
+          testID="add-button-fab"
+          accessibilityLabel="Adicionar"
+          onPress={onOpen}
+          style={({ pressed }) => ({
+            backgroundColor: pressed ? PURPLE_900 : PURPLE_600,
+            width: fabSize,
+            height: fabSize,
+            borderRadius: 999,
+            marginTop: -24,
+            shadowColor: "#000",
+            shadowOpacity: 0.2,
+            shadowRadius: 4,
+            elevation: 4,
+            alignItems: "center",
+            justifyContent: "center",
+          })}
+        >
+          <Feather name="plus" size={26} color="white" />
+        </Pressable>
+      )}
       <Modal visible={isOpen} animationType="slide" onRequestClose={onClose} transparent={false}>
         <View style={{ flex: 1, height: height * (isKeyboardOpen ? 0.9 : 1.09), paddingTop: 24, backgroundColor: bg }}>
           <Pressable onPress={onClose} style={{ alignSelf: "flex-end", padding: 16 }}>

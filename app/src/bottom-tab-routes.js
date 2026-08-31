@@ -1,37 +1,34 @@
 import React from "react";
+import { Text, View } from "react-native";
 import { Feather, MaterialCommunityIcons } from "@expo/vector-icons";
 
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 
-import AboutUs from "./pages/AboutUs";
 import Dashboard from "./pages/Dashboard";
 import Finances from "./pages/Finances";
 import Market from "./pages/Market";
 import Reports from "./pages/Reports";
 import Runs from "./pages/Runs";
-import { Text, useColorModeValue, useTheme } from "native-base";
 import ActionSheet from "./pages/ActionSheet";
 import AddButton from "./components/AddButtton";
-import { useSettings } from "./hooks/useSettings";
+import { useSettingsStore } from "./stores/settings";
 import { useIsKeyboardOpen } from "./hooks/useIsKeyboardOpen";
 import MarketStackRoutes from "./market-stack-routes";
 
 const Tab = createBottomTabNavigator();
 
+// Theme mapping for NativeWind dark replacement
+const PURPLE_600 = "#9c44dc";
+
 export default function BottomTabRoutes() {
-  const theme = useTheme();
-  const { isShowLabelOnNavigation } = useSettings();
+  const colorModeState = useSettingsStore((s) => s.colorModeState);
+  const isShowLabelOnNavigation = useSettingsStore((s) => !!s.isShowLabelOnNavigation);
+
+  const isDark = colorModeState === "dark";
+  const bg = isDark ? "#1c1e21" : "#f5f5f4";
+  const text = isDark ? "#e4e4e7" : "#52525b";
 
   const isKeyboardOpen = useIsKeyboardOpen();
-
-  const bg = useColorModeValue(
-    theme.colors.warmGray[50],
-    theme.colors.gray[900]
-  );
-  const text = useColorModeValue(
-    theme.colors.gray[600],
-    theme.colors.gray[200]
-  );
 
   return (
     <Tab.Navigator
@@ -52,13 +49,13 @@ export default function BottomTabRoutes() {
         component={Dashboard}
         options={{
           tabBarLabel: ({ focused }) => (
-            <Text color={focused ? theme.colors.purple[600] : text}>Início</Text>
+            <Text style={{ color: focused ? PURPLE_600 : text }}>Início</Text>
           ),
           tabBarIcon: ({ focused }) => (
             <Feather
               name="home"
               size={24}
-              color={focused ? theme.colors.purple[600] : text}
+              color={focused ? PURPLE_600 : text}
             />
           ),
         }}
@@ -68,7 +65,7 @@ export default function BottomTabRoutes() {
         component={Finances}
         options={{
           tabBarLabel: ({ focused }) => (
-            <Text color={focused ? theme.colors.purple[600] : text}>
+            <Text style={{ color: focused ? PURPLE_600 : text }}>
               Finanças
             </Text>
           ),
@@ -76,7 +73,7 @@ export default function BottomTabRoutes() {
             <Feather
               name="dollar-sign"
               size={24}
-              color={focused ? theme.colors.purple[600] : text}
+              color={focused ? PURPLE_600 : text}
             />
           ),
         }}
@@ -86,7 +83,7 @@ export default function BottomTabRoutes() {
         component={Runs}
         options={{
           tabBarLabel: ({ focused }) => (
-            <Text color={focused ? theme.colors.purple[600] : text}>
+            <Text style={{ color: focused ? PURPLE_600 : text }}>
               Combustível
             </Text>
           ),
@@ -94,7 +91,7 @@ export default function BottomTabRoutes() {
             <MaterialCommunityIcons
               name={"fuel"}
               size={26}
-              color={focused ? theme.colors.purple[600] : text}
+              color={focused ? PURPLE_600 : text}
             />
           ),
         }}
@@ -111,7 +108,7 @@ export default function BottomTabRoutes() {
         component={MarketStackRoutes}
         options={{
           tabBarLabel: ({ focused }) => (
-            <Text color={focused ? theme.colors.purple[600] : text}>
+            <Text style={{ color: focused ? PURPLE_600 : text }}>
               Mercado
             </Text>
           ),
@@ -119,7 +116,7 @@ export default function BottomTabRoutes() {
             <Feather
               name="shopping-cart"
               size={24}
-              color={focused ? theme.colors.purple[600] : text}
+              color={focused ? PURPLE_600 : text}
             />
           ),
         }}
@@ -129,7 +126,7 @@ export default function BottomTabRoutes() {
         component={Reports}
         options={{
           tabBarLabel: ({ focused }) => (
-            <Text color={focused ? theme.colors.purple[600] : text}>
+            <Text style={{ color: focused ? PURPLE_600 : text }}>
               Relatórios
             </Text>
           ),
@@ -137,7 +134,7 @@ export default function BottomTabRoutes() {
             <Feather
               name="pie-chart"
               size={24}
-              color={focused ? theme.colors.purple[600] : text}
+              color={focused ? PURPLE_600 : text}
             />
           ),
         }}

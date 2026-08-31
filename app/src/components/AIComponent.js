@@ -1,21 +1,20 @@
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useIsFocused, useNavigation } from '@react-navigation/native';
-import { Box, HStack, IconButton, Text, useColorModeValue, useTheme } from 'native-base';
 import { useEffect, useRef } from 'react';
-import { Animated } from 'react-native';
-import { useSettings } from '../hooks/useSettings';
+import { Animated, View, Text, Pressable } from 'react-native';
+import { useSettingsStore } from '../stores/settings';
+
+const PURPLE_600 = "#9c44dc";
+const PURPLE_900 = "#581c87";
 
 export default function AIComponent() {
-  const theme = useTheme();
-
-  const text = useColorModeValue(theme.colors.gray[600], theme.colors.gray[200]);
-  const bgCard = useColorModeValue(theme.colors.warmGray[50], theme.colors.gray[800]);
+  const colorModeState = useSettingsStore((s) => s.colorModeState);
+  const isDark = colorModeState === "dark";
+  const text = isDark ? "#e4e4e7" : "#52525b";
+  const bgCard = isDark ? "#27272a" : "#f5f5f4";
 
   const navigation = useNavigation();
-
-  const {
-    isAiEnabled
-  } = useSettings();
+  const isAiEnabled = useSettingsStore((s) => !!s.isAiEnabled);
 
   const fadeAnim = useRef(new Animated.Value(1)).current;
   const tiltValue = useRef(new Animated.Value(0)).current;
@@ -23,16 +22,8 @@ export default function AIComponent() {
 
   const handlePulse = () => {
     Animated.sequence([
-      Animated.timing(pulseValue, {
-        toValue: 1.1,
-        duration: 300,
-        useNativeDriver: true,
-      }),
-      Animated.timing(pulseValue, {
-        toValue: 1,
-        duration: 300,
-        useNativeDriver: true,
-      }),
+      Animated.timing(pulseValue, { toValue: 1.1, duration: 300, useNativeDriver: true }),
+      Animated.timing(pulseValue, { toValue: 1, duration: 300, useNativeDriver: true }),
     ]).start(({ finished }) => {
       if (finished) {
         Animated.delay(4000).start(handlePulse);
@@ -40,134 +31,54 @@ export default function AIComponent() {
     });
   };
 
-  const interpolatedPulse = pulseValue.interpolate({
-    inputRange: [1, 1.1],
-    outputRange: [1, 1.1], // Aqui você pode ajustar o efeito de pulsação
-  });
+  const interpolatedPulse = pulseValue.interpolate({ inputRange: [1, 1.1], outputRange: [1, 1.1] });
 
   const handleTilt = () => {
     const tiltAnimation = Animated.sequence([
-      Animated.timing(tiltValue, {
-        toValue: 0.5,
-        duration: 100,
-        useNativeDriver: true,
-      }),
-      Animated.timing(tiltValue, {
-        toValue: -0.5,
-        duration: 100,
-        useNativeDriver: true,
-      }),
-      Animated.timing(tiltValue, {
-        toValue: 0,
-        duration: 100,
-        useNativeDriver: true,
-      }),
-      Animated.timing(tiltValue, {
-        toValue: 0.5,
-        duration: 100,
-        useNativeDriver: true,
-      }),
-      Animated.timing(tiltValue, {
-        toValue: -0.5,
-        duration: 100,
-        useNativeDriver: true,
-      }),
-      Animated.timing(tiltValue, {
-        toValue: 0,
-        duration: 200,
-        useNativeDriver: true,
-      }),
-      Animated.timing(tiltValue, {
-        toValue: 0,
-        duration: 500,
-        useNativeDriver: true,
-      }),
+      Animated.timing(tiltValue, { toValue: 0.5, duration: 100, useNativeDriver: true }),
+      Animated.timing(tiltValue, { toValue: -0.5, duration: 100, useNativeDriver: true }),
+      Animated.timing(tiltValue, { toValue: 0, duration: 100, useNativeDriver: true }),
+      Animated.timing(tiltValue, { toValue: 0.5, duration: 100, useNativeDriver: true }),
+      Animated.timing(tiltValue, { toValue: -0.5, duration: 100, useNativeDriver: true }),
+      Animated.timing(tiltValue, { toValue: 0, duration: 200, useNativeDriver: true }),
+      Animated.timing(tiltValue, { toValue: 0, duration: 500, useNativeDriver: true }),
     ]);
-
     Animated.loop(tiltAnimation, { iterations: 3000 }).start();
   };
 
-  const tiltInterpolate = tiltValue.interpolate({
-    inputRange: [-0.5, 0.5],
-    outputRange: ['-5deg', '5deg'], // Aqui você pode ajustar o ângulo do tilt
-  });
+  const tiltInterpolate = tiltValue.interpolate({ inputRange: [-0.5, 0.5], outputRange: ['-5deg', '5deg'] });
 
-  const isFocused = useIsFocused()
+  const isFocused = useIsFocused();
 
   useEffect(() => {
     if (isFocused) {
       handleTilt();
-
       handlePulse();
-
-      const fadeOutAnimation = Animated.timing(fadeAnim, {
-        toValue: 0,
-        duration: 1000,
-        useNativeDriver: true,
-      });
-
-      const timer = setTimeout(() => {
-        fadeOutAnimation.start();
-      }, 6000);
-
-      return () => {
-        clearTimeout(timer);
-        fadeOutAnimation.stop();
-      };
+      const fadeOutAnimation = Animated.timing(fadeAnim, { toValue: 0, duration: 1000, useNativeDriver: true });
+      const timer = setTimeout(() => { fadeOutAnimation.start(); }, 6000);
+      return () => { clearTimeout(timer); fadeOutAnimation.stop(); };
     }
   }, []);
-
 
   if (!isAiEnabled) return null;
 
   return (
-    <HStack
-      position={'absolute'}
-      bottom={8}
-      left={4}
-      space={4}
-      alignItems={'center'}
-      justifyContent={'center'}
-    >
-      <Animated.View
-        style={{
-          transform: [{ scale: interpolatedPulse }],
-          padding: 0,
-        }}
-      >
-        <IconButton
-          bgColor={"purple.600"}
-          w={10}
-          h={10}
-          alignItems={'center'}
-          justifyContent={'center'}
+    <View style={{ position: 'absolute', bottom: 32, left: 16, flexDirection: 'row', gap: 16, alignItems: 'center', justifyContent: 'center' }}>
+      <Animated.View style={{ transform: [{ scale: interpolatedPulse }], padding: 0 }}>
+        <Pressable
           onPress={() => navigation.navigate("IAPage")}
-          borderRadius={'full'}
-          shadow={4}
-          _pressed={{
-            bgColor: theme.colors.purple[900]
-          }}
-          icon={<MaterialCommunityIcons name="robot-outline" size={20} color={theme.colors.white} />}
-        />
+          style={{ backgroundColor: PURPLE_600, width: 40, height: 40, alignItems: 'center', justifyContent: 'center', borderRadius: 999, elevation: 4 }}
+        >
+          <MaterialCommunityIcons name="robot-outline" size={20} color="white" />
+        </Pressable>
       </Animated.View>
       <Animated.View style={{ opacity: fadeAnim }}>
-        <Animated.View
-          style={{
-            transform: [{ rotate: tiltInterpolate }],
-            padding: 0,
-          }}
-        >
-          <Box
-            bg={bgCard}
-            py={0.5}
-            px={2}
-            borderRadius={4}
-            shadow={4}
-          >
-            <Text color={text}>Converser com a IA</Text>
-          </Box>
+        <Animated.View style={{ transform: [{ rotate: tiltInterpolate }], padding: 0 }}>
+          <View style={{ backgroundColor: bgCard, paddingVertical: 2, paddingHorizontal: 8, borderRadius: 4, elevation: 4 }}>
+            <Text style={{ color: text }}>Converser com a IA</Text>
+          </View>
         </Animated.View>
       </Animated.View>
-    </HStack>
+    </View>
   );
 }

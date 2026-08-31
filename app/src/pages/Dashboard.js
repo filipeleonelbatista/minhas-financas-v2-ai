@@ -8,22 +8,16 @@ import Header from "../components/Header";
 import { financeRepo } from "../repositories/finance";
 import { goalRepo } from "../repositories/goal";
 
-// LinearGradient: prefer expo-linear-gradient, fallback to react-native-linear-gradient, else View
 let LinearGradient;
 try {
   // eslint-disable-next-line global-require
   LinearGradient = require("expo-linear-gradient").LinearGradient;
 } catch {
-  try {
-    // eslint-disable-next-line global-require
-    LinearGradient = require("react-native-linear-gradient").default;
-  } catch {
-    LinearGradient = ({ children, colors, style, ...rest }) => (
-      <View style={[{ backgroundColor: (colors && colors[0]) || "#581C87" }, style]} {...rest}>
-        {children}
-      </View>
-    );
-  }
+  LinearGradient = ({ children, colors, style, ...rest }) => (
+    <View style={[{ backgroundColor: (colors && colors[0]) || "#581C87" }, style]} {...rest}>
+      {children}
+    </View>
+  );
 }
 
 // Reanimated wrapper fallback

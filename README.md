@@ -1,6 +1,6 @@
 # Minhas Finanças v2 — AI
 
-> Monorepo: app Expo offline-first + docs GitHub Pages (Jekyll SEO). Stack: Expo SDK 54 • RN 0.81 • React 19.1 • NativeWind 4.1 • expo-sqlite + drizzle-orm • ReacticX • Firebase (Fase 2).
+> Monorepo: app Expo offline-first + docs GitHub Pages (Jekyll SEO). Stack: Expo SDK 54 • RN 0.81 • React 19.1 • NativeWind 4.1 • expo-sqlite + drizzle-orm • Zustand 5 (stores, sem Context) • ReacticX • Firebase (Fase 2).
 
 ## Estrutura
 
@@ -21,7 +21,7 @@ yarn && npx expo prebuild --clean && yarn android
 ## Docs
 
 - Dossiê: `app/docs/DOSSIE.md`
-- Roadmap: `app/docs/ROADMAP.md` (A' Managed, 13 decisões, hardening Excel/prompt) — **Fase 1 ✅ ver `docs/project-status.md`**
+- Roadmap: `app/docs/ROADMAP.md` (A' Managed → Zustand Standard 2026-08-29)
 - Spec Fase 1: `app/docs/superpowers/specs/2026-08-28-fase1-redesign-offline-design.md`
-- Plan Fase 1: `app/docs/superpowers/plans/2026-08-28-fase1-offline-redesign.md` (11 tasks)
-- Status: `docs/project-status.md` (implementado + próximos passos)
+- Plans: `app/docs/superpowers/plans/2026-08-28-fase1-offline-redesign.md` (11 tasks) + `2026-08-29-zustand-standard.md` (10 tasks, Zustand sem Context)
+- Status: `docs/project-status.md` (Fase 1.1 em execução)

@@ -4,11 +4,7 @@ module.exports = function(api) {
   return {
     presets: ["babel-preset-expo"],
     plugins: isTest
-      ? [["@babel/plugin-proposal-decorators", { legacy: true }], "react-native-reanimated/plugin"]
-      : [
-          ["@babel/plugin-proposal-decorators", { legacy: true }],
-          "nativewind/babel",
-          "react-native-reanimated/plugin",
-        ],
+      ? ["react-native-reanimated/plugin"]
+      : ["nativewind/babel", "react-native-reanimated/plugin"],
   };
 };

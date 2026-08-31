@@ -5,5 +5,6 @@ export * from './lists';
 export * from './runs';
 export * from './goals';
 export * from './settings';
+export * from './pages';
 
 export function resetAllStores() {}

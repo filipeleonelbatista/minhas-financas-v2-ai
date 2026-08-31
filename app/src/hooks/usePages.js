@@ -1,7 +1,9 @@
-import { useContext } from 'react';
-import { PagesContext } from '../context/PagesContext';
+import { usePagesStore } from '../stores/pages';
 
 export function usePages() {
-  const value = useContext(PagesContext)
-  return value;
+  const { selectedSheet, setSelectedSheet } = usePagesStore();
+  return {
+    selectedSheet,
+    setSelectedSheet,
+  };
 }

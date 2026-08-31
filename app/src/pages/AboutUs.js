@@ -38,7 +38,6 @@ import { useEffect, useState } from "react";
 import { jsonToCSV, readString } from "react-native-csv";
 import userImg from "../assets/icon.png";
 import Header from "../components/Header";
-import { database } from "../databases";
 import { useLists } from "../hooks/useLists";
 import { useMarket } from "../hooks/useMarket";
 import { useOpenAi } from "../hooks/useOpenAi";
@@ -46,6 +45,10 @@ import { usePayments } from "../hooks/usePayments";
 import { useRuns } from "../hooks/useRuns";
 import { useSettings } from "../hooks/useSettings";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { financeRepo } from "../repositories/finance";
+import { marketRepo } from "../repositories/market";
+import { listRepo } from "../repositories/list";
+import { runRepo } from "../repositories/run";
 
 export default function AboutUs() {
   // migrated from native-base useColorMode -> zustand
@@ -216,18 +219,16 @@ export default function AboutUs() {
         {
           text: "Apagar Listas",
           onPress: async () => {
-            await database.write(async () => {
-              const listsCollection = database.collections.get("lists");
-              const allLists = await listsCollection.query().fetch();
+            try {
+              const allLists = await listRepo.getAll();
               for (const item of allLists) {
-                await item.destroyPermanently();
+                await listRepo.delete(item.id);
               }
-              const itemsCollection = database.collections.get("items");
-              const allItems = await itemsCollection.query().fetch();
-              for (const item of allItems) {
-                await item.destroyPermanently();
+              if (listRepo.clearItems) {
+                // fallback clear via memory if available
+                try { await listRepo.clearMemory(); } catch {}
               }
-            });
+            } catch {}
 
             await loadTransactionsLists();
 
@@ -240,13 +241,13 @@ export default function AboutUs() {
         {
           text: "Apagar estoque",
           onPress: async () => {
-            await database.write(async () => {
-              const stockCollection = database.collections.get("stock");
-              const allStock = await stockCollection.query().fetch();
+            try {
+              if (marketRepo.clearMemory) await marketRepo.clearMemory();
+              const allStock = await marketRepo.getAll();
               for (const item of allStock) {
-                await item.destroyPermanently();
+                await marketRepo.delete(item.id);
               }
-            });
+            } catch {}
 
             await loadTransactions();
 
@@ -259,23 +260,18 @@ export default function AboutUs() {
         {
           text: "Apagar tudo",
           onPress: async () => {
-            await database.write(async () => {
-              const stockCollection = database.collections.get("stock");
-              const allStock = await stockCollection.query().fetch();
+            try {
+              if (marketRepo.clearMemory) await marketRepo.clearMemory();
+              const allStock = await marketRepo.getAll();
               for (const item of allStock) {
-                await item.destroyPermanently();
+                await marketRepo.delete(item.id);
               }
-              const listsCollection = database.collections.get("lists");
-              const allLists = await listsCollection.query().fetch();
+              const allLists = await listRepo.getAll();
               for (const item of allLists) {
-                await item.destroyPermanently();
+                await listRepo.delete(item.id);
               }
-              const itemsCollection = database.collections.get("items");
-              const allItems = await itemsCollection.query().fetch();
-              for (const item of allItems) {
-                await item.destroyPermanently();
-              }
-            });
+              if (listRepo.clearMemory) try { await listRepo.clearMemory(); } catch {}
+            } catch {}
 
             await loadTransactions();
             await loadTransactionsLists();
@@ -303,13 +299,13 @@ export default function AboutUs() {
         {
           text: "Sim",
           onPress: async () => {
-            await database.write(async () => {
-              const financesCollection = database.collections.get("finances");
-              const allFinances = await financesCollection.query().fetch();
+            try {
+              if (financeRepo.clearMemory) await financeRepo.clearMemory();
+              const allFinances = await financeRepo.getAll();
               for (const item of allFinances) {
-                await item.destroyPermanently();
+                await financeRepo.delete(item.id);
               }
-            });
+            } catch {}
             setTransactionsList([]);
 
             ToastAndroid.show(
@@ -356,13 +352,13 @@ export default function AboutUs() {
         {
           text: "Sim",
           onPress: async () => {
-            await database.write(async () => {
-              const runsCollection = database.collections.get("runs");
-              const allRuns = await runsCollection.query().fetch();
+            try {
+              if (runRepo.clearMemory) await runRepo.clearMemory();
+              const allRuns = await runRepo.getAll();
               for (const item of allRuns) {
-                await item.destroyPermanently();
+                await runRepo.delete(item.id);
               }
-            });
+            } catch {}
 
             setFuelList([]);
 

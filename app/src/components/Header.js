@@ -1,7 +1,9 @@
-import { Box, HStack, Text, useColorModeValue, useTheme } from "native-base";
-import { ImageBackground } from "react-native";
-
+import { ImageBackground, View, Text } from "react-native";
+import { useSettingsStore } from "../stores/settings";
 import bgImg from "../assets/images/background.png";
+
+const PURPLE_600 = "#9c44dc";
+const PURPLE_900 = "#581c87";
 
 export default function Header({
   title,
@@ -9,12 +11,9 @@ export default function Header({
   isRightIconComponent = false,
   isShort = false,
 }) {
-  const theme = useTheme();
-
-  const bg = useColorModeValue(
-    theme.colors.warmGray[50],
-    theme.colors.gray[900]
-  );
+  const colorModeState = useSettingsStore((s) => s.colorModeState);
+  const isDark = colorModeState === "dark";
+  const bg = isDark ? "#1c1e21" : "#f5f5f4";
 
   return (
     <ImageBackground
@@ -23,17 +22,17 @@ export default function Header({
         paddingTop: 12,
         height: isShort ? 70 : 130,
         width: "100%",
-        backgroundColor: theme.colors.purple[600],
+        backgroundColor: PURPLE_600,
       }}
     >
-      <HStack justifyContent="space-between" alignItems={"center"} px={4}>
-        {isLeftIconComponent ? isLeftIconComponent : <Box w={10} />}
-        <Text color={bg} bold fontSize={28}>
+      <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", paddingHorizontal: 16 }}>
+        {isLeftIconComponent ? isLeftIconComponent : <View style={{ width: 40 }} />}
+        <Text style={{ color: bg, fontWeight: "700", fontSize: 28 }}>
           {title}
-          <Text color={theme.colors.purple[900]}>$</Text>
+          <Text style={{ color: PURPLE_900 }}>$</Text>
         </Text>
-        {isRightIconComponent ? isRightIconComponent : <Box w={10} />}
-      </HStack>
+        {isRightIconComponent ? isRightIconComponent : <View style={{ width: 40 }} />}
+      </View>
     </ImageBackground>
   );
 }

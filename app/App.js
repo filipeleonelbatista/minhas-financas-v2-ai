@@ -1,7 +1,7 @@
 import "./global.css";
 import { StatusBar } from "expo-status-bar";
-import React, { useCallback, useContext, useEffect, useState } from "react";
-import { AppState, StatusBar as RNStatusBar, Text, TouchableOpacity, View } from "react-native";
+import React, { useCallback, useEffect, useState } from "react";
+import { AppState, StatusBar as RNStatusBar, Text, TouchableOpacity, View, ActivityIndicator } from "react-native";
 import "react-native-url-polyfill/auto";
 import Routes from "./src/routes";
 
@@ -11,27 +11,17 @@ import {
   useFonts,
 } from "@expo-google-fonts/poppins";
 
-import { NativeBaseProvider } from "native-base";
-
-import { GoalsContextProvider } from "./src/context/GoalsContext";
-import { MarketContextProvider } from "./src/context/MarketContext";
-import { PagesContextProvider } from "./src/context/PagesContext";
-import { PaymentsContextProvider } from "./src/context/PaymentsContext";
-import { RunsContextProvider } from "./src/context/RunsContext";
-import { SettingsContext, SettingsContextProvider } from "./src/context/SettingsContext";
-
-import { LogBox } from "react-native";
+import { useSettingsStore } from "./src/stores/settings";
 import Loading from "./src/components/Loading";
-import { ListsContextProvider } from "./src/context/ListsContext";
+import { LogBox } from "react-native";
 
 LogBox.ignoreLogs([
   "In React 18, SSRProvider is not necessary and is a noop. You can remove it from your app.",
 ]);
 
-// LocalAuth gate §1.3: biometria antes de Routes se isBiometricEnabled
+// BiometricGate migrated to useSettingsStore
 function BiometricGate({ children }) {
-  const ctx = useContext(SettingsContext) || {};
-  const isBiometricEnabled = ctx.isBiometricEnabled ?? false;
+  const isBiometricEnabled = useSettingsStore((s) => !!s.isBiometricEnabled);
 
   const [locked, setLocked] = useState(!!isBiometricEnabled);
   const [checking, setChecking] = useState(!!isBiometricEnabled);
@@ -46,12 +36,10 @@ function BiometricGate({ children }) {
     setChecking(true);
     setErrorMsg("");
     try {
-      // Lazy import to allow jest fallback without native module
       let LocalAuth;
       try {
         LocalAuth = require("expo-local-authentication");
       } catch {
-        // In jest without native, fallback to biometry utils
         const { authenticateAsync } = require("./src/utils/biometry");
         const res = await authenticateAsync("Desbloquear Finanças");
         setLocked(!res.success);
@@ -61,7 +49,6 @@ function BiometricGate({ children }) {
       const hasHardware = await LocalAuth.hasHardwareAsync();
       const isEnrolled = await LocalAuth.isEnrolledAsync();
       if (!hasHardware || !isEnrolled) {
-        // Sem biometria disponível, libera acesso (switch deve ficar oculto em AboutUs)
         setLocked(false);
         setChecking(false);
         return;
@@ -79,7 +66,6 @@ function BiometricGate({ children }) {
         setErrorMsg(result.error || "Autenticação falhou");
       }
     } catch (e) {
-      // Fallback via utils/biometry wrapper
       try {
         const { authenticateAsync } = require("./src/utils/biometry");
         const res = await authenticateAsync("Desbloquear Finanças");
@@ -109,11 +95,7 @@ function BiometricGate({ children }) {
   if (!isBiometricEnabled) return children;
 
   if (checking) {
-    return (
-      <NativeBaseProvider>
-        <Loading />
-      </NativeBaseProvider>
-    );
+    return <Loading />;
   }
 
   if (locked) {
@@ -127,7 +109,7 @@ function BiometricGate({ children }) {
         </Text>
         <TouchableOpacity
           onPress={authenticate}
-          style={{ backgroundColor: "#9c44dc", paddingHorizontal: 32, paddingVertical: 14, borderRadius: 999, shadowColor: "#000", shadowOpacity: 0.2 }}
+          style={{ backgroundColor: "#9c44dc", paddingHorizontal: 32, paddingVertical: 14, borderRadius: 999 }}
         >
           <Text style={{ color: "white", fontWeight: "600", fontSize: 16 }}>Desbloquear Finanças</Text>
         </TouchableOpacity>
@@ -144,12 +126,14 @@ export default function App() {
     Poppins_600SemiBold,
   });
 
+  const load = useSettingsStore((s) => s.load);
+
+  useEffect(() => {
+    load();
+  }, []);
+
   if (!fontsLoaded) {
-    return (
-      <NativeBaseProvider>
-        <Loading />
-      </NativeBaseProvider>
-    );
+    return <Loading />;
   }
 
   return (
@@ -162,25 +146,9 @@ export default function App() {
       >
         <StatusBar style="light" />
       </View>
-      <NativeBaseProvider>
-        <PagesContextProvider>
-          <SettingsContextProvider>
-            <BiometricGate>
-              <PaymentsContextProvider>
-                <RunsContextProvider>
-                  <ListsContextProvider>
-                    <MarketContextProvider>
-                      <GoalsContextProvider>
-                        <Routes />
-                      </GoalsContextProvider>
-                    </MarketContextProvider>
-                  </ListsContextProvider>
-                </RunsContextProvider>
-              </PaymentsContextProvider>
-            </BiometricGate>
-          </SettingsContextProvider>
-        </PagesContextProvider>
-      </NativeBaseProvider>
+      <BiometricGate>
+        <Routes />
+      </BiometricGate>
     </>
   );
 }

@@ -1,6 +1,6 @@
 # Project Status — Minhas Finanças v2
 
-> Atualizado: 2026-08-29 | Branch: `main` | Status: **Fase 1 11/11 concluída (117 PASS) + Fase 1.1 Zustand Standard em execução (plano `app/docs/superpowers/plans/2026-08-29-zustand-standard.md`)**
+> Atualizado: 2026-08-29 | Branch: `feat/zustand-standard` (`aa6e4bc`→`f181219`) | Status: **Fase 1 11/11 + Fase 1.1 Zustand Standard Tasks 1-9 concluídas (20 suites/142 PASS) — WatermelonDB/context removidos, App/routes zustand+NativeWind dark**
 
 ---
 
@@ -24,20 +24,28 @@
 
 **Renomeio:** `finances-app-feature-adicionando-watermelondb/` → `app/` (`ae034a8`), `.gitignore` + `README.md` paths atualizados.
 
-**Qualidade:** `yarn jest --no-coverage` → **14 suites, 117 testes PASS** (finance/tithe/goal/dashboard/security/biometry/prompt/excel/migration/nativewind). `npx expo-doctor` 16/18 (2 fails esperados: WatermelonDB New Arch + expo-sqlite version RC).
+**Qualidade Fase 1.1 (2026-08-29):** `yarn jest --no-coverage` → **20 suites, 142 testes PASS** (6 stores `finance/market/lists/runs/goals/settings` + 14 originais, WatermelonDB warning zerado). `npx expo-doctor` 2 fails restantes (`react-dom` peer `native-base` residual + `expo-sqlite` 57 vs 16) — **WatermelonDB New Arch removido**. `src/stores/*` `useShallow` + `filterFinances` puro, `App.js:1` sem `NativeBaseProvider`.
 
 **Repo:** `git@github.com:filipeleonelbatista/minhas-financas-v2-ai.git` `main` `4e6844d..ae034a8` pushado, privado, `docs/` com SEO (`jekyll-seo-tag`) mantido offline.
 
 ---
 
-## 2. Próximos passos — Fase 1.1 Zustand Standard (em execução)
+## 2. O que foi implementado — Fase 1.1 Zustand Standard (Tasks 1-9)
 
-### 2.1 Fase 1.1 — Zustand sem Context (10 tasks, `app/docs/superpowers/plans/2026-08-29-zustand-standard.md`)
-- [ ] **Task 1 scaffold** `zustand` + `src/stores/index.ts`
-- [ ] **Tasks 2-7** stores `finance/market/lists/runs/goals/settings` (TDD, `filterFinances` puro, `colorModeState` → `NativeWind` `dark:`)
-- [ ] **Task 8** migrar `App.js:14`/`routes.js:9`/`bottom-tab-routes.js:12` + 34 arquivos `native-base` → `NativeWind` + `reacticx` isolado + `useShallow`
-- [ ] **Task 9** deletar `src/databases/` + `src/context/*` + `src/theme.js`, `package.json` remove `@nozbe/watermelondb`/`native-base`/decorators, `babel.config.js:7`
-- [ ] **Task 10** `yarn jest` + `expo-doctor` + `eas build preview` verdes, `dark:` QA
+| # | Task | Commit | O que mudou |
+|---|---|---|---|
+| 12 | Zustand scaffold | `1f3273a` | `zustand@5.0.8` + `src/stores/index.ts` barrel + placeholders  |
+| 13 | Finance store | `4b75a86` | `src/stores/finance.ts` `useFinanceStore` (`filterFinances` + `calcTithe` via `financeRepo`, `useShallow` compat), `__tests__/stores/finance.test.ts` 2 PASS |
+| 14 | Market store | `1061438` | `src/stores/market.ts` `useMarketStore` via `marketRepo`, `quantityDesired` fix |
+| 15 | Lists store | `7caa815` | `src/stores/lists.ts` `useListsStore` cascade `list_id` + `updateItem`, `src/repositories/list.ts:12` `updateItem` |
+| 16 | Runs store | `9ec048f` | `src/stores/runs.ts` `calcRunEstimative` `(autonomy*amount/unityAmount)+currentDistance`, `__tests__/stores/runs.test.ts` 6 PASS |
+| 17 | Goals store | `6570e06` | `src/stores/goals.ts` `filteredGoals` Todas/Ativas/Concluídas + `normalizeCategory`/`calcGoalProgress` |
+| 18 | Settings store | `794642b` | `src/stores/settings.ts` `colorModeState` → `Appearance`+`react-native-css-interop` `set`, `applyColorScheme`, `configRepo` |
+| 19 | UI migration | `b39ceb8` | `App.js:14` sem `NativeBaseProvider`, `routes.js:9`/`bottom-tab-routes.js:12` `useSettingsStore`, `Header.js`/`Finances.js`/`Loading.js` NativeWind |
+| 20 | Remove WDB | `f181219` | deleta `src/databases/` (17) + `src/context/*` (7) + `theme.js`, `package.json` remove `@nozbe/watermelondb`/decorators, `babel.config.js:7`, `hooks/*` shims |
+| **Fase 1.1 qualidade** | — | — | 20 suites 142 PASS, `expo-doctor` WDB warning removido |
+
+## 2.1 Próximos passos
 
 ### 2.1b Polimento Fase 1 antes da Play Store (curto prazo, pós-Zustand)
 - [x] Resolver `tailwindcss@4` mismatch NativeWind — downgrade para `3.4.17` concluído (`metro.config.js:1` sem warning)

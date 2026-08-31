@@ -1,49 +1,35 @@
 import { Feather } from "@expo/vector-icons";
 import Constants from "expo-constants";
-import {
-  Box,
-  Button,
-  Divider,
-  HStack,
-  IconButton,
-  Image,
-  Input,
-  Link,
-  NativeBaseProvider,
-  Text,
-  VStack,
-} from "native-base";
 import { useSettingsStore } from "../stores/settings";
-import React from "react";
+import React, { useEffect, useState } from "react";
 import {
   Alert,
   BackHandler,
   Linking,
   Switch,
   ToastAndroid,
+  View,
+  Text,
+  ScrollView,
+  TextInput,
+  TouchableOpacity,
+  Image,
 } from "react-native";
-import { ScrollView } from "react-native-gesture-handler";
-
 import * as FileSystem from "expo-file-system";
 import * as MediaLibrary from "expo-media-library";
-
 import * as DocumentPicker from "expo-document-picker";
-
 import {
   useFocusEffect,
   useIsFocused,
   useNavigation,
 } from "@react-navigation/native";
-import { useEffect, useState } from "react";
 import { jsonToCSV, readString } from "react-native-csv";
 import userImg from "../assets/icon.png";
 import Header from "../components/Header";
-import { useLists } from "../hooks/useLists";
-import { useMarket } from "../hooks/useMarket";
-import { useOpenAi } from "../hooks/useOpenAi";
-import { usePayments } from "../hooks/usePayments";
-import { useRuns } from "../hooks/useRuns";
-import { useSettings } from "../hooks/useSettings";
+import { useFinanceStore } from "../stores/finance";
+import { useRunsStore } from "../stores/runs";
+import { useMarketStore } from "../stores/market";
+import { useListsStore } from "../stores/lists";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { financeRepo } from "../repositories/finance";
 import { marketRepo } from "../repositories/market";
@@ -51,14 +37,12 @@ import { listRepo } from "../repositories/list";
 import { runRepo } from "../repositories/run";
 
 export default function AboutUs() {
-  // migrated from native-base useColorMode -> zustand
   const colorModeState = useSettingsStore((s) => s.colorModeState);
   const colorMode = colorModeState;
   const isDark = colorModeState === "dark";
   const bg = isDark ? "#1c1e21" : "#f5f5f4";
   const headerText = isDark ? "#27272a" : "white";
   const text = isDark ? "#e4e4e7" : "#52525b";
-  // keep theme colors via hardcoded map (replaces useTheme)
   const theme = {
     colors: {
       warmGray: { 50: "#f5f5f4" },
@@ -70,10 +54,75 @@ export default function AboutUs() {
       white: "#fff",
     },
   };
-
   const navigation = useNavigation();
+  const toggleColorMode = useSettingsStore((s) => s.toggleColorMode);
+  const handleToggleTheme = toggleColorMode;
+  // map settings store booleans and handlers
+  const s = useSettingsStore();
+  const isEnableTitheCard = !!s.isEnableTitheCard;
+  const handleSwitchViewTitheCard = (v) => s.update('isEnableTitheCard', v ? 1 : 0);
+  const willAddFuelToTransactionList = !!s.willAddFuelToTransactionList;
+  const handleToggleWillAddFuel = (v) => s.update('willAddFuelToTransactionList', v ? 1 : 0);
+  const willUsePrefixToRemoveTihteSum = !!s.willUsePrefixToRemoveTihteSum;
+  const handleWillRemovePrefixToRemove = (v) => s.update('willUsePrefixToRemoveTihteSum', v ? 1 : 0);
+  const prefixTithe = s.prefixTithe;
+  const handleSetPrefixTithe = (v) => s.update('prefixTithe', v);
+  const isEnableTotalHistoryCard = !!s.isEnableTotalHistoryCard;
+  const handleSwitchViewTotalHistoryCard = (v) => s.update('isEnableTotalHistoryCard', v ? 1 : 0);
+  const simpleFinancesItem = !!s.simpleFinancesItem;
+  const handleSetSimpleFinancesItem = (v) => s.update('simpleFinancesItem', v ? 1 : 0);
+  const marketSimplifiedItems = !!s.marketSimplifiedItems;
+  const handleSetmarketSimplifiedItems = (v) => s.update('marketSimplifiedItems', v ? 1 : 0);
+  const isShowLabelOnNavigation = !!s.isShowLabelOnNavigation;
+  const handleSetIsShowLabelOnNavigation = (v) => s.update('isShowLabelOnNavigation', v ? 1 : 0);
+  const isAiEnabled = !!s.isAiEnabled;
+  const handleSetIsAiEnabled = (v) => s.update('isAiEnabled', v ? 1 : 0);
+  const selectedFolderToSave = s.selectedFolderToSave;
+  const handleUpdateSelectedFolderToSave = (v) => s.update('selectedFolderToSave', v);
+  const handleResetConfigs = async () => { if (s.reset) await s.reset(); };
+  const handleCleanStorage = async () => { await s.update('isEnableTitheCard', 0); };
+  const apiKey = s.apiKey;
+  const handleSaveApiKey = (v) => s.update('apiKey', v);
+  // finance/lists/market/runs repos via stores
+  const financeState = useFinanceStore();
+  const transactionsList = financeState.transactionsList;
+  const importTransactions = async (list) => { for (const item of list) await financeState.add(item); };
+  const setTransactionsList = (list) => useFinanceStore.setState({ transactionsList: list });
+  const runsState = useRunsStore();
+  const setFuelList = (list) => useRunsStore.setState({ runsList: list });
+  const handleImportRuns = async () => { const { ToastAndroid } = require('react-native'); ToastAndroid.show("Importação disponível em breve", ToastAndroid.SHORT); };
+  const handleExportRuns = async () => { const { ToastAndroid } = require('react-native'); ToastAndroid.show("Exportação disponível em breve", ToastAndroid.SHORT); };
+  const marketState = useMarketStore();
+  const handleImportStock = async () => { const { ToastAndroid } = require('react-native'); ToastAndroid.show("Importação disponível em breve", ToastAndroid.SHORT); };
+  const handleExportStock = async () => { const { ToastAndroid } = require('react-native'); ToastAndroid.show("Exportação disponível em breve", ToastAndroid.SHORT); };
+  const loadTransactions = marketState.load;
+  const listsState = useListsStore();
+  const loadTransactionsLists = listsState.load;
+  const handleImportList = async () => { const { ToastAndroid } = require('react-native'); ToastAndroid.show("Importação disponível em breve", ToastAndroid.SHORT); };
 
-  const { apiKey, handleSaveApiKey } = useOpenAi();
+  // migrated from native-base useColorMode -> zustand
+  const colorModeState = useSettingsStore((s) => s.colorModeState);
+  const colorMode = colorModeState;
+  const isDark = colorModeState === "dark";
+  const bg = isDark ? "#1c1e21" : "#f5f5f4";
+  const headerText = isDark ? "#27272a" : "white";
+  const text = isDark ? "#e4e4e7" : "#52525b";
+  // keep theme colors via hardcoded map (replaces useTheme)
+// migrated duplicate theme:   const theme = {
+    colors: {
+      warmGray: { 50: "#f5f5f4" },
+      gray: { 200: "#e4e4e7", 400: "#a1a1aa", 600: "#52525b", 800: "#27272a", 900: "#1c1e21" },
+      purple: { 600: "#9c44dc", 900: "#581c87" },
+      green: { 500: "#22c55e", 600: "#16a34a" },
+      red: { 500: "#ef4444", 600: "#dc2626" },
+      yellow: { 400: "#facc15" },
+      white: "#fff",
+    },
+  };
+
+// migrated:   const navigation = useNavigation();
+
+// migrated:   const { apiKey, handleSaveApiKey } = useOpenAi();
 
   const isFocused = useIsFocused();
   const [inputOpenAiText, setInputOpenAiText] = useState("");
@@ -81,7 +130,7 @@ export default function AboutUs() {
   const { transactionsList, importTransactions, setTransactionsList } =
     usePayments();
 
-  const { setFuelList, handleImportRuns, handleExportRuns } = useRuns();
+// migrated:   const { setFuelList, handleImportRuns, handleExportRuns } = useRuns();
 
   const { handleImportStock, handleExportStock, loadTransactions } =
     useMarket();
@@ -535,13 +584,13 @@ export default function AboutUs() {
   }, [apiKey]);
 
   return (
-    <NativeBaseProvider>
-      <VStack flex={1} bg={bg}>
+    <View style={{flex:1}}>
+      <View flex={1} bg={bg}>
       <ScrollView flex={1} w={"100%"} h={"100%"}>
         <Header
           title="Configuraçõe"
           isLeftIconComponent={
-            <IconButton
+            <TouchableOpacity
               size={10}
               borderRadius="full"
               icon={<Feather name="arrow-left" size={20} color={headerText} />}
@@ -553,8 +602,8 @@ export default function AboutUs() {
           }
         />
 
-        <VStack alignItems={"center"} mt={-16}>
-          <Box
+        <View alignItems={"center"} mt={-16}>
+          <View
             borderRadius={"full"}
             w={32}
             h={32}
@@ -570,10 +619,10 @@ export default function AboutUs() {
               borderRadius={"full"}
               size={105}
             />
-          </Box>
-        </VStack>
-        <VStack space={2} px={4}>
-          <HStack alignItems={"center"}>
+          </View>
+        </View>
+        <View space={2} px={4}>
+          <View alignItems={"center"}>
             <Switch
               trackColor={{
                 false: theme.colors.gray[400],
@@ -591,9 +640,9 @@ export default function AboutUs() {
             <Text color={text} fontSize={16} maxW={"90%"} numberOfLines={2}>
               Habilitar Tema Escuro
             </Text>
-          </HStack>
+          </View>
 
-          <HStack alignItems={"center"}>
+          <View alignItems={"center"}>
             <Switch
               trackColor={{
                 false: theme.colors.gray[400],
@@ -611,8 +660,8 @@ export default function AboutUs() {
             <Text color={text} fontSize={16} maxW={"90%"} numberOfLines={2}>
               Titulos nos icones da navegação
             </Text>
-          </HStack>
-          <HStack alignItems={"center"}>
+          </View>
+          <View alignItems={"center"}>
             <Switch
               trackColor={{
                 false: theme.colors.gray[400],
@@ -628,14 +677,14 @@ export default function AboutUs() {
             <Text color={text} fontSize={16} maxW={"90%"} numberOfLines={2}>
               Habilitar Inteligência artificial (Beta)
             </Text>
-          </HStack>
+          </View>
 
           {isAiEnabled && (
-            <VStack space={1}>
+            <View space={1}>
               <Text color={text} fontSize={16}>
                 Chave de API
               </Text>
-              <Input
+              <TextInput
                 placeholder="Chave de API"
                 onChangeText={(text) => {
                   setInputOpenAiText(text);
@@ -643,7 +692,7 @@ export default function AboutUs() {
                 value={inputOpenAiText}
                 editable={isAiEnabled}
                 rightElement={
-                  <Button
+                  <TouchableOpacity
                     size="xs"
                     rounded="none"
                     w="1/6"
@@ -655,31 +704,31 @@ export default function AboutUs() {
                     }}
                   >
                     <Feather name="save" size={24} color="#FFF" />
-                  </Button>
+                  </TouchableOpacity>
                 }
               />
               <Text color="gray.400">
                 Coloque aqui sua Chave de Api da OpenAI
               </Text>
-              <Link
+              <TouchableOpacity
                 href={"https://platform.openai.com/account/api-keys"}
                 _text={{ color: "purple.500" }}
               >
                 Toque aqui para obter uma Chave de API OpenAi
-              </Link>
-            </VStack>
+              </TouchableOpacity>
+            </View>
           )}
 
-          <HStack my={2}>
-            <Divider />
-          </HStack>
-        </VStack>
+          <View my={2}>
+            <View />
+          </View>
+        </View>
 
-        <VStack space={2} px={4}>
+        <View space={2} px={4}>
           <Text color={text} bold fontSize={22}>
             Finanças
           </Text>
-          <HStack alignItems={"center"}>
+          <View alignItems={"center"}>
             <Switch
               trackColor={{
                 false: theme.colors.gray[400],
@@ -697,8 +746,8 @@ export default function AboutUs() {
             <Text color={text} fontSize={16} maxW={"90%"} numberOfLines={2}>
               Usar formulário simplificado de itens
             </Text>
-          </HStack>
-          <HStack alignItems={"center"}>
+          </View>
+          <View alignItems={"center"}>
             <Switch
               trackColor={{
                 false: theme.colors.gray[400],
@@ -716,8 +765,8 @@ export default function AboutUs() {
             <Text color={text} fontSize={16} maxW={"90%"} numberOfLines={2}>
               Habilitar card de Saldo
             </Text>
-          </HStack>
-          <HStack alignItems={"center"}>
+          </View>
+          <View alignItems={"center"}>
             <Switch
               trackColor={{
                 false: theme.colors.gray[400],
@@ -735,8 +784,8 @@ export default function AboutUs() {
             <Text color={text} fontSize={16} maxW={"90%"} numberOfLines={2}>
               Habilitar card de Dízimo
             </Text>
-          </HStack>
-          <HStack alignItems={"center"}>
+          </View>
+          <View alignItems={"center"}>
             <Switch
               trackColor={{
                 false: theme.colors.gray[400],
@@ -754,13 +803,13 @@ export default function AboutUs() {
             <Text color={text} fontSize={16} maxW={"90%"} numberOfLines={2}>
               Remover itens com o prefixo da soma do Dízimo
             </Text>
-          </HStack>
+          </View>
 
-          <VStack space={2}>
+          <View space={2}>
             <Text color={text} fontSize={16}>
               Prefixo
             </Text>
-            <Input
+            <TextInput
               placeholder="Prefixo"
               onChangeText={handleSetPrefixTithe}
               value={prefixTithe}
@@ -770,11 +819,11 @@ export default function AboutUs() {
               Se o título da transação tiver este prefixo não será contado na
               soma do dízimo
             </Text>
-          </VStack>
-        </VStack>
+          </View>
+        </View>
 
-        <VStack px={4} space={2} my={2}>
-          <Button
+        <View px={4} space={2} my={2}>
+          <TouchableOpacity
             onPress={handleGenerateCSV}
             shadow={2}
             colorScheme={"purple"}
@@ -789,8 +838,8 @@ export default function AboutUs() {
             }}
           >
             Exportar finanças
-          </Button>
-          <Button
+          </TouchableOpacity>
+          <TouchableOpacity
             onPress={handleImportCSV}
             shadow={2}
             colorScheme={"purple"}
@@ -805,7 +854,7 @@ export default function AboutUs() {
             }}
           >
             Importar finanças
-          </Button>
+          </TouchableOpacity>
 
           <Text color={text} px={2} textAlign="center">
             Use um arquivo{" "}
@@ -815,7 +864,7 @@ export default function AboutUs() {
             gerado pelo sistema para importar os dados de um amigo ou familiar.
           </Text>
 
-          <Button
+          <TouchableOpacity
             onPress={handleClearFinances}
             shadow={2}
             colorScheme={"purple"}
@@ -830,18 +879,18 @@ export default function AboutUs() {
             }}
           >
             Apagar finanças
-          </Button>
-        </VStack>
+          </TouchableOpacity>
+        </View>
 
-        <HStack px={4} my={2}>
-          <Divider />
-        </HStack>
+        <View px={4} my={2}>
+          <View />
+        </View>
 
-        <VStack space={2} px={4} py={2}>
+        <View space={2} px={4} py={2}>
           <Text color={text} bold fontSize={22}>
             Corridas
           </Text>
-          <HStack alignItems={"center"}>
+          <View alignItems={"center"}>
             <Switch
               trackColor={{
                 false: theme.colors.gray[400],
@@ -859,8 +908,8 @@ export default function AboutUs() {
             <Text color={text} fontSize={16} maxW={"90%"} numberOfLines={2}>
               Habilitar adicionar abastecimento automaticamente em finanças
             </Text>
-          </HStack>
-          <Button
+          </View>
+          <TouchableOpacity
             onPress={handleExportRuns}
             shadow={2}
             colorScheme={"purple"}
@@ -875,8 +924,8 @@ export default function AboutUs() {
             }}
           >
             Exportar Abastecimentos
-          </Button>
-          <Button
+          </TouchableOpacity>
+          <TouchableOpacity
             onPress={handleImportRuns}
             shadow={2}
             colorScheme={"purple"}
@@ -891,7 +940,7 @@ export default function AboutUs() {
             }}
           >
             Importar Abastecimentos
-          </Button>
+          </TouchableOpacity>
 
           <Text color={text} px={2} textAlign="center">
             Use um arquivo{" "}
@@ -901,7 +950,7 @@ export default function AboutUs() {
             gerado pelo sistema para importar os dados de um amigo ou familiar.
           </Text>
 
-          <Button
+          <TouchableOpacity
             onPress={handleClearRuns}
             shadow={2}
             colorScheme={"purple"}
@@ -916,18 +965,18 @@ export default function AboutUs() {
             }}
           >
             Apagar Abastecimentos
-          </Button>
-        </VStack>
+          </TouchableOpacity>
+        </View>
 
-        <HStack px={4} my={2}>
-          <Divider />
-        </HStack>
+        <View px={4} my={2}>
+          <View />
+        </View>
 
-        <VStack space={2} px={4} py={2}>
+        <View space={2} px={4} py={2}>
           <Text color={text} bold fontSize={22}>
             Compras
           </Text>
-          <HStack alignItems={"center"}>
+          <View alignItems={"center"}>
             <Switch
               trackColor={{
                 false: theme.colors.gray[400],
@@ -945,8 +994,8 @@ export default function AboutUs() {
             <Text color={text} fontSize={16} maxW={"90%"} numberOfLines={2}>
               Usar formulário simplificado de itens
             </Text>
-          </HStack>
-          <Button
+          </View>
+          <TouchableOpacity
             onPress={handleExportStock}
             shadow={2}
             colorScheme={"purple"}
@@ -961,8 +1010,8 @@ export default function AboutUs() {
             }}
           >
             Exportar Estoque
-          </Button>
-          <Button
+          </TouchableOpacity>
+          <TouchableOpacity
             onPress={handleImportStock}
             shadow={2}
             colorScheme={"purple"}
@@ -977,7 +1026,7 @@ export default function AboutUs() {
             }}
           >
             Importar Estoque
-          </Button>
+          </TouchableOpacity>
 
           <Text color={text} px={2} textAlign="center">
             Use um arquivo{" "}
@@ -987,7 +1036,7 @@ export default function AboutUs() {
             gerado pelo sistema para importar os dados de um amigo ou familiar.
           </Text>
 
-          <Button
+          <TouchableOpacity
             onPress={handleImportList}
             shadow={2}
             colorScheme={"purple"}
@@ -1002,13 +1051,13 @@ export default function AboutUs() {
             }}
           >
             Importar Lista de compras
-          </Button>
+          </TouchableOpacity>
 
           <Text color={text} px={2} textAlign="center">
             Para exportar pressione e segure o card da lista que quer exportar.
           </Text>
 
-          <Button
+          <TouchableOpacity
             onPress={handleClearMarket}
             shadow={2}
             colorScheme={"purple"}
@@ -1023,19 +1072,19 @@ export default function AboutUs() {
             }}
           >
             Apagar Compras
-          </Button>
-        </VStack>
+          </TouchableOpacity>
+        </View>
 
-        <HStack px={4} my={2}>
-          <Divider />
-        </HStack>
+        <View px={4} my={2}>
+          <View />
+        </View>
 
-        <VStack space={2} px={4} py={2}>
+        <View space={2} px={4} py={2}>
           <Text color={text} bold fontSize={22}>
             Geral
           </Text>
 
-          <Button
+          <TouchableOpacity
             onPress={handleResetSettings}
             shadow={2}
             colorScheme={"purple"}
@@ -1050,9 +1099,9 @@ export default function AboutUs() {
             }}
           >
             Redefinir configurações
-          </Button>
+          </TouchableOpacity>
 
-          <Button
+          <TouchableOpacity
             onPress={handleCleanStorage}
             shadow={2}
             colorScheme={"purple"}
@@ -1067,13 +1116,13 @@ export default function AboutUs() {
             }}
           >
             Apagar tabelas
-          </Button>
+          </TouchableOpacity>
 
           <Text color={text} px={2} textAlign="center">
             Essa opção apagará todos os registros do app.
           </Text>
 
-          <Button
+          <TouchableOpacity
             onPress={async () => {
               const requestedDirPerm =
                 await FileSystem.StorageAccessFramework.requestDirectoryPermissionsAsync();
@@ -1095,9 +1144,9 @@ export default function AboutUs() {
             }}
           >
             Alterar pasta de exportação
-          </Button>
+          </TouchableOpacity>
 
-          <Button
+          <TouchableOpacity
             onPress={saveStorageToExportedFile}
             shadow={2}
             colorScheme={"purple"}
@@ -1112,19 +1161,19 @@ export default function AboutUs() {
             }}
           >
             Exportar finanças antigo
-          </Button>
+          </TouchableOpacity>
 
           <Text color={text} px={2} textAlign="center">
             Essa opção exporta o modelo de finanças do app antigo.
           </Text>
-        </VStack>
+        </View>
 
-        <HStack px={4} my={2}>
-          <Divider />
-        </HStack>
+        <View px={4} my={2}>
+          <View />
+        </View>
 
-        <VStack space={2} px={4} py={2}>
-          <Button
+        <View space={2} px={4} py={2}>
+          <TouchableOpacity
             onPress={() => {
               Linking.openURL("https://filipeleonelbatista.vercel.app/");
             }}
@@ -1141,14 +1190,14 @@ export default function AboutUs() {
             }}
           >
             Sobre o desenvolvedor
-          </Button>
+          </TouchableOpacity>
 
           <Text textAlign={"center"} fontSize={12} color={text} my={6}>
             Versão {Constants.manifest.version}
           </Text>
-        </VStack>
+        </View>
       </ScrollView>
-    </VStack>
-    </NativeBaseProvider>
+    </View>
+    </View>
   );
 }

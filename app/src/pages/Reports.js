@@ -1,23 +1,8 @@
-import {
-  Actionsheet,
-  Box,
-  HStack,
-  IconButton,
-  Pressable,
-  ScrollView,
-  Text,
-  useColorModeValue,
-  useDisclose,
-  useTheme,
-  VStack,
-} from "native-base";
-import React, { useMemo, useState } from "react";
-
+import React, { useMemo, useState, useEffect } from "react";
+import { View, Text, ScrollView, Pressable, TouchableOpacity, Modal, useWindowDimensions } from "react-native";
 import { Feather } from "@expo/vector-icons";
 import { useIsFocused, useNavigation } from "@react-navigation/native";
 import { differenceInCalendarDays } from "date-fns";
-import { useEffect } from "react";
-import { useWindowDimensions } from "react-native";
 import { LineChart, PieChart } from "react-native-chart-kit";
 import * as Progress from "react-native-progress";
 import AIComponent from "../components/AIComponent";
@@ -26,431 +11,182 @@ import EmptyMessage from "../components/EmptyMessage";
 import ErrorSheet from "../components/ErrorSheet";
 import Header from "../components/Header";
 import ViewFuelReport from "../components/ViewFuelReport";
-import { useGoals } from "../hooks/useGoals";
 import { useIsKeyboardOpen } from "../hooks/useIsKeyboardOpen";
-import { usePages } from "../hooks/usePages";
-import { usePayments } from "../hooks/usePayments";
-import { useRuns } from "../hooks/useRuns";
-import { useSettings } from "../hooks/useSettings";
+import { useFinanceStore } from "../stores/finance";
+import { useRunsStore } from "../stores/runs";
+import { useGoalsStore } from "../stores/goals";
+import { useSettingsStore } from "../stores/settings";
+import { usePagesStore } from "../stores/pages";
 
 export default function Reports() {
-  const { isAiEnabled } = useSettings();
-  const theme = useTheme();
+  const colorModeState = useSettingsStore((s) => s.colorModeState);
+  const isDark = colorModeState === "dark";
+  const bg = isDark ? "#1c1e21" : "#f5f5f4";
+  const bgCard = isDark ? "#27272a" : "#f5f5f4";
+  const bgCardButton = isDark ? "#3f3f46" : "#e7e5e4";
+  const bgCardPressed = isDark ? "#3f3f46" : "#e7e5e4";
+  const headerText = isDark ? "#27272a" : "white";
+  const text = isDark ? "#e4e4e7" : "#52525b";
+  const isAiEnabled = useSettingsStore((s) => !!s.isAiEnabled);
 
-  const bg = useColorModeValue(
-    theme.colors.warmGray[50],
-    theme.colors.gray[900]
-  );
-  const bgCard = useColorModeValue(
-    theme.colors.warmGray[50],
-    theme.colors.gray[800]
-  );
-  const bgCardButton = useColorModeValue(
-    theme.colors.warmGray[100],
-    theme.colors.gray[700]
-  );
-
-  const bgCardPressed = useColorModeValue(
-    theme.colors.warmGray[100],
-    theme.colors.gray[700]
-  );
-
-  const headerText = useColorModeValue("white", theme.colors.gray[800]);
-  const text = useColorModeValue(
-    theme.colors.gray[600],
-    theme.colors.gray[200]
-  );
-
-  const { setSelectedSheet } = usePages();
-
+  const { setSelectedSheet } = usePagesStore();
   const isFocused = useIsFocused();
-
   useEffect(() => {
-    if (isFocused) {
-      setSelectedSheet("Relatórios");
-    }
+    if (isFocused) setSelectedSheet("Relatórios");
   }, [isFocused]);
 
   const isKeyboardOpen = useIsKeyboardOpen();
-
-  const { isOpen, onOpen, onClose } = useDisclose();
-
+  const [isOpen, setIsOpen] = useState(false);
+  const onOpen = () => setIsOpen(true);
+  const onClose = () => setIsOpen(false);
   const [currentSelectedSheet, setCurrentSelectedSheet] = useState(null);
   const [selectedValue, setSelectedValue] = useState(0);
-
   const navigation = useNavigation();
-
   const { width, height } = useWindowDimensions();
 
-  const { Incomings, Expenses, filteredList, setStartDate, setEndDate } =
-    usePayments();
+  const filteredList = useFinanceStore((s) => s.getFilteredList());
+  const Incomings = useFinanceStore((s) => s.getIncomings());
+  const Expenses = useFinanceStore((s) => s.getExpenses());
+  const FuelList = useRunsStore((s) => s.runsList);
+  const goalsList = useGoalsStore((s) => s.goals);
+  const [selectedTransaction, setSelectedTransaction] = useState(null);
 
-  const {
-    GoalsList: goalsList,
-    selectedTransaction,
-    setSelectedTransaction,
-  } = useGoals();
-
-  const { FuelList } = useRuns();
-
-  const formatCurrency = (value) => {
-    return value.toLocaleString("pt-BR", {
-      style: "currency",
-      currency: "BRL",
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2,
-      useGrouping: true,
-    });
-  };
+  const formatCurrency = (value) => value.toLocaleString("pt-BR", { style: "currency", currency: "BRL", minimumFractionDigits: 2, maximumFractionDigits: 2, useGrouping: true });
 
   const [selectedRunsFilter, setSelectedRunsFilter] = useState("litro");
 
   const runsChartData = useMemo(() => {
     const currentFuelList = FuelList;
-
-    const last8Elements = currentFuelList
-      .sort((a, b) => a.date - b.date)
-      .slice(-8);
-
+    const last8Elements = [...currentFuelList].sort((a, b) => a.date - b.date).slice(-8);
     const labels = last8Elements.map((item) => {
       const dateObj = new Date(item.date);
       const dia = dateObj.getUTCDate().toString().padStart(2, "0");
       const mes = (dateObj.getUTCMonth() + 1).toString().padStart(2, "0");
       return `${dia}/${mes}`;
     });
-
-    const data = last8Elements.map((item) =>
-      selectedRunsFilter === "litro" ? item.unityAmount : item.amount
-    );
-
+    const data = last8Elements.map((item) => (selectedRunsFilter === "litro" ? item.unityAmount : item.amount));
     return { labels, data, fullList: last8Elements };
   }, [FuelList, selectedRunsFilter]);
 
   const expensesByCatData = useMemo(() => {
     const getSum = (cat) => {
-      const filteredCategoryArray = filteredList.filter(
-        (item) => item.category === cat
-      );
-
+      const filteredCategoryArray = filteredList.filter((item) => item.category === cat);
       let totalSelectedCat = 0.0;
-
-      for (const item of filteredCategoryArray) {
-        totalSelectedCat = item.amount + totalSelectedCat;
-      }
-
+      for (const item of filteredCategoryArray) totalSelectedCat = item.amount + totalSelectedCat;
       return totalSelectedCat;
     };
-
     const data = [
-      {
-        name: "Cartão",
-        population: getSum("Cartão"),
-        color: "#2D0D45",
-        legendFontColor: text,
-        legendFontSize: 14,
-      },
-      {
-        name: "Moradia",
-        population: getSum("Moradia"),
-        color: "#391056",
-        legendFontColor: text,
-        legendFontSize: 14,
-      },
-      {
-        name: "Vestuário",
-        population: getSum("Vestuário"),
-        color: "#4F1778",
-        legendFontColor: text,
-        legendFontSize: 14,
-      },
-      {
-        name: "Streaming",
-        population: getSum("Streaming"),
-        color: "#661D9A",
-        legendFontColor: text,
-        legendFontSize: 14,
-      },
-      {
-        name: "Estudos",
-        population: getSum("Estudos"),
-        color: "#7D24BC",
-        legendFontColor: text,
-        legendFontSize: 14,
-      },
-      {
-        name: "Beleza",
-        population: getSum("Beleza"),
-        color: "#9231D8",
-        legendFontColor: text,
-        legendFontSize: 14,
-      },
-      {
-        name: "Emergência",
-        population: getSum("Emergência"),
-        color: "#9C44DC",
-        legendFontColor: text,
-        legendFontSize: 14,
-      },
-      {
-        name: "Outros",
-        population: getSum("Outros"),
-        color: "#AA5DE0",
-        legendFontColor: text,
-        legendFontSize: 14,
-      },
-      {
-        name: "Mercado",
-        population: getSum("Mercado"),
-        color: "#B16BE3",
-        legendFontColor: text,
-        legendFontSize: 14,
-      },
-      {
-        name: "TV/Internet/Telefone",
-        population: getSum("TV/Internet/Telefone"),
-        color: "#C693EA",
-        legendFontColor: text,
-        legendFontSize: 14,
-      },
-      {
-        name: "Transporte",
-        population: getSum("Transporte"),
-        color: "#D4AEF0",
-        legendFontColor: text,
-        legendFontSize: 14,
-      },
-      {
-        name: "Saúde",
-        population: getSum("Saúde"),
-        color: "#DBBCF2",
-        legendFontColor: text,
-        legendFontSize: 14,
-      },
-      {
-        name: "Bares e Restaurantes",
-        population: getSum("Bares e Restaurantes"),
-        color: "#DBBCF2",
-        legendFontColor: text,
-        legendFontSize: 14,
-      },
+      { name: "Cartão", population: getSum("Cartão"), color: "#2D0D45", legendFontColor: text, legendFontSize: 14 },
+      { name: "Moradia", population: getSum("Moradia"), color: "#391056", legendFontColor: text, legendFontSize: 14 },
+      { name: "Vestuário", population: getSum("Vestuário"), color: "#4F1778", legendFontColor: text, legendFontSize: 14 },
+      { name: "Streaming", population: getSum("Streaming"), color: "#661D9A", legendFontColor: text, legendFontSize: 14 },
+      { name: "Estudos", population: getSum("Estudos"), color: "#7D24BC", legendFontColor: text, legendFontSize: 14 },
+      { name: "Beleza", population: getSum("Beleza"), color: "#9231D8", legendFontColor: text, legendFontSize: 14 },
+      { name: "Emergência", population: getSum("Emergência"), color: "#9C44DC", legendFontColor: text, legendFontSize: 14 },
+      { name: "Outros", population: getSum("Outros"), color: "#AA5DE0", legendFontColor: text, legendFontSize: 14 },
+      { name: "Mercado", population: getSum("Mercado"), color: "#B16BE3", legendFontColor: text, legendFontSize: 14 },
+      { name: "TV/Internet/Telefone", population: getSum("TV/Internet/Telefone"), color: "#C693EA", legendFontColor: text, legendFontSize: 14 },
+      { name: "Transporte", population: getSum("Transporte"), color: "#D4AEF0", legendFontColor: text, legendFontSize: 14 },
+      { name: "Saúde", population: getSum("Saúde"), color: "#DBBCF2", legendFontColor: text, legendFontSize: 14 },
+      { name: "Bares e Restaurantes", population: getSum("Bares e Restaurantes"), color: "#DBBCF2", legendFontColor: text, legendFontSize: 14 },
     ];
-
     const filteredData = data.filter((item) => item.population > 0);
-
-    const sortedData = filteredData.sort((a, b) => {
-      if (a.population < b.population) {
-        return 1;
-      } else if (a.population > b.population) {
-        return -1;
-      } else {
-        return 0;
-      }
-    });
-
+    const sortedData = filteredData.sort((a, b) => (a.population < b.population ? 1 : a.population > b.population ? -1 : 0));
     return sortedData;
-  }, [filteredList]);
+  }, [filteredList, text]);
 
   return (
-    <VStack flex={1} bg={bg}>
-      <ScrollView flex={1} w={"100%"} h={"100%"}>
+    <View style={{ flex: 1, backgroundColor: bg }} className="flex-1 bg-gray-50 dark:bg-gray-900">
+      <ScrollView style={{ flex: 1, width: "100%", height: "100%" }}>
         <Header
           title="Relatório"
           isRightIconComponent={
-            <IconButton
-              size={10}
-              borderRadius="full"
-              icon={<Feather name="settings" size={20} color={headerText} />}
-              onPress={() => navigation.navigate("Configuracoes")}
-              _pressed={{
-                bgColor: theme.colors.purple[900],
-              }}
-            />
+            <TouchableOpacity onPress={() => navigation.navigate("Configuracoes")} style={{ width: 40, height: 40, borderRadius: 999, alignItems: "center", justifyContent: "center" }}>
+              <Feather name="settings" size={20} color={headerText} />
+            </TouchableOpacity>
           }
         />
 
-        <VStack space={4} px={4}>
-          <VStack
-            borderRadius={4}
-            bg={bgCard}
-            py={2}
-            px={4}
-            mt={-50}
-            shadow={2}
-          >
+        <View style={{ gap: 16, paddingHorizontal: 16 }}>
+          <View style={{ borderRadius: 4, backgroundColor: bgCard, paddingVertical: 8, paddingHorizontal: 16, marginTop: -50, elevation: 2 }}>
             {filteredList.length === 0 ? (
-              <VStack alignItems="center" justifyContent="center">
-                <Text color={text} fontSize={20}>
-                  Sem dados para analisar
-                </Text>
-                <Text color={text} textAlign="center">
-                  Adicione e atualize os dados em finanças para ver o relatório
-                  aqui.
-                </Text>
-              </VStack>
+              <View style={{ alignItems: "center", justifyContent: "center" }}>
+                <Text style={{ color: text, fontSize: 20 }}>Sem dados para analisar</Text>
+                <Text style={{ color: text, textAlign: "center" }}>Adicione e atualize os dados em finanças para ver o relatório aqui.</Text>
+              </View>
             ) : (
-              <VStack space={2}>
-                <Text bold color={text} fontSize={20}>
-                  Saúde das finanças
-                </Text>
-
-                <HStack alignItems={"center"} justifyContent={"space-between"}>
-                  <HStack alignItems={"center"} space={2}>
-                    <Feather
-                      name="arrow-up-circle"
-                      size={36}
-                      color={"#12a454"}
-                    />
-                    <VStack alignItems={"flex-start"}>
-                      <Text color={text} fontSize={18}>
-                        Ganhos
-                      </Text>
-                      <Text color={text} fontSize={18} bold>
-                        {formatCurrency(Incomings)}
-                      </Text>
-                    </VStack>
-                  </HStack>
-                  <HStack alignItems={"center"} space={2}>
-                    <VStack alignItems={"flex-end"}>
-                      <Text color={text} fontSize={18}>
-                        Despesas
-                      </Text>
-                      <Text color={text} fontSize={18} bold>
-                        {formatCurrency(Expenses)}
-                      </Text>
-                    </VStack>
-                    <Feather
-                      name="arrow-down-circle"
-                      size={36}
-                      color={"#e83e5a"}
-                    />
-                  </HStack>
-                </HStack>
+              <View style={{ gap: 8 }}>
+                <Text style={{ fontWeight: "700", color: text, fontSize: 20 }}>Saúde das finanças</Text>
+                <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>
+                  <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
+                    <Feather name="arrow-up-circle" size={36} color="#12a454" />
+                    <View style={{ alignItems: "flex-start" }}>
+                      <Text style={{ color: text, fontSize: 18 }}>Ganhos</Text>
+                      <Text style={{ color: text, fontSize: 18, fontWeight: "700" }}>{formatCurrency(Incomings)}</Text>
+                    </View>
+                  </View>
+                  <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
+                    <View style={{ alignItems: "flex-end" }}>
+                      <Text style={{ color: text, fontSize: 18 }}>Despesas</Text>
+                      <Text style={{ color: text, fontSize: 18, fontWeight: "700" }}>{formatCurrency(Expenses)}</Text>
+                    </View>
+                    <Feather name="arrow-down-circle" size={36} color="#e83e5a" />
+                  </View>
+                </View>
                 <Progress.Bar
-                  progress={
-                    (Incomings * 100) / (Incomings + Expenses) / 100 >= 1
-                      ? 1
-                      : (Incomings * 100) / (Incomings + Expenses) / 100
-                  }
+                  progress={ (Incomings * 100) / (Incomings + Expenses) / 100 >= 1 ? 1 : (Incomings * 100) / (Incomings + Expenses) / 100 }
                   width={width * 0.81}
                   height={14}
                   borderRadius={16}
-                  color={theme.colors.green[600]}
-                  unfilledColor={theme.colors.red[600]}
+                  color="#16a34a"
+                  unfilledColor="#dc2626"
                   borderWidth={0}
                 />
-              </VStack>
+              </View>
             )}
 
             {expensesByCatData.length > 0 && (
-              <VStack space={2} position="relative" mt={2}>
-                <Text color={text} fontSize={18} bold>
-                  Gastos por categoria
-                </Text>
+              <View style={{ gap: 8, position: "relative", marginTop: 8 }}>
+                <Text style={{ color: text, fontSize: 18, fontWeight: "700" }}>Gastos por categoria</Text>
                 <PieChart
                   width={width * 0.81}
                   height={width * 0.6}
                   data={expensesByCatData}
                   strokeWidth={16}
                   radius={32}
-                  chartConfig={{
-                    color: (opacity = 1) => `rgba(255, 255, 255, ${opacity})`,
-                  }}
-                  accessor={"population"}
-                  backgroundColor={"transparent"}
-                  paddingLeft={"15"}
+                  chartConfig={{ color: (opacity = 1) => `rgba(255, 255, 255, ${opacity})` }}
+                  accessor="population"
+                  backgroundColor="transparent"
+                  paddingLeft="15"
                 />
-              </VStack>
+              </View>
             )}
 
             {FuelList.length > 0 && runsChartData && (
-              <VStack mt={2} space={2} alignItems="center">
-                <Text color={text} fontSize={18} w={"100%"}>
-                  Abastecimentos
-                </Text>
-                <HStack
-                  mb={4}
-                  shadow={2}
-                  borderRadius={4}
-                  bg={bgCardButton}
-                  w={"100%"}
-                >
+              <View style={{ marginTop: 8, gap: 8, alignItems: "center" }}>
+                <Text style={{ color: text, fontSize: 18, width: "100%" }}>Abastecimentos</Text>
+                <View style={{ marginBottom: 16, shadowColor: "#000", shadowOpacity: 0.1, elevation: 2, borderRadius: 4, backgroundColor: bgCardButton, width: "100%", flexDirection: "row" }}>
                   <Pressable
-                    bgColor={bgCardButton}
-                    p={2}
-                    flex={1}
-                    borderTopLeftRadius={4}
-                    borderBottomLeftRadius={4}
-                    alignItems="center"
-                    justifyContent="center"
-                    borderBottomColor={
-                      selectedRunsFilter === "litro"
-                        ? "purple.500"
-                        : bgCardButton
-                    }
-                    borderBottomWidth={2}
                     onPress={() => setSelectedRunsFilter("litro")}
-                    _pressed={{
-                      bgColor: bgCard,
-                    }}
+                    style={{ flex: 1, padding: 8, alignItems: "center", justifyContent: "center", borderBottomWidth: 2, borderBottomColor: selectedRunsFilter === "litro" ? "#a855f7" : bgCardButton, backgroundColor: bgCardButton, borderTopLeftRadius: 4, borderBottomLeftRadius: 4 }}
                   >
-                    <Text
-                      fontSize={14}
-                      fontWeight={500}
-                      color={
-                        selectedRunsFilter === "litro" ? "purple.500" : text
-                      }
-                    >
-                      Por Litro
-                    </Text>
+                    <Text style={{ fontSize: 14, fontWeight: "500", color: selectedRunsFilter === "litro" ? "#a855f7" : text }}>Por Litro</Text>
                   </Pressable>
-
                   <Pressable
-                    bgColor={bgCardButton}
-                    p={2}
-                    flex={1}
-                    borderTopLeftRadius={4}
-                    borderBottomLeftRadius={4}
-                    alignItems="center"
-                    justifyContent="center"
-                    borderBottomColor={
-                      selectedRunsFilter === "pago"
-                        ? "purple.500"
-                        : bgCardButton
-                    }
-                    borderBottomWidth={2}
                     onPress={() => setSelectedRunsFilter("pago")}
-                    _pressed={{
-                      bgColor: bgCard,
-                    }}
+                    style={{ flex: 1, padding: 8, alignItems: "center", justifyContent: "center", borderBottomWidth: 2, borderBottomColor: selectedRunsFilter === "pago" ? "#a855f7" : bgCardButton, backgroundColor: bgCardButton, borderTopLeftRadius: 4, borderBottomLeftRadius: 4 }}
                   >
-                    <Text
-                      fontSize={14}
-                      fontWeight={500}
-                      color={
-                        selectedRunsFilter === "pago" ? "purple.500" : text
-                      }
-                    >
-                      Pago
-                    </Text>
+                    <Text style={{ fontSize: 14, fontWeight: "500", color: selectedRunsFilter === "pago" ? "#a855f7" : text }}>Pago</Text>
                   </Pressable>
-                </HStack>
-                <HStack ml={-5}>
+                </View>
+                <View style={{ marginLeft: -20 }}>
                   <LineChart
-                    onDataPointClick={({ index, ...rest }) => {
+                    onDataPointClick={({ index }) => {
                       setCurrentSelectedSheet("fuel");
                       setSelectedValue(index);
                       onOpen();
                     }}
-                    data={{
-                      labels: runsChartData.labels,
-                      datasets: [
-                        {
-                          data: runsChartData.data,
-                          color: () => theme.colors.purple[800],
-                          strokeWidth: 1.5,
-                        },
-                      ],
-                    }}
+                    data={{ labels: runsChartData.labels, datasets: [{ data: runsChartData.data.length ? runsChartData.data : [0], color: () => "#581c87", strokeWidth: 1.5 }] }}
                     width={width * 0.84}
                     height={220}
                     chartConfig={{
@@ -461,156 +197,79 @@ export default function Reports() {
                       color: () => text,
                       barPercentage: 0.5,
                       useShadowColorFromDataset: true,
-                      propsForVerticalLabels: {
-                        fontSize: 10,
-                      },
-                      propsForDots: {
-                        onPress: (event) => console.log("event", event),
-                      },
+                      propsForVerticalLabels: { fontSize: 10 },
                     }}
                   />
-                </HStack>
-              </VStack>
+                </View>
+              </View>
             )}
-          </VStack>
+          </View>
 
-          <VStack space={2}>
-            <Text bold fontSize={20} color={text}>
-              Minhas metas
-            </Text>
-            <Text fontSize={14} color={text}>
-              Adicione e atualize suas metas financeiras.
-            </Text>
-          </VStack>
+          <View style={{ gap: 8 }}>
+            <Text style={{ fontWeight: "700", fontSize: 20, color: text }}>Minhas metas</Text>
+            <Text style={{ fontSize: 14, color: text }}>Adicione e atualize suas metas financeiras.</Text>
+          </View>
 
           {goalsList.length === 0 && <EmptyMessage />}
 
           {goalsList.map((goal) => (
             <Pressable
               key={goal.id}
-              onPress={() => {
-                setSelectedTransaction(goal);
-                onOpen();
-              }}
-              bg={bgCard}
-              _pressed={{
-                bgColor: bgCardPressed,
-              }}
+              onPress={() => { setSelectedTransaction(goal); setCurrentSelectedSheet("editar"); onOpen(); }}
+              style={({ pressed }) => ({ backgroundColor: pressed ? bgCardPressed : bgCard, borderRadius: 2, elevation: 2 })}
             >
-              <VStack
-                alignItems={"center"}
-                bg={bgCard}
-                shadow={2}
-                borderRadius={2}
-                px={4}
-                py={2}
-              >
-                <HStack
-                  alignItems={"center"}
-                  justifyContent={"space-between"}
-                  space={2}
-                  w={"100%"}
-                >
-                  <Text color={text} fontSize={18}>
-                    {goal.description}
-                  </Text>
-                  <Text color={text} fontSize={12}>
-                    {"Prazo: "}
-                    {new Date(goal.date).toLocaleDateString("pt-BR")}
-                  </Text>
-                </HStack>
-                <HStack
-                  alignItems={"center"}
-                  justifyContent={"space-between"}
-                  space={2}
-                  w={"100%"}
-                  mb={1}
-                >
-                  <HStack
-                    alignItems={"center"}
-                    justifyContent={"space-between"}
-                  >
-                    <Text color={text} fontSize={14} textAlign={"right"}>
-                      {goal.amount.toLocaleString("pt-BR", {
-                        style: "currency",
-                        currency: "BRL",
-                        minimumFractionDigits: 2,
-                        maximumFractionDigits: 2,
-                        useGrouping: true,
-                      })}
-                      {" /"}
+              <View style={{ alignItems: "center", backgroundColor: bgCard, borderRadius: 2, paddingHorizontal: 16, paddingVertical: 8 }}>
+                <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: 8, width: "100%" }}>
+                  <Text style={{ color: text, fontSize: 18 }}>{goal.description}</Text>
+                  <Text style={{ color: text, fontSize: 12 }}>{"Prazo: "}{new Date(goal.date).toLocaleDateString("pt-BR")}</Text>
+                </View>
+                <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: 8, width: "100%", marginBottom: 4 }}>
+                  <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>
+                    <Text style={{ color: text, fontSize: 14, textAlign: "right" }}>
+                      {goal.amount.toLocaleString("pt-BR", { style: "currency", currency: "BRL", minimumFractionDigits: 2, maximumFractionDigits: 2, useGrouping: true })} {" /"}
                     </Text>
-                    <Text color={text} fontSize={16} bold textAlign={"right"}>
-                      {goal.currentAmount.toLocaleString("pt-BR", {
-                        style: "currency",
-                        currency: "BRL",
-                        minimumFractionDigits: 2,
-                        maximumFractionDigits: 2,
-                        useGrouping: true,
-                      })}
+                    <Text style={{ color: text, fontSize: 16, fontWeight: "700", textAlign: "right" }}>
+                      {goal.currentAmount.toLocaleString("pt-BR", { style: "currency", currency: "BRL", minimumFractionDigits: 2, maximumFractionDigits: 2, useGrouping: true })}
                     </Text>
-                  </HStack>
+                  </View>
                   {differenceInCalendarDays(goal.date, Date.now()) <= 30 && (
-                    <Text color={text} fontSize={16} bold textAlign={"left"}>
-                      Restam {differenceInCalendarDays(goal.date, Date.now())}{" "}
-                      dias
-                    </Text>
+                    <Text style={{ color: text, fontSize: 16, fontWeight: "700", textAlign: "left" }}>Restam {differenceInCalendarDays(goal.date, Date.now())} dias</Text>
                   )}
-                </HStack>
+                </View>
                 <Progress.Bar
-                  progress={
-                    (goal.currentAmount * 100) / goal.amount / 100 >= 1
-                      ? 1
-                      : (goal.currentAmount * 100) / goal.amount / 100
-                  }
+                  progress={ (goal.currentAmount * 100) / goal.amount / 100 >= 1 ? 1 : (goal.currentAmount * 100) / goal.amount / 100 }
                   width={width * 0.85}
                   height={14}
                   borderRadius={16}
-                  color={
-                    (goal.currentAmount * 100) / goal.amount / 100 >= 1
-                      ? theme.colors.purple[200]
-                      : theme.colors.purple[600]
-                  }
-                  unfilledColor={
-                    (goal.currentAmount * 100) / goal.amount / 100 >= 1
-                      ? theme.colors.purple[200] + "66"
-                      : theme.colors.purple[600] + "66"
-                  }
+                  color={ (goal.currentAmount * 100) / goal.amount / 100 >= 1 ? "#e9d5ff" : "#9c44dc" }
+                  unfilledColor={ (goal.currentAmount * 100) / goal.amount / 100 >= 1 ? "#e9d5ff66" : "#9c44dc66" }
                   borderWidth={0}
                 />
-              </VStack>
+              </View>
             </Pressable>
           ))}
-        </VStack>
-        <Box h={4} w={"100%"} />
+        </View>
+        <View style={{ height: 16, width: "100%" }} />
       </ScrollView>
 
-      {isAiEnabled && <Box w={"100%"} h={16} />}
-
+      {isAiEnabled && <View style={{ width: "100%", height: 64 }} />}
       <AIComponent />
 
-      <Actionsheet
-        isOpen={isOpen}
-        onClose={onClose}
-        size="full"
-        h={height * (isKeyboardOpen ? 0.9 : 1.09)}
-      >
-        <Actionsheet.Content pb={isKeyboardOpen ? 24 : 0}>
+      <Modal visible={isOpen} animationType="slide" onRequestClose={onClose} transparent={false}>
+        <View style={{ flex: 1, height: height * (isKeyboardOpen ? 0.9 : 1.09), paddingTop: 24, backgroundColor: bg }}>
+          <Pressable onPress={onClose} style={{ alignSelf: "flex-end", padding: 16 }}>
+            <Feather name="x" size={24} color={text} />
+          </Pressable>
           {currentSelectedSheet === "editar" ? (
-            <EditGoalForm
-              onClose={onClose}
-              selectedTransaction={selectedTransaction}
-            />
+            <EditGoalForm onClose={onClose} selectedTransaction={selectedTransaction} />
           ) : currentSelectedSheet === "fuel" ? (
-            <ViewFuelReport
-              selectedValue={runsChartData.fullList[selectedValue]}
-            />
+            <ViewFuelReport selectedValue={runsChartData.fullList[selectedValue]} />
           ) : (
             <ErrorSheet />
           )}
-          <Box h={16} w={"100%"} />
-        </Actionsheet.Content>
-      </Actionsheet>
-    </VStack>
+          <View style={{ height: 64, width: "100%" }} />
+        </View>
+      </Modal>
+    </View>
   );
 }

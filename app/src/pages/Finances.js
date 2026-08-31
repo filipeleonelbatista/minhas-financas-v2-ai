@@ -31,7 +31,6 @@ import { useSettingsStore } from "../stores/settings";
 import { useFinanceStore } from "../stores/finance";
 import { useShallow } from "zustand/react/shallow";
 import AIComponent from "../components/AIComponent";
-import { NativeBaseProvider } from "native-base";
 
 dayjs.extend(isSameOrAfter);
 dayjs.extend(isSameOrBefore);
@@ -516,9 +515,7 @@ export default function Finances() {
             <Feather name="x" size={24} color={text} />
           </Pressable>
           {selectedTransaction && (
-            <NativeBaseProvider>
-              <EditItemForm onClose={onClose} selectedTransaction={selectedTransaction} />
-            </NativeBaseProvider>
+            <EditItemForm onClose={onClose} selectedTransaction={selectedTransaction} />
           )}
           <View style={{ height: 64, width: "100%" }} />
         </View>

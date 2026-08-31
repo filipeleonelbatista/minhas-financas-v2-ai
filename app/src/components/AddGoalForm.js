@@ -1,19 +1,22 @@
-
 import React from 'react';
 
 import { Feather } from '@expo/vector-icons';
 import { DateTimePickerAndroid } from '@react-native-community/datetimepicker';
 import { useFormik } from 'formik';
-import { Button, Input, ScrollView, Text, VStack, useColorModeValue, useTheme } from 'native-base';
+import { View, Text, TextInput, ScrollView, Pressable, TouchableOpacity } from 'react-native';
 import { useCallback } from 'react';
 import * as Yup from 'yup';
-import { useGoals } from '../hooks/useGoals';
+import { useGoalsStore } from '../stores/goals';
+import { useSettingsStore } from '../stores/settings';
+
+const PURPLE_600 = "#9c44dc";
 
 export default function AddGoalForm({ onClose }) {
-    const theme = useTheme();
-    const text = useColorModeValue(theme.colors.gray[600], theme.colors.gray[200]);
+    const colorModeState = useSettingsStore((s) => s.colorModeState);
+    const isDark = colorModeState === "dark";
+    const text = isDark ? "#e4e4e7" : "#52525b";
 
-    const { addTransaction } = useGoals();
+    const addTransaction = useGoalsStore((s) => s.add);
 
     const formSchema = useCallback(() => {
         return Yup.object().shape({
@@ -45,7 +48,7 @@ export default function AddGoalForm({ onClose }) {
             date: formValues.date !== '' ? new Date(`${submittedDate[2]}-${submittedDate[1]}-${submittedDate[0]}`).getTime() + 43200000 : '',
             description: formValues.description,
         }
-        addTransaction(data)
+        await addTransaction(data)
         onClose()
     }
 
@@ -65,117 +68,95 @@ export default function AddGoalForm({ onClose }) {
 
     return (
         <ScrollView
-            w={'100%'}
-            px={4}
+            style={{ width: "100%", paddingHorizontal: 16 }}
+            contentContainerStyle={{ paddingBottom: 32 }}
         >
-            <Text bold fontSize={24} color={text}>
-                Adicionar Meta
-            </Text>
-            <Text color={text} mb={4}>
+            <Text style={{ fontWeight: "700", fontSize: 24, color: text }}>Adicionar Meta</Text>
+            <Text style={{ color: text, marginBottom: 16 }}>
                 Adicione sua meta para acompanhar em suas finanças.
             </Text>
 
-            <VStack space={2}>
-                <Text color={text}>
-                    Descrição
-                </Text>
-                <Input
-                    errors={!!formik.errors.description}
-                    helperText={formik.errors.description}
+            <View className="flex-col gap-2" style={{ gap: 8, marginBottom: 8 }}>
+                <Text style={{ color: text }}>Descrição</Text>
+                <TextInput
                     placeholder="Descrição"
-                    onChangeText={(text) => formik.setFieldValue('description', text)}
+                    placeholderTextColor="#a1a1aa"
+                    onChangeText={(t) => formik.setFieldValue('description', t)}
                     value={formik.values.description}
+                    className="bg-white dark:bg-gray-800 rounded-xl p-3 border border-gray-200 dark:border-gray-700"
+                    style={{ color: text, backgroundColor: isDark ? "#27272a" : "white", borderWidth: 1, borderColor: isDark ? "#3f3f46" : "#e4e4e7", borderRadius: 12, padding: 12 }}
                 />
                 {formik.errors.description && (
-                    <Text color="red.600">{formik.errors.description}</Text>
+                    <Text style={{ color: "#dc2626" }}>{formik.errors.description}</Text>
                 )}
-            </VStack>
-            <VStack space={2}>
-                <Text color={text}>
-                    Valor da meta
-                </Text>
-                <Input
-                    errors={!!formik.errors.amount}
-                    helperText={formik.errors.amount}
+            </View>
+            <View className="flex-col gap-2" style={{ gap: 8, marginBottom: 8 }}>
+                <Text style={{ color: text }}>Valor da meta</Text>
+                <TextInput
                     keyboardType="decimal-pad"
                     placeholder="Valor da meta"
-                    onChangeText={(text) => formik.setFieldValue('amount', moeda(text))}
+                    placeholderTextColor="#a1a1aa"
+                    onChangeText={(t) => formik.setFieldValue('amount', moeda(t))}
                     value={formik.values.amount}
+                    className="bg-white dark:bg-gray-800 rounded-xl p-3 border border-gray-200 dark:border-gray-700"
+                    style={{ color: text, backgroundColor: isDark ? "#27272a" : "white", borderWidth: 1, borderColor: isDark ? "#3f3f46" : "#e4e4e7", borderRadius: 12, padding: 12 }}
                 />
                 {formik.errors.amount && (
-                    <Text color="red.600">{formik.errors.amount}</Text>
+                    <Text style={{ color: "#dc2626" }}>{formik.errors.amount}</Text>
                 )}
-            </VStack>
-            <VStack space={2}>
-                <Text color={text}>
-                    Valor alcançado
-                </Text>
-                <Input
-                    errors={!!formik.errors.currentAmount}
-                    helperText={formik.errors.currentAmount}
+            </View>
+            <View className="flex-col gap-2" style={{ gap: 8, marginBottom: 8 }}>
+                <Text style={{ color: text }}>Valor alcançado</Text>
+                <TextInput
                     keyboardType="decimal-pad"
                     placeholder="Valor alcançado"
-                    onChangeText={(text) => formik.setFieldValue('currentAmount', moeda(text))}
+                    placeholderTextColor="#a1a1aa"
+                    onChangeText={(t) => formik.setFieldValue('currentAmount', moeda(t))}
                     value={formik.values.currentAmount}
+                    className="bg-white dark:bg-gray-800 rounded-xl p-3 border border-gray-200 dark:border-gray-700"
+                    style={{ color: text, backgroundColor: isDark ? "#27272a" : "white", borderWidth: 1, borderColor: isDark ? "#3f3f46" : "#e4e4e7", borderRadius: 12, padding: 12 }}
                 />
                 {formik.errors.currentAmount && (
-                    <Text color="red.600">{formik.errors.currentAmount}</Text>
+                    <Text style={{ color: "#dc2626" }}>{formik.errors.currentAmount}</Text>
                 )}
-            </VStack>
+            </View>
 
-            <VStack space={2}>
-                <Text color={text}>
-                    Data da meta
-                </Text>
-                <Input
-                    errors={!!formik.errors.date}
-                    helperText={formik.errors.date}
-                    placeholder="DD/MM/AAAA"
-                    value={formik.values.date}
-                    editable={false}
-                    rightElement={
-                        <Button
-                            size="xs"
-                            rounded="none"
-                            w="1/4"
-                            p={0}
-                            h="full"
-                            bgColor={theme.colors.purple[600]}
-                            _pressed={{
-                              bgColor: 'purple.800'
-                            }}
-                            onPress={() => {
-                                DateTimePickerAndroid.open({
-                                    value: new Date(Date.now()),
-                                    onChange,
-                                    mode: 'date',
-                                    is24Hour: false,
-                                });
-                            }}
-                        >
-                            <Feather name="calendar" size={24} color="#FFF" />
-                        </Button>
-                    }
-                />
+            <View className="flex-col gap-2" style={{ gap: 8, marginBottom: 8 }}>
+                <Text style={{ color: text }}>Data da meta</Text>
+                <View className="flex-row items-center bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden" style={{ flexDirection: "row", alignItems: "center", backgroundColor: isDark ? "#27272a" : "white", borderWidth: 1, borderColor: isDark ? "#3f3f46" : "#e4e4e7", borderRadius: 12, overflow: "hidden" }}>
+                    <TextInput
+                        placeholder="DD/MM/AAAA"
+                        placeholderTextColor="#a1a1aa"
+                        value={formik.values.date}
+                        editable={false}
+                        style={{ flex: 1, padding: 12, color: text }}
+                    />
+                    <TouchableOpacity
+                        onPress={() => {
+                            DateTimePickerAndroid.open({
+                                value: new Date(Date.now()),
+                                onChange,
+                                mode: 'date',
+                                is24Hour: false,
+                            });
+                        }}
+                        style={{ backgroundColor: PURPLE_600, padding: 12, height: "100%", justifyContent: "center", alignItems: "center", width: "25%" }}
+                    >
+                        <Feather name="calendar" size={24} color="#FFF" />
+                    </TouchableOpacity>
+                </View>
                 {formik.errors.date && (
-                    <Text color="red.600">{formik.errors.date}</Text>
+                    <Text style={{ color: "#dc2626" }}>{formik.errors.date}</Text>
                 )}
-            </VStack>
+            </View>
 
-            <Button
+            <Pressable
                 onPress={formik.submitForm}
-                colorScheme="purple"
-                mt={2}
-                mb={8}
-                _text={{
-                    color: "white",
-                }}
-                _pressed={{
-                    bgColor: theme.colors.purple[900]
-                }}
+                className="bg-purple-600 rounded-xl p-3 mt-2 mb-8 items-center justify-center active:bg-purple-900"
+                style={{ backgroundColor: PURPLE_600, marginTop: 8, marginBottom: 32, padding: 12, borderRadius: 12, alignItems: "center", justifyContent: "center" }}
             >
-                Adicionar
-            </Button>
+                <Text style={{ color: "white", fontWeight: "600" }}>Adicionar</Text>
+            </Pressable>
         </ScrollView>
     );
 }

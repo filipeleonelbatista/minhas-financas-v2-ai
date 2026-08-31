@@ -2,28 +2,22 @@ import React, { useMemo } from "react";
 
 import { useNavigation } from "@react-navigation/native";
 import { useFormik } from "formik";
-import {
-  Button,
-  Input,
-  ScrollView,
-  Text,
-  useColorModeValue,
-  useTheme,
-  VStack,
-} from "native-base";
+import { View, Text, TextInput, ScrollView, Pressable } from "react-native";
 import * as Yup from "yup";
-import { useLists } from "../hooks/useLists";
+import { useListsStore } from "../stores/lists";
+import { useSettingsStore } from "../stores/settings";
+
+const PURPLE_600 = "#9c44dc";
 
 export default function EditListForm({ onClose }) {
-  const theme = useTheme();
-  const text = useColorModeValue(
-    theme.colors.gray[600],
-    theme.colors.gray[200]
-  );
+  const colorModeState = useSettingsStore((s) => s.colorModeState);
+  const isDark = colorModeState === "dark";
+  const text = isDark ? "#e4e4e7" : "#52525b";
 
   const navigation = useNavigation();
 
-  const { updateTransaction, selectedList } = useLists();
+  const selectedList = useListsStore((s) => s.selectedList);
+  const load = useListsStore((s) => s.load);
 
   const formSchema = useMemo(() => {
     return Yup.object().shape({
@@ -34,8 +28,8 @@ export default function EditListForm({ onClose }) {
 
   const formik = useFormik({
     initialValues: {
-      description: selectedList.description ?? "",
-      location: selectedList.location ?? "",
+      description: selectedList?.description ?? "",
+      location: selectedList?.location ?? "",
     },
     validationSchema: formSchema,
     onSubmit: (values) => {
@@ -51,7 +45,10 @@ export default function EditListForm({ onClose }) {
         location: formValues.location,
       };
 
-      await updateTransaction(createdList);
+      const { listRepo } = require("../repositories/list");
+      await listRepo.update(createdList.id, createdList);
+      await load();
+      useListsStore.setState({ selectedList: createdList });
 
       onClose();
     } catch (error) {
@@ -60,54 +57,55 @@ export default function EditListForm({ onClose }) {
   }
 
   return (
-    <ScrollView w={"100%"} px={4}>
-      <Text bold fontSize={24} color={text}>
+    <ScrollView style={{ width: "100%", paddingHorizontal: 16 }} contentContainerStyle={{ paddingBottom: 32 }}>
+      <Text style={{ fontWeight: "700", fontSize: 24, color: text }}>
         Editar informações da Lista
       </Text>
-      <Text color={text} mb={4}>
+      <Text style={{ color: text, marginBottom: 16 }}>
         Edite os dados da sua lista.
       </Text>
 
-      <VStack space={2}>
-        <Text color={text}>Nome da lista</Text>
-        <Input
-          errors={!!formik.errors.description}
-          helperText={formik.errors.description}
+      <View className="flex-col gap-2" style={{ gap: 8, marginBottom: 8 }}>
+        <Text style={{ color: text }}>Nome da lista</Text>
+        <TextInput
           placeholder="Nome da lista"
-          onChangeText={(text) => formik.setFieldValue("description", text)}
+          placeholderTextColor="#a1a1aa"
+          onChangeText={(t) => formik.setFieldValue("description", t)}
           value={formik.values.description}
+          className="bg-white dark:bg-gray-800 rounded-xl p-3 border border-gray-200 dark:border-gray-700"
+          style={{ color: text, backgroundColor: isDark ? "#27272a" : "white", borderWidth: 1, borderColor: isDark ? "#3f3f46" : "#e4e4e7", borderRadius: 12, padding: 12 }}
         />
-      </VStack>
+        {formik.errors.description && (
+          <Text style={{ color: "#dc2626" }}>{formik.errors.description}</Text>
+        )}
+      </View>
 
-      <VStack space={2}>
-        <Text color={text}>Local de compra</Text>
-        <Input
-          errors={!!formik.errors.location}
-          helperText={formik.errors.location}
+      <View className="flex-col gap-2" style={{ gap: 8, marginBottom: 8 }}>
+        <Text style={{ color: text }}>Local de compra</Text>
+        <TextInput
           placeholder="Local de compra"
-          onChangeText={(text) => formik.setFieldValue("location", text)}
+          placeholderTextColor="#a1a1aa"
+          onChangeText={(t) => formik.setFieldValue("location", t)}
           value={formik.values.location}
+          className="bg-white dark:bg-gray-800 rounded-xl p-3 border border-gray-200 dark:border-gray-700"
+          style={{ color: text, backgroundColor: isDark ? "#27272a" : "white", borderWidth: 1, borderColor: isDark ? "#3f3f46" : "#e4e4e7", borderRadius: 12, padding: 12 }}
         />
-        <Text color={text} fontSize={12}>
+        {formik.errors.location && (
+          <Text style={{ color: "#dc2626" }}>{formik.errors.location}</Text>
+        )}
+        <Text style={{ color: text, fontSize: 12 }}>
           Esse local será usado para criar os itens da sua lista. Ao adicionar
           um item na lista você poderá mudar isso se preferir.
         </Text>
-      </VStack>
+      </View>
 
-      <Button
+      <Pressable
         onPress={formik.submitForm}
-        colorScheme="purple"
-        mt={2}
-        mb={8}
-        _text={{
-          color: "white",
-        }}
-        _pressed={{
-          bgColor: theme.colors.purple[900],
-        }}
+        className="bg-purple-600 rounded-xl p-3 mt-2 mb-8 items-center justify-center active:bg-purple-900"
+        style={{ backgroundColor: PURPLE_600, marginTop: 8, marginBottom: 32, padding: 12, borderRadius: 12, alignItems: "center", justifyContent: "center" }}
       >
-        Atualizar
-      </Button>
+        <Text style={{ color: "white", fontWeight: "600" }}>Atualizar</Text>
+      </Pressable>
     </ScrollView>
   );
 }

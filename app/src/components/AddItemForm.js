@@ -4,30 +4,40 @@ import { Feather } from "@expo/vector-icons";
 import { DateTimePickerAndroid } from "@react-native-community/datetimepicker";
 import { Picker } from "@react-native-picker/picker";
 import { useFormik } from "formik";
-import {
-  Button,
-  HStack,
-  Input,
-  ScrollView,
-  Text,
-  VStack,
-  useColorModeValue,
-  useTheme,
-} from "native-base";
-import { Switch } from "react-native";
+import { View, Text, TextInput, ScrollView, Pressable, TouchableOpacity, Switch } from "react-native";
 import * as Yup from "yup";
-import { usePayments } from "../hooks/usePayments";
-import { useSettings } from "../hooks/useSettings";
+import { useFinanceStore } from "../stores/finance";
+import { useSettingsStore } from "../stores/settings";
+
+const PURPLE_600 = "#9c44dc";
+const PURPLE_900 = "#581C87";
+
+const categoriesList = [
+  "Todos",
+  "Outros",
+  "Bares e Restaurantes",
+  "Beleza",
+  "Cartão",
+  "Emergência",
+  "Estudos",
+  "Ganhos",
+  "Investimentos",
+  "Mercado",
+  "Moradia",
+  "Saúde",
+  "Streaming",
+  "TV/Internet/Telefone",
+  "Transporte",
+  "Vestuário",
+];
 
 export default function AddItemForm({ onClose }) {
-  const theme = useTheme();
-  const text = useColorModeValue(
-    theme.colors.gray[600],
-    theme.colors.gray[200]
-  );
+  const colorModeState = useSettingsStore((s) => s.colorModeState);
+  const isDark = colorModeState === "dark";
+  const text = isDark ? "#e4e4e7" : "#52525b";
 
-  const { addTransaction, categoriesList } = usePayments();
-  const { simpleFinancesItem } = useSettings();
+  const addTransaction = useFinanceStore((s) => s.add);
+  const simpleFinancesItem = useSettingsStore((s) => !!s.simpleFinancesItem);
 
   const formSchema = useMemo(() => {
     return Yup.object().shape({
@@ -83,7 +93,7 @@ export default function AddItemForm({ onClose }) {
       isEnabled: formValues.isEnabled,
       isFavorited: false,
     };
-    addTransaction(data);
+    await addTransaction(data);
     onClose();
   }
 
@@ -158,96 +168,85 @@ export default function AddItemForm({ onClose }) {
   };
 
   return (
-    <ScrollView w={"100%"} px={4}>
-      <Text bold fontSize={24} color={text}>
-        Adicionar transação
-      </Text>
-      <Text color={text} mb={4}>
+    <ScrollView style={{ width: "100%", paddingHorizontal: 16 }} contentContainerStyle={{ paddingBottom: 32 }}>
+      <Text style={{ fontWeight: "700", fontSize: 24, color: text }}>Adicionar transação</Text>
+      <Text style={{ color: text, marginBottom: 16 }}>
         Adicione informações sobre o entrada ou saída que está adicionando.
       </Text>
 
-      <VStack space={2}>
-        <Text color={text}>Descrição</Text>
-        <Input
+      <View className="flex-col gap-2" style={{ gap: 8, marginBottom: 8 }}>
+        <Text style={{ color: text }}>Descrição</Text>
+        <TextInput
           testID="tour-input-description"
           accessibilityLabel="Descrição"
-          errors={!!formik.errors.description}
-          helperText={formik.errors.description}
           placeholder="Descrição"
-          onChangeText={(text) => formik.setFieldValue("description", text)}
+          placeholderTextColor="#a1a1aa"
+          onChangeText={(t) => formik.setFieldValue("description", t)}
           value={formik.values.description}
+          className="bg-white dark:bg-gray-800 rounded-xl p-3 border border-gray-200 dark:border-gray-700"
+          style={{ color: text, backgroundColor: isDark ? "#27272a" : "white", borderWidth: 1, borderColor: isDark ? "#3f3f46" : "#e4e4e7", borderRadius: 12, padding: 12 }}
         />
         {formik.errors.description && (
-          <Text color="red.600">{formik.errors.description}</Text>
+          <Text style={{ color: "#dc2626" }}>{formik.errors.description}</Text>
         )}
-      </VStack>
-      <VStack space={2}>
-        <Text color={text}>Valor</Text>
-        <Input
+      </View>
+      <View className="flex-col gap-2" style={{ gap: 8, marginBottom: 8 }}>
+        <Text style={{ color: text }}>Valor</Text>
+        <TextInput
           testID="tour-input-amount"
           accessibilityLabel="Valor"
-          errors={!!formik.errors.amount}
-          helperText={formik.errors.amount}
           keyboardType="decimal-pad"
           placeholder="Valor"
-          onChangeText={(text) => formik.setFieldValue("amount", moeda(text))}
+          placeholderTextColor="#a1a1aa"
+          onChangeText={(t) => formik.setFieldValue("amount", moeda(t))}
           value={formik.values.amount}
+          className="bg-white dark:bg-gray-800 rounded-xl p-3 border border-gray-200 dark:border-gray-700"
+          style={{ color: text, backgroundColor: isDark ? "#27272a" : "white", borderWidth: 1, borderColor: isDark ? "#3f3f46" : "#e4e4e7", borderRadius: 12, padding: 12 }}
         />
         {formik.errors.amount && (
-          <Text color="red.600">{formik.errors.amount}</Text>
+          <Text style={{ color: "#dc2626" }}>{formik.errors.amount}</Text>
         )}
-      </VStack>
-      <VStack space={2}>
-        <Text color={text}>Data de vencimento</Text>
-        <Input
-          errors={!!formik.errors.date}
-          helperText={formik.errors.date}
-          placeholder="DD/MM/AAAA"
-          value={formik.values.date}
-          editable={false}
-          rightElement={
-            <Button
-              size="xs"
-              rounded="none"
-              w="1/4"
-              p={0}
-              h="full"
-              bgColor={theme.colors.purple[600]}
-              _pressed={{
-                bgColor: "purple.800",
-              }}
-              onPress={() => {
-                DateTimePickerAndroid.open({
-                  value: new Date(Date.now()),
-                  onChange,
-                  mode: "date",
-                  is24Hour: false,
-                });
-              }}
-            >
-              <Feather name="calendar" size={24} color="#FFF" />
-            </Button>
-          }
-        />
+      </View>
+      <View className="flex-col gap-2" style={{ gap: 8, marginBottom: 8 }}>
+        <Text style={{ color: text }}>Data de vencimento</Text>
+        <View className="flex-row items-center bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden" style={{ flexDirection: "row", alignItems: "center", backgroundColor: isDark ? "#27272a" : "white", borderWidth: 1, borderColor: isDark ? "#3f3f46" : "#e4e4e7", borderRadius: 12, overflow: "hidden" }}>
+          <TextInput
+            placeholder="DD/MM/AAAA"
+            placeholderTextColor="#a1a1aa"
+            value={formik.values.date}
+            editable={false}
+            style={{ flex: 1, padding: 12, color: text }}
+          />
+          <TouchableOpacity
+            onPress={() => {
+              DateTimePickerAndroid.open({
+                value: new Date(Date.now()),
+                onChange,
+                mode: "date",
+                is24Hour: false,
+              });
+            }}
+            style={{ backgroundColor: PURPLE_600, padding: 12, height: "100%", justifyContent: "center", alignItems: "center", width: "25%" }}
+          >
+            <Feather name="calendar" size={24} color="#FFF" />
+          </TouchableOpacity>
+        </View>
         {formik.errors.date && (
-          <Text color="red.600">{formik.errors.date}</Text>
+          <Text style={{ color: "#dc2626" }}>{formik.errors.date}</Text>
         )}
-      </VStack>
+      </View>
 
       {!simpleFinancesItem && (
         <>
-          <VStack space={2}>
-            <Text bold fontSize={18} color={text}>
-              Categoria
-            </Text>
+          <View className="flex-col gap-2" style={{ gap: 8, marginBottom: 8 }}>
+            <Text style={{ fontWeight: "700", fontSize: 18, color: text }}>Categoria</Text>
             <Picker
               selectedValue={formik.values.category ?? "Outros"}
-              onValueChange={(itemValue, itemIndex) =>
+              onValueChange={(itemValue) =>
                 formik.setFieldValue("category", itemValue)
               }
               mode="dropdown"
-              dropdownIconColor={theme.colors.purple[600]}
-              dropdownIconRippleColor={theme.colors.purple[600]}
+              dropdownIconColor={PURPLE_600}
               enabled
               style={{
                 width: "100%",
@@ -262,115 +261,96 @@ export default function AddItemForm({ onClose }) {
               )}
             </Picker>
             {formik.errors.category && (
-              <Text color="red.600">{formik.errors.category}</Text>
+              <Text style={{ color: "#dc2626" }}>{formik.errors.category}</Text>
             )}
-          </VStack>
-          <VStack space={2}>
-            <Text color={text}>Data do pagamento</Text>
-            <Input
-              errors={!!formik.errors.paymentDate}
-              helperText={formik.errors.paymentDate}
-              placeholder="DD/MM/AAAA"
-              value={formik.values.paymentDate}
-              editable={false}
-              rightElement={
-                <Button
-                  size="xs"
-                  rounded="none"
-                  w="1/4"
-                  p={0}
-                  h="full"
-                  bgColor={theme.colors.purple[600]}
-                  _pressed={{
-                    bgColor: "purple.800",
-                  }}
-                  onPress={() => {
-                    DateTimePickerAndroid.open({
-                      value: new Date(Date.now()),
-                      onChange: onChangePaymentDate,
-                      mode: "date",
-                      is24Hour: false,
-                    });
-                  }}
-                >
-                  <Feather name="calendar" size={24} color="#FFF" />
-                </Button>
-              }
-            />
+          </View>
+          <View className="flex-col gap-2" style={{ gap: 8, marginBottom: 8 }}>
+            <Text style={{ color: text }}>Data do pagamento</Text>
+            <View className="flex-row items-center bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden" style={{ flexDirection: "row", alignItems: "center", backgroundColor: isDark ? "#27272a" : "white", borderWidth: 1, borderColor: isDark ? "#3f3f46" : "#e4e4e7", borderRadius: 12, overflow: "hidden" }}>
+              <TextInput
+                placeholder="DD/MM/AAAA"
+                placeholderTextColor="#a1a1aa"
+                value={formik.values.paymentDate}
+                editable={false}
+                style={{ flex: 1, padding: 12, color: text }}
+              />
+              <TouchableOpacity
+                onPress={() => {
+                  DateTimePickerAndroid.open({
+                    value: new Date(Date.now()),
+                    onChange: onChangePaymentDate,
+                    mode: "date",
+                    is24Hour: false,
+                  });
+                }}
+                style={{ backgroundColor: PURPLE_600, padding: 12, height: "100%", justifyContent: "center", alignItems: "center", width: "25%" }}
+              >
+                <Feather name="calendar" size={24} color="#FFF" />
+              </TouchableOpacity>
+            </View>
             {formik.errors.paymentDate && (
-              <Text color="red.600">{formik.errors.paymentDate}</Text>
+              <Text style={{ color: "#dc2626" }}>{formik.errors.paymentDate}</Text>
             )}
-          </VStack>
+          </View>
         </>
       )}
 
-      <HStack space={2} alignItems="center">
+      <View className="flex-row items-center gap-2" style={{ flexDirection: "row", alignItems: "center", gap: 8, marginTop: 8 }}>
         <Switch
           trackColor={{
-            false: theme.colors.gray[400],
-            true: theme.colors.gray[400],
+            false: "#a1a1aa",
+            true: "#a1a1aa",
           }}
           thumbColor={
             formik.values.isEnabled
-              ? theme.colors.purple[600]
-              : theme.colors.gray[800]
+              ? PURPLE_600
+              : "#27272a"
           }
-          ios_backgroundColor={theme.colors.gray[800]}
+          ios_backgroundColor="#27272a"
           onValueChange={toggleSwitch}
           value={formik.values.isEnabled}
         />
-        <Text fontSize={14} color={text}>
-          É despesa?
-        </Text>
-      </HStack>
+        <Text style={{ fontSize: 14, color: text }}>É despesa?</Text>
+      </View>
       {formik.errors.isEnabled && (
-        <Text color="red.600">{formik.errors.isEnabled}</Text>
+        <Text style={{ color: "#dc2626" }}>{formik.errors.isEnabled}</Text>
       )}
-      <Text fontSize={14} color={text}>
+      <Text style={{ fontSize: 14, color: text }}>
         Deixe marcado caso esteja adicionando uma saída (Despesa).
       </Text>
 
       {!simpleFinancesItem && (
         <>
-          <HStack space={2} alignItems="center">
+          <View className="flex-row items-center gap-2" style={{ flexDirection: "row", alignItems: "center", gap: 8, marginTop: 8 }}>
             <Switch
               trackColor={{
-                false: theme.colors.gray[400],
-                true: theme.colors.gray[400],
+                false: "#a1a1aa",
+                true: "#a1a1aa",
               }}
               thumbColor={
                 formik.values.paymentStatus
-                  ? theme.colors.purple[600]
-                  : theme.colors.gray[800]
+                  ? PURPLE_600
+                  : "#27272a"
               }
-              ios_backgroundColor={theme.colors.gray[800]}
+              ios_backgroundColor="#27272a"
               onValueChange={toggleSwitchPaymentStatus}
               value={formik.values.paymentStatus}
             />
-            <Text fontSize={14} color={text}>
-              Foi Pago?
-            </Text>
-          </HStack>
+            <Text style={{ fontSize: 14, color: text }}>Foi Pago?</Text>
+          </View>
           {formik.errors.paymentStatus && (
-            <Text color="red.600">{formik.errors.paymentStatus}</Text>
+            <Text style={{ color: "#dc2626" }}>{formik.errors.paymentStatus}</Text>
           )}
         </>
       )}
 
-      <Button
+      <Pressable
         onPress={formik.submitForm}
-        colorScheme="purple"
-        mt={2}
-        mb={8}
-        _text={{
-          color: "white",
-        }}
-        _pressed={{
-          bgColor: theme.colors.purple[900],
-        }}
+        className="bg-purple-600 rounded-xl p-3 mt-2 mb-8 items-center justify-center active:bg-purple-900"
+        style={{ backgroundColor: PURPLE_600, marginTop: 8, marginBottom: 32, padding: 12, borderRadius: 12, alignItems: "center", justifyContent: "center" }}
       >
-        Adicionar
-      </Button>
+        <Text style={{ color: "white", fontWeight: "600" }}>Adicionar</Text>
+      </Pressable>
     </ScrollView>
   );
 }

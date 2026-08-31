@@ -8,6 +8,13 @@ export const listRepo={
   async delete(id:string){ const db=getDb(); if(db){ try{ await db.delete(items).where(eq(items.list_id,id)); await db.delete(lists).where(eq(lists.id,id));}catch{}} memItems=memItems.filter(r=>r.list_id!==id); memLists=memLists.filter(r=>r.id!==id);},
   async getAll(){ const db=getDb(); if(db){ try{ return await db.select().from(lists);}catch{}} return [...memLists];},
   async getItems(listId:string){ const db=getDb(); if(db){ try{ return await db.select().from(items).where(eq(items.list_id,listId));}catch{}} return memItems.filter(r=>r.list_id===listId);},
+  async update(id:string, dto:any){
+    const db=getDb();
+    if(db){ try{ await db.update(lists).set(dto).where(eq(lists.id,id)); }catch{}}
+    const idx=memLists.findIndex((r)=>r.id===id);
+    if(idx>=0){ memLists[idx]={ ...memLists[idx], ...dto }; return memLists[idx]; }
+    return null;
+  },
   async updateItem(id:string, dto:any){
     const db=getDb();
     if(db){ try{ await db.update(items).set(dto).where(eq(items.id,id)); }catch{}}

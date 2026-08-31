@@ -1,6 +1,6 @@
 # Project Status — Minhas Finanças v2
 
-> Atualizado: 2026-08-29 | Branch: `feat/zustand-standard` (`aa6e4bc`→`f181219`) | Status: **Fase 1 11/11 + Fase 1.1 Zustand Standard Tasks 1-9 concluídas (20 suites/142 PASS) — WatermelonDB/context removidos, App/routes zustand+NativeWind dark**
+> Atualizado: 2026-08-29 | Branch: `main` (`9bd3059`→`ba0a9bc`) | Status: **Fase 1 100% finalizada — Zustand padrão (sem Context), NativeWind 100%, NativeBase 0, WatermelonDB 0 — 20 suites/142 PASS, expo-doctor 18/18**
 
 ---
 
@@ -24,7 +24,7 @@
 
 **Renomeio:** `finances-app-feature-adicionando-watermelondb/` → `app/` (`ae034a8`), `.gitignore` + `README.md` paths atualizados.
 
-**Qualidade Fase 1.1 (2026-08-29):** `yarn jest --no-coverage` → **20 suites, 142 testes PASS** (6 stores `finance/market/lists/runs/goals/settings` + 14 originais, WatermelonDB warning zerado). `npx expo-doctor` 2 fails restantes (`react-dom` peer `native-base` residual + `expo-sqlite` 57 vs 16) — **WatermelonDB New Arch removido**. `src/stores/*` `useShallow` + `filterFinances` puro, `App.js:1` sem `NativeBaseProvider`.
+**Qualidade final (2026-08-29):** `yarn jest --no-coverage` → **20 suites, 142 PASS** (6 stores + 14 originais, `native-base:0`, `watermelondb:0`, `zustand` + `NativeWind` `dark:`). `npx expo-doctor` **18/18 PASS** (`expo.install.exclude` + `reactNativeDirectoryCheck` para `expo-sqlite`/`css-interop`). `src/stores/*` `useShallow`, `App.js:1` sem `NativeBaseProvider`, `babel.config.js` sem decorators.
 
 **Repo:** `git@github.com:filipeleonelbatista/minhas-financas-v2-ai.git` `main` `4e6844d..ae034a8` pushado, privado, `docs/` com SEO (`jekyll-seo-tag`) mantido offline.
 
@@ -43,15 +43,22 @@
 | 18 | Settings store | `794642b` | `src/stores/settings.ts` `colorModeState` → `Appearance`+`react-native-css-interop` `set`, `applyColorScheme`, `configRepo` |
 | 19 | UI migration | `b39ceb8` | `App.js:14` sem `NativeBaseProvider`, `routes.js:9`/`bottom-tab-routes.js:12` `useSettingsStore`, `Header.js`/`Finances.js`/`Loading.js` NativeWind |
 | 20 | Remove WDB | `f181219` | deleta `src/databases/` (17) + `src/context/*` (7) + `theme.js`, `package.json` remove `@nozbe/watermelondb`/decorators, `babel.config.js:7`, `hooks/*` shims |
-| **Fase 1.1 qualidade** | — | — | 20 suites 142 PASS, `expo-doctor` WDB warning removido |
+| 21 | Migrate forms | `f2056b9` | `AddItemForm/EditItemForm/AddGoalForm/EditGoalForm/AddFuelForm/AddListForm/EditListForm` → NativeWind |
+| 22 | Migrate pages | `b5c1a2c`* | `Market/Lists/List/Runs/Reports/IAPage/AboutUs/Finances` → NativeWind `useSettingsStore` |
+| 23 | Remove NB | `ba0a9bc` | `AddButtton` `Actionsheet→Modal`, 10 components finais, `package.json` remove `native-base`, `grep native-base:0`, `expo-doctor` 17/18 |
+| 24 | Finalize | `HEAD` | `expo.install.exclude` + `reactNativeDirectoryCheck`, `docs` final, `yarn jest` 20/142 + `expo-doctor` 18/18 |
+| **Fase 1 qualidade** | — | — | **20 suites 142 PASS, NativeBase 0, WDB 0, dark NativeWind ok** |
 
 ## 2.1 Próximos passos
 
 ### 2.1b Polimento Fase 1 antes da Play Store (curto prazo, pós-Zustand)
 - [x] Resolver `tailwindcss@4` mismatch NativeWind — downgrade para `3.4.17` concluído (`metro.config.js:1` sem warning)
-- [ ] Alinhar `expo-sqlite` para `~16.0.10` (ou `expo.install.exclude`) para zerar `expo-doctor` (hoje 3 fails: `react-dom` peer `native-base` + WDB NewArch + sqlite RC)
+- [x] Remover `NativeBase` 100% (`grep native-base:0`, `ba0a9bc`, `package.json` sem `native-base`/`react-dom`)
+- [x] Remover `WatermelonDB` 100% (`grep watermelondb:0`, `f181219`, `src/databases:0`, `babel` sem decorators)
+- [x] `Zustand` padrão (`src/stores/*` 6 stores, `useShallow`, `filterFinances` puro, `App.js` sem Provider)
+- [x] `expo-doctor` 18/18 (`expo.install.exclude` `expo-sqlite` + `css-interop`, `expo-sqlite 57` mantido)
 - [ ] QA em device/emulador API 29/33/35: SAF `selectedFolderToSave`, import CSV/XLSX (5MB, `xlsm` bloqueado), biometria real, Dashboard gráficos com dados reais
-- [ ] Atualizar `app/README.md` pós-rename (ainda cita Expo 48) e `app/docs/DOSSIE.md` com nova stack
+- [ ] Atualizar `app/README.md` e `app/docs/DOSSIE.md` com stack final (`zustand` + `NativeWind` + `drizzle`)
 
 ### 2.2 Fase 2 — Família online (6-8 semanas)
 - [ ] Novo projeto Firebase `financas-v2` `southamerica-east1`

@@ -473,7 +473,7 @@ export default function Goals() {
                 paddingHorizontal={0}
                 paddingVertical={0}
                 style={{ width: fabSize, height: fabSize, borderRadius: fabSize / 2 }}
-                theme={{ background: PURPLE_600, backgroundSubtle: "#581C87", foreground: "#ffffff", highlight: "#e9d5ff", highlightSubtle: "#c084fc" }}
+                theme={{ background: "#9333ea", backgroundSubtle: "#581C87", foreground: "#ffffff", highlight: "#f3e8ff", highlightSubtle: "#a78bfa" }}
               >
                 <View style={{ width: fabSize, height: fabSize, alignItems: 'center', justifyContent: 'center' }}>
                   <Feather name="plus" size={26} color="white" />

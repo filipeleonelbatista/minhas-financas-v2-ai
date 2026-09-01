@@ -332,8 +332,14 @@ export default function Dashboard() {
                   </View>
                 ) : null}
               </View>
-              {/* Legenda ao lado do gráfico (ordem by valor, apenas categoria) - clique também realça disco */}
-              <View style={{ flex: 1, gap: 6, justifyContent: "center" }} testID="pizza-legend">
+              {/* Legenda ao lado do gráfico - scroll 5 itens + metade do 6º indicando overflow */}
+              <ScrollView
+                style={{ flex: 1, maxHeight: 187 }}
+                contentContainerStyle={{ gap: 6, paddingVertical: 2 }}
+                showsVerticalScrollIndicator={true}
+                testID="pizza-legend"
+                nestedScrollEnabled
+              >
                 {pieData.map((item, idx) => {
                   const isSelected = selectedPieIndex === idx;
                   const isDimmed = selectedPieIndex !== null && !isSelected;
@@ -361,7 +367,7 @@ export default function Dashboard() {
                     </TouchableOpacity>
                   );
                 })}
-              </View>
+              </ScrollView>
             </View>
           )}
         </View>

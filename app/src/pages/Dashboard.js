@@ -492,27 +492,26 @@ export default function Dashboard() {
                         </TouchableOpacity>
                       ))}
                     </View>
-                    {/* Tooltip compacto sobre o intervalo, deslocado para o lado para não ficar em cima da linha nem cortado */}
+                    {/* Tooltip compacto sobre o intervalo, deslocado para o lado e com largura respeitando conteúdo interno */}
                     {selectedLineIndex !== null && lineData.labels[selectedLineIndex] !== undefined ? (
                       (() => {
                         const paddingRight = 64;
                         const x = paddingRight + (selectedLineIndex * (chartInnerWidth - paddingRight)) / lineData.labels.length;
                         const isLeftSide = selectedLineIndex <= 2;
-                        const tooltipWidth = 148;
-                        // posiciona ao lado da linha: se está à esquerda, vai para direita da linha; se à direita, vai para esquerda
-                        const left = isLeftSide ? Math.min(x + 10, chartInnerWidth - tooltipWidth - 8) : undefined;
-                        const right = !isLeftSide ? Math.max(chartInnerWidth - x + 10, 8) : undefined;
-                        // fallback centralizado se não couber
-                        const clampedLeft = left !== undefined && left < 8 ? 8 : left;
-                        const clampedRight = right !== undefined && right < 8 ? 8 : right;
+                        // largura respeita valores internos: deixa auto com min/max baseado no espaço disponível até a borda
+                        const availableToRight = chartInnerWidth - x - 12;
+                        const availableToLeft = x - 12;
+                        const maxW = isLeftSide ? Math.min(availableToRight, chartInnerWidth - 16) : Math.min(availableToLeft, chartInnerWidth - 16);
+                        const left = isLeftSide ? x + 10 : undefined;
+                        const right = !isLeftSide ? chartInnerWidth - x + 10 : undefined;
                         return (
                           <View
                             testID="line-tooltip"
                             style={{
                               position: "absolute",
                               top: 8,
-                              left: clampedLeft,
-                              right: clampedRight,
+                              left: left,
+                              right: right,
                               backgroundColor: isDark ? "#27272a" : "white",
                               borderRadius: 10,
                               paddingHorizontal: 10,
@@ -524,9 +523,9 @@ export default function Dashboard() {
                               borderWidth: 1,
                               borderColor: isDark ? "#3f3f46" : "#e5e7eb",
                               minWidth: 130,
-                              maxWidth: 160,
-                              width: tooltipWidth,
+                              maxWidth: Math.max(160, Math.min(maxW, chartInnerWidth - 16)),
                               alignItems: "flex-start",
+                              alignSelf: isLeftSide ? "flex-start" : "flex-end",
                               zIndex: 10,
                             }}
                           >

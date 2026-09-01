@@ -433,6 +433,14 @@ export default function Dashboard() {
                         propsForHorizontalLabels: { fontSize: 9 },
                         propsForVerticalLabels: { fontSize: 11 },
                       }}
+                      getDotProps={(value, index) => {
+                        const isSelected = index === selectedLineIndex;
+                        return {
+                          r: isSelected ? "7" : "5",
+                          strokeWidth: "2",
+                          stroke: PURPLE_900,
+                        };
+                      }}
                       bezier
                       style={{ borderRadius: 16 }}
                       withDots
@@ -447,10 +455,10 @@ export default function Dashboard() {
                         try {
                           const { G, Line } = require("react-native-svg");
                           const x = paddingRight + (selectedLineIndex * (w - paddingRight)) / data[0].data.length;
-                          // destaca o período selecionado com linha vertical tracejada e realce
+                          // destaca o período selecionado com linha vertical cinza escuro para realce
                           return (
                             <G key={`sel-${selectedLineIndex}`}>
-                              <Line x1={x} y1={paddingTop} x2={x} y2={h * 0.75 + paddingTop} stroke={PURPLE_900} strokeWidth={2} strokeDasharray="6,4" opacity={0.6} />
+                              <Line x1={x} y1={paddingTop} x2={x} y2={h * 0.75 + paddingTop} stroke="#52525b" strokeWidth={2} strokeDasharray="6,4" opacity={0.85} />
                             </G>
                           );
                         } catch {

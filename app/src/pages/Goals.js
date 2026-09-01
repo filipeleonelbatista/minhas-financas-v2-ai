@@ -1,11 +1,26 @@
 import React, { useCallback, useEffect, useState, useMemo } from "react";
-import { ScrollView, View, Text, TextInput, TouchableOpacity, Modal, Alert } from "react-native";
+import {
+  ScrollView,
+  View,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  Pressable,
+  Modal,
+  Alert,
+  FlatList,
+  useWindowDimensions,
+} from "react-native";
 import { Feather } from "@expo/vector-icons";
 import { useIsFocused, useNavigation, useRoute } from "@react-navigation/native";
-import { differenceInCalendarDays } from "date-fns";
 import { goalRepo, DEFAULT_GOAL_CATEGORIES, filterGoalsByStatus, calcGoalProgress, getDaysRemaining } from "../repositories/goal";
 import GoalCard from "../components/ui/GoalCard";
 import Header from "../components/Header";
+import { useSettingsStore } from "../stores/settings";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { Sheet, useSheetRef } from "../components/nativewindui/Sheet";
+import { BottomSheetScrollView } from "@gorhom/bottom-sheet";
+import { useIsKeyboardOpen } from "../hooks/useIsKeyboardOpen";
 
 // Re-export for tests
 export { DEFAULT_GOAL_CATEGORIES };
@@ -13,6 +28,12 @@ export function getCategoryOptions(existingGoals = []) {
   const custom = [...new Set(existingGoals.map(g => (g.category||'').toLowerCase()).filter(c => c && !DEFAULT_GOAL_CATEGORIES.includes(c) && c !== 'outros'))];
   return [...DEFAULT_GOAL_CATEGORIES, ...custom];
 }
+
+const PURPLE_600 = "#9c44dc";
+const PURPLE_900 = "#581c87";
+const GREEN_500 = "#22c55e";
+const GREEN_600 = "#16a34a";
+const RED_500 = "#ef4444";
 
 function moeda(value) {
   let v = String(value).replace(/\D/g, "");
@@ -55,7 +76,6 @@ function CategoryPicker({ selected, onSelect, customValue, onCustomChange, showC
             </TouchableOpacity>
           );
         })}
-        {/* Custom option */}
         <TouchableOpacity
           testID={`${testIDPrefix}-custom-chip`}
           onPress={() => setShowCustom(true)}
@@ -87,15 +107,31 @@ export default function Goals() {
   let route = { params: {} };
   try { const n = useNavigation(); if (n) navigation = n; } catch {}
   try { const r = useRoute(); if (r) route = r; } catch {}
+
+  const colorModeState = useSettingsStore((s) => s.colorModeState);
+  const isDark = colorModeState === "dark";
+  const bg = isDark ? "#1c1e21" : "#f5f5f4";
+  const bgCard = isDark ? "#27272a" : "#f5f5f4";
+  const bgCardPressed = isDark ? "#3f3f46" : "#e7e5e4";
+  const headerText = isDark ? "#27272a" : "white";
+  const text = isDark ? "#e4e4e7" : "#52525b";
+  const subText = isDark ? "#a1a1aa" : "#6b7280";
+  const isKeyboardOpen = useIsKeyboardOpen();
+  const { height } = useWindowDimensions();
+  let insets = { bottom: 0, top: 0, left: 0, right: 0 };
+  try { const v = useSafeAreaInsets(); if (v) insets = v; } catch {}
+  const filterSheetRef = useSheetRef();
+  const tabBarHeight = (() => { try { const { useBottomTabBarHeight } = require("@react-navigation/bottom-tabs"); return useBottomTabBarHeight(); } catch { return 80; } })();
+
   const [goals, setGoals] = useState([]);
   const [filterStatus, setFilterStatus] = useState('Todas');
   const [filterCategory, setFilterCategory] = useState('Todas');
+  const [search, setSearch] = useState("");
   const [showForm, setShowForm] = useState(false);
-  const [editing, setEditing] = useState(null); // goal or null
+  const [editing, setEditing] = useState(null);
   const [depositGoal, setDepositGoal] = useState(null);
   const [depositAmount, setDepositAmount] = useState("");
 
-  // form state
   const [description, setDescription] = useState("");
   const [amount, setAmount] = useState("");
   const [currentAmount, setCurrentAmount] = useState("");
@@ -113,7 +149,6 @@ export default function Goals() {
     if (isFocused) load();
   }, [isFocused, load]);
 
-  // Stack navigation: abrir form via params de Dashboard (Criar meta / editar)
   useEffect(() => {
     if (!isFocused) return;
     const params = route.params;
@@ -143,9 +178,22 @@ export default function Goals() {
       const norm = filterCategory.toLowerCase();
       list = list.filter(g => (g.category||'').toLowerCase() === norm);
     }
-    // sort by urgency: soonest deadline first
+    if (search.trim()) {
+      const q = search.toLowerCase();
+      list = list.filter(g => g.description.toLowerCase().includes(q) || (g.category||'').toLowerCase().includes(q));
+    }
     return [...list].sort((a,b) => Number(a.date) - Number(b.date));
-  }, [goals, filterStatus, filterCategory]);
+  }, [goals, filterStatus, filterCategory, search]);
+
+  // Hero metrics
+  const totalGoals = goals.length;
+  const totalAmount = useMemo(() => goals.reduce((acc, g) => acc + Number(g.amount||0), 0), [goals]);
+  const totalCurrent = useMemo(() => goals.reduce((acc, g) => acc + Number(g.currentAmount||0), 0), [goals]);
+  const activeCount = useMemo(() => filterGoalsByStatus(goals, 'Ativas').length, [goals]);
+  const concludedCount = useMemo(() => filterGoalsByStatus(goals, 'Concluídas').length, [goals]);
+  const formatCurrency = (value) => Number(value||0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL', minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
+  const canGoBack = navigation.canGoBack?.() ?? false;
 
   const resetForm = () => {
     setDescription("");
@@ -231,123 +279,211 @@ export default function Goals() {
 
   const categoryOptions = useMemo(() => getCategoryOptions(goals), [goals]);
 
-  const canGoBack = navigation.canGoBack?.() ?? false;
   return (
-    <View className="flex-1 bg-gray-50 dark:bg-gray-900">
-      <Header
-        title="Metas"
-        isLeftIconComponent={
-          canGoBack ? (
-            <TouchableOpacity onPress={() => navigation.goBack()} testID="goals-back" style={{ width: 40, height: 40, alignItems: "center", justifyContent: "center", borderRadius: 999 }}>
-              <Feather name="arrow-left" size={22} color="white" />
+    <View style={{ flex: 1, backgroundColor: bg }}>
+      <ScrollView style={{ flex: 1, width: "100%", height: "100%" }} contentContainerStyle={{ paddingBottom: tabBarHeight + 24 }} showsVerticalScrollIndicator={false}>
+        <Header
+          title="Metas"
+          isLeftIconComponent={
+            canGoBack ? (
+              <TouchableOpacity onPress={() => navigation.goBack()} testID="goals-back" style={{ width: 40, height: 40, alignItems: "center", justifyContent: "center", borderRadius: 999 }}>
+                <Feather name="arrow-left" size={22} color="white" />
+              </TouchableOpacity>
+            ) : false
+          }
+          isRightIconComponent={
+            <TouchableOpacity onPress={() => navigation.navigate("Configuracoes")} style={{ width: 40, height: 40, borderRadius: 999, alignItems: "center", justifyContent: "center" }}>
+              <Feather name="settings" size={20} color={headerText} />
             </TouchableOpacity>
-          ) : false
-        }
-      />
-      <View className="px-4 pt-2">
-        {/* Filters Ativas/Concluídas */}
-        <View className="flex-row mb-3" testID="filter-status">
-          {['Todas','Ativas','Concluídas'].map(s => (
-            <TouchableOpacity
-              key={s}
-              testID={`filter-${s}`}
-              onPress={() => setFilterStatus(s)}
-              className={`px-4 py-2 rounded-full mr-2 ${filterStatus===s ? 'bg-purple-600' : 'bg-white border border-gray-200'}`}
-            >
-              <Text className={`text-xs font-bold ${filterStatus===s ? 'text-white' : 'text-gray-600'}`}>{s}</Text>
-            </TouchableOpacity>
-          ))}
-        </View>
-        {/* Category filter */}
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} className="mb-3">
-          <TouchableOpacity testID="filter-category-Todas" onPress={() => setFilterCategory('Todas')} className={`px-3 py-1.5 rounded-full mr-2 ${filterCategory==='Todas'?'bg-purple-100 border border-purple-300':'bg-white border border-gray-200'}`}>
-            <Text className="text-xs">Todas</Text>
-          </TouchableOpacity>
-          {categoryOptions.map(cat => (
-            <TouchableOpacity
-              key={cat}
-              testID={`filter-category-${cat}`}
-              onPress={() => setFilterCategory(cat)}
-              className={`px-3 py-1.5 rounded-full mr-2 capitalize ${filterCategory===cat?'bg-purple-600':'bg-white border border-gray-200'}`}
-            >
-              <Text className={`text-xs capitalize ${filterCategory===cat?'text-white':'text-gray-600'}`}>{cat}</Text>
-            </TouchableOpacity>
-          ))}
-        </ScrollView>
-      </View>
+          }
+        />
 
-      <ScrollView className="flex-1 px-4" contentContainerStyle={{ paddingBottom: 100 }}>
-        {filtered.length === 0 ? (
-          <View testID="empty-goals" className="items-center py-12">
-            <Feather name="target" size={48} color="#9CA3AF" />
-            <Text className="text-gray-400 mt-2">Nenhuma meta encontrada</Text>
-            <Text className="text-gray-400 text-xs">Crie sua primeira meta financeira</Text>
+        {/* Hero cards - modelo Finances */}
+        <ScrollView
+          horizontal
+          style={{ width: "100%", marginTop: -50, height: 150 }}
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={{ height: 130, paddingHorizontal: 8 }}
+          testID="hero-goals"
+        >
+          <View style={{ marginHorizontal: 4, backgroundColor: bgCard, minWidth: 180, height: 110, borderRadius: 4, padding: 16, elevation: 2, shadowColor: "#000", shadowOpacity: 0.1 }} testID="card-total-metas">
+            <View style={{ flexDirection: "row", justifyContent: "space-between" }}>
+              <Text style={{ color: text, fontSize: 16 }}>Total metas</Text>
+              <Feather name="target" size={36} color={PURPLE_600} />
+            </View>
+            <Text style={{ color: text, fontSize: 26, fontWeight: "700" }}>{totalGoals}</Text>
+            <Text style={{ color: text, fontSize: 12 }}>{activeCount} ativas • {concludedCount} concluídas</Text>
           </View>
-        ) : (
-          filtered.map(goal => (
-            <GoalCard
-              key={goal.id}
-              goal={goal}
-              onDeposit={setDepositGoal}
-              onPress={openEdit}
-            />
-          ))
+
+          <View style={{ marginHorizontal: 4, backgroundColor: bgCard, minWidth: 180, height: 110, borderRadius: 4, padding: 16, elevation: 2, shadowColor: "#000", shadowOpacity: 0.1 }} testID="card-valor-total">
+            <View style={{ flexDirection: "row", justifyContent: "space-between" }}>
+              <Text style={{ color: text, fontSize: 16 }}>Valor total</Text>
+              <Feather name="dollar-sign" size={36} color={GREEN_500} />
+            </View>
+            <Text style={{ color: text, fontSize: totalAmount < 10000 ? 22 : 18, fontWeight: "700" }} numberOfLines={1}>
+              {formatCurrency(totalAmount)}
+            </Text>
+            <Text style={{ color: text, fontSize: 12 }} numberOfLines={1}>Soma de todas as metas</Text>
+          </View>
+
+          <View style={{ marginHorizontal: 4, backgroundColor: bgCard, minWidth: 180, height: 110, borderRadius: 4, padding: 16, elevation: 2, shadowColor: "#000", shadowOpacity: 0.1 }} testID="card-valor-guardado">
+            <View style={{ flexDirection: "row", justifyContent: "space-between" }}>
+              <Text style={{ color: text, fontSize: 16 }}>Guardado</Text>
+              <Feather name="trending-up" size={36} color={PURPLE_600} />
+            </View>
+            <Text style={{ color: text, fontSize: totalCurrent < 10000 ? 22 : 18, fontWeight: "700" }} numberOfLines={1}>
+              {formatCurrency(totalCurrent)}
+            </Text>
+            <Text style={{ color: text, fontSize: 12 }}>{totalAmount ? Math.round((totalCurrent/totalAmount)*100) : 0}% do total</Text>
+          </View>
+
+          <View style={{ marginHorizontal: 4, backgroundColor: PURPLE_900, minWidth: 180, height: 110, borderRadius: 4, padding: 16, elevation: 2 }} testID="card-concluidas">
+            <View style={{ flexDirection: "row", justifyContent: "space-between" }}>
+              <Text style={{ color: "white", fontSize: 16 }}>Concluídas</Text>
+              <Feather name="check-circle" size={36} color="white" />
+            </View>
+            <Text style={{ color: "white", fontSize: 26, fontWeight: "700" }}>{concludedCount}</Text>
+            <Text style={{ color: "white", fontSize: 12 }}>{totalGoals ? Math.round((concludedCount/totalGoals)*100) : 0}% das metas</Text>
+          </View>
+        </ScrollView>
+
+        <View style={{ paddingHorizontal: 16, marginTop: -36 }}>
+          <Text style={{ fontSize: 14, color: text }}>* Totais de todas as metas cadastradas</Text>
+          <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginTop: 8 }}>
+            <Text style={{ fontWeight: "700", fontSize: 20, color: text }}>Minhas metas</Text>
+            <TouchableOpacity
+              onPress={() => filterSheetRef.current?.present()}
+              testID="goals-filter-button"
+              style={{
+                alignItems: "center",
+                justifyContent: "center",
+                paddingHorizontal: 28,
+                paddingVertical: 6,
+                borderWidth: 1,
+                borderRadius: 20,
+                backgroundColor: "transparent",
+                borderColor: PURPLE_600,
+              }}
+            >
+              <Text style={{ fontSize: 16, color: PURPLE_600 }}>
+                <Feather name="filter" size={18} color={PURPLE_600} /> Filtros
+              </Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+
+        {goals.length > 0 && (
+          <TextInput
+            testID="goals-search"
+            placeholder="Pesquise metas..."
+            onChangeText={(t) => setSearch(t)}
+            value={search}
+            style={{ marginHorizontal: 16, marginTop: 12, borderWidth: 1, borderColor: "#d4d4d8", borderRadius: 4, padding: 10, color: text, backgroundColor: isDark ? "#27272a" : "white" }}
+            placeholderTextColor="#a1a1aa"
+          />
         )}
+
+        <View style={{ paddingHorizontal: 16, marginTop: 12, marginBottom: 24 }}>
+          {filtered.length === 0 ? (
+            <View testID="empty-goals" className="items-center py-12" style={{ alignItems: "center", paddingVertical: 32 }}>
+              <View style={{ width: 72, height: 72, borderRadius: 36, backgroundColor: isDark ? "#3f3f46" : "#f3e8ff", alignItems: "center", justifyContent: "center", marginBottom: 12 }}>
+                <Feather name="target" size={36} color={PURPLE_600} />
+              </View>
+              <Text style={{ color: text, fontWeight: "700", fontSize: 16, marginBottom: 4 }}>Nenhuma meta encontrada</Text>
+              <Text style={{ color: subText, fontSize: 12, textAlign: "center", paddingHorizontal: 24, marginBottom: 16 }}>
+                {goals.length === 0 ? "Crie sua primeira meta financeira e comece a realizar seus objetivos" : "Nenhuma meta com esse filtro"}
+              </Text>
+              {goals.length === 0 && (
+                <TouchableOpacity
+                  testID="empty-create-goal"
+                  onPress={openAdd}
+                  style={{ backgroundColor: PURPLE_600, paddingHorizontal: 20, paddingVertical: 10, borderRadius: 12, flexDirection: "row", alignItems: "center", gap: 6 }}
+                >
+                  <Feather name="plus" size={16} color="white" />
+                  <Text style={{ color: "white", fontWeight: "700" }}>Criar meta</Text>
+                </TouchableOpacity>
+              )}
+            </View>
+          ) : (
+            <View style={{ gap: 8 }}>
+              <Text style={{ color: subText, fontSize: 12, marginBottom: 4 }}>Toque para editar • Use o botão Depositar para adicionar valores</Text>
+              {filtered.map(goal => (
+                <Pressable
+                  key={goal.id}
+                  onPress={() => openEdit(goal)}
+                  style={({ pressed }) => ({
+                    borderRadius: 4,
+                    backgroundColor: pressed ? bgCardPressed : bgCard,
+                    shadowColor: "#000",
+                    shadowOpacity: 0.08,
+                    elevation: 2,
+                  })}
+                  testID={`goal-press-${goal.id}`}
+                >
+                  <GoalCard goal={goal} onDeposit={setDepositGoal} onPress={openEdit} />
+                </Pressable>
+              ))}
+            </View>
+          )}
+        </View>
       </ScrollView>
 
       <TouchableOpacity
         testID="add-goal-button"
         onPress={openAdd}
-        className="absolute bottom-6 right-6 w-14 h-14 bg-purple-600 rounded-full items-center justify-center"
-        style={{ elevation: 4 }}
+        style={{ position: "absolute", bottom: 24, right: 16, width: 56, height: 56, backgroundColor: PURPLE_600, borderRadius: 28, alignItems: "center", justifyContent: "center", elevation: 4, shadowColor: "#000", shadowOpacity: 0.2, shadowRadius: 4 }}
       >
         <Feather name="plus" size={28} color="#FFF" />
       </TouchableOpacity>
 
       {/* Form Modal */}
       <Modal visible={showForm} animationType="slide" transparent>
-        <View className="flex-1 bg-black/40 justify-end">
-          <View className="bg-white dark:bg-gray-800 rounded-t-3xl p-5 max-h-[90%]">
-            <View className="flex-row justify-between items-center mb-4">
-              <Text className="text-lg font-bold text-gray-800 dark:text-white">{editing ? 'Editar meta' : 'Nova meta'}</Text>
-              <TouchableOpacity testID="close-form" onPress={() => { setShowForm(false); resetForm(); }}>
-                <Feather name="x" size={24} color="#6B7280" />
+        <View style={{ flex: 1, backgroundColor: "rgba(0,0,0,0.4)", justifyContent: "flex-end" }}>
+          <View style={{ backgroundColor: isDark ? "#27272a" : "white", borderTopLeftRadius: 24, borderTopRightRadius: 24, padding: 20, maxHeight: height * 0.9 }}>
+            <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
+              <Text style={{ fontSize: 18, fontWeight: "700", color: text }}>{editing ? 'Editar meta' : 'Nova meta'}</Text>
+              <TouchableOpacity testID="close-form" onPress={() => { setShowForm(false); resetForm(); }} style={{ padding: 4 }}>
+                <Feather name="x" size={24} color={text} />
               </TouchableOpacity>
             </View>
             <ScrollView showsVerticalScrollIndicator={false}>
-              <Text className="text-sm font-semibold text-gray-700 mb-1">Descrição</Text>
+              <Text style={{ fontSize: 14, fontWeight: "600", color: text, marginBottom: 4 }}>Descrição</Text>
               <TextInput
                 testID="input-description"
                 placeholder="Ex: Viagem para Europa"
+                placeholderTextColor="#a1a1aa"
                 value={description}
                 onChangeText={setDescription}
-                className="border border-gray-200 rounded-xl px-3 py-2 mb-3 bg-white text-gray-800"
+                style={{ borderWidth: 1, borderColor: "#d4d4d8", borderRadius: 8, paddingHorizontal: 12, paddingVertical: 10, marginBottom: 12, backgroundColor: isDark ? "#3f3f46" : "white", color: text }}
               />
-              <Text className="text-sm font-semibold text-gray-700 mb-1">Valor da meta</Text>
+              <Text style={{ fontSize: 14, fontWeight: "600", color: text, marginBottom: 4 }}>Valor da meta</Text>
               <TextInput
                 testID="input-amount"
                 placeholder="R$ 0,00"
+                placeholderTextColor="#a1a1aa"
                 value={amount}
                 onChangeText={t => setAmount(moeda(t))}
                 keyboardType="numeric"
-                className="border border-gray-200 rounded-xl px-3 py-2 mb-3 bg-white text-gray-800"
+                style={{ borderWidth: 1, borderColor: "#d4d4d8", borderRadius: 8, paddingHorizontal: 12, paddingVertical: 10, marginBottom: 12, backgroundColor: isDark ? "#3f3f46" : "white", color: text }}
               />
-              <Text className="text-sm font-semibold text-gray-700 mb-1">Valor já guardado</Text>
+              <Text style={{ fontSize: 14, fontWeight: "600", color: text, marginBottom: 4 }}>Valor já guardado</Text>
               <TextInput
                 testID="input-currentAmount"
                 placeholder="R$ 0,00"
+                placeholderTextColor="#a1a1aa"
                 value={currentAmount}
                 onChangeText={t => setCurrentAmount(moeda(t))}
                 keyboardType="numeric"
-                className="border border-gray-200 rounded-xl px-3 py-2 mb-3 bg-white text-gray-800"
+                style={{ borderWidth: 1, borderColor: "#d4d4d8", borderRadius: 8, paddingHorizontal: 12, paddingVertical: 10, marginBottom: 12, backgroundColor: isDark ? "#3f3f46" : "white", color: text }}
               />
-              <Text className="text-sm font-semibold text-gray-700 mb-1">Prazo (DD/MM/AAAA)</Text>
+              <Text style={{ fontSize: 14, fontWeight: "600", color: text, marginBottom: 4 }}>Prazo (DD/MM/AAAA)</Text>
               <TextInput
                 testID="input-date"
                 placeholder="31/12/2026"
+                placeholderTextColor="#a1a1aa"
                 value={date}
                 onChangeText={setDate}
-                className="border border-gray-200 rounded-xl px-3 py-2 mb-3 bg-white text-gray-800"
+                style={{ borderWidth: 1, borderColor: "#d4d4d8", borderRadius: 8, paddingHorizontal: 12, paddingVertical: 10, marginBottom: 12, backgroundColor: isDark ? "#3f3f46" : "white", color: text }}
               />
               <CategoryPicker
                 selected={selectedCategory}
@@ -357,25 +493,25 @@ export default function Goals() {
                 showCustom={showCustomCat}
                 setShowCustom={setShowCustomCat}
               />
-              <View className="flex-row mt-6">
+              <View style={{ flexDirection: "row", marginTop: 20, gap: 8 }}>
                 {editing && (
                   <TouchableOpacity
                     testID="delete-goal-button"
                     onPress={() => { setShowForm(false); handleDelete(editing); }}
-                    className="flex-1 bg-red-50 border border-red-200 rounded-xl py-3 items-center mr-2"
+                    style={{ flex: 1, backgroundColor: "#fef2f2", borderWidth: 1, borderColor: "#fecaca", borderRadius: 12, paddingVertical: 12, alignItems: "center" }}
                   >
-                    <Text className="text-red-600 font-bold">Excluir</Text>
+                    <Text style={{ color: RED_500, fontWeight: "700" }}>Excluir</Text>
                   </TouchableOpacity>
                 )}
                 <TouchableOpacity
                   testID="submit-goal-button"
                   onPress={handleSubmit}
-                  className="flex-1 bg-purple-600 rounded-xl py-3 items-center"
+                  style={{ flex: 1, backgroundColor: PURPLE_600, borderRadius: 12, paddingVertical: 12, alignItems: "center" }}
                 >
-                  <Text className="text-white font-bold">{editing ? 'Salvar' : 'Criar meta'}</Text>
+                  <Text style={{ color: "white", fontWeight: "700" }}>{editing ? 'Salvar' : 'Criar meta'}</Text>
                 </TouchableOpacity>
               </View>
-              <View className="h-6" />
+              <View style={{ height: 24 }} />
             </ScrollView>
           </View>
         </View>
@@ -383,32 +519,110 @@ export default function Goals() {
 
       {/* Deposit Modal */}
       <Modal visible={!!depositGoal} animationType="fade" transparent>
-        <View className="flex-1 bg-black/40 justify-center px-6">
-          <View className="bg-white rounded-2xl p-5">
-            <Text className="text-lg font-bold text-gray-800 mb-2">Depositar na meta</Text>
+        <View style={{ flex: 1, backgroundColor: "rgba(0,0,0,0.4)", justifyContent: "center", paddingHorizontal: 24 }}>
+          <View style={{ backgroundColor: isDark ? "#27272a" : "white", borderRadius: 16, padding: 20 }}>
+            <Text style={{ fontSize: 18, fontWeight: "700", color: text, marginBottom: 8 }}>Depositar na meta</Text>
             {depositGoal && (
-              <Text className="text-sm text-gray-500 mb-3">{depositGoal.description} • {Number(depositGoal.currentAmount||0).toLocaleString('pt-BR',{style:'currency',currency:'BRL'})} de {Number(depositGoal.amount).toLocaleString('pt-BR',{style:'currency',currency:'BRL'})}</Text>
+              <Text style={{ fontSize: 13, color: subText, marginBottom: 12 }}>{depositGoal.description} • {Number(depositGoal.currentAmount||0).toLocaleString('pt-BR',{style:'currency',currency:'BRL'})} de {Number(depositGoal.amount).toLocaleString('pt-BR',{style:'currency',currency:'BRL'})}</Text>
             )}
-            <Text className="text-sm font-semibold text-gray-700 mb-1">Valor do depósito</Text>
+            <Text style={{ fontSize: 14, fontWeight: "600", color: text, marginBottom: 4 }}>Valor do depósito</Text>
             <TextInput
               testID="input-deposit-amount"
               placeholder="R$ 0,00"
+              placeholderTextColor="#a1a1aa"
               value={depositAmount}
               onChangeText={t => setDepositAmount(moeda(t))}
               keyboardType="numeric"
-              className="border border-gray-200 rounded-xl px-3 py-2 mb-4 bg-white text-gray-800"
+              style={{ borderWidth: 1, borderColor: "#d4d4d8", borderRadius: 8, paddingHorizontal: 12, paddingVertical: 10, marginBottom: 16, backgroundColor: isDark ? "#3f3f46" : "white", color: text }}
             />
-            <View className="flex-row">
-              <TouchableOpacity testID="cancel-deposit" onPress={() => { setDepositGoal(null); setDepositAmount(""); }} className="flex-1 bg-gray-100 rounded-xl py-3 items-center mr-2">
-                <Text className="text-gray-600 font-bold">Cancelar</Text>
+            <View style={{ flexDirection: "row", gap: 8 }}>
+              <TouchableOpacity testID="cancel-deposit" onPress={() => { setDepositGoal(null); setDepositAmount(""); }} style={{ flex: 1, backgroundColor: isDark ? "#3f3f46" : "#f3f4f6", borderRadius: 12, paddingVertical: 12, alignItems: "center" }}>
+                <Text style={{ color: text, fontWeight: "700" }}>Cancelar</Text>
               </TouchableOpacity>
-              <TouchableOpacity testID="confirm-deposit" onPress={handleDepositConfirm} className="flex-1 bg-purple-600 rounded-xl py-3 items-center">
-                <Text className="text-white font-bold">Depositar</Text>
+              <TouchableOpacity testID="confirm-deposit" onPress={handleDepositConfirm} style={{ flex: 1, backgroundColor: PURPLE_600, borderRadius: 12, paddingVertical: 12, alignItems: "center" }}>
+                <Text style={{ color: "white", fontWeight: "700" }}>Depositar</Text>
               </TouchableOpacity>
             </View>
           </View>
         </View>
       </Modal>
+
+      <Sheet ref={filterSheetRef} snapPoints={["55%"]} enableDynamicSizing={false} backgroundStyle={{ backgroundColor: bg }} handleIndicatorStyle={{ backgroundColor: isDark ? "#3f3f46" : "#e4e4e7" }}>
+        <BottomSheetScrollView contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: insets.bottom + 24, gap: 16 }} style={{ flex: 1, backgroundColor: bg }}>
+          <View style={{ alignItems: "center", paddingTop: 8, paddingBottom: 4 }}>
+            <Text style={{ fontSize: 18, fontWeight: "700", color: text }}>Filtros</Text>
+            <Text style={{ fontSize: 12, color: subText, marginTop: 4 }}>Refine suas metas</Text>
+          </View>
+
+          <View>
+            <Text style={{ color: text, fontSize: 16, fontWeight: "700", marginBottom: 8 }}>Status</Text>
+            <FlatList
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              data={['Todas','Ativas','Concluídas']}
+              keyExtractor={(item) => item}
+              ItemSeparatorComponent={() => <View style={{ width: 8 }} />}
+              renderItem={({ item }) => (
+                <TouchableOpacity
+                  testID={`filter-${item}`}
+                  onPress={() => setFilterStatus(item)}
+                  style={{
+                    paddingHorizontal: 16,
+                    paddingVertical: 8,
+                    borderRadius: 999,
+                    borderWidth: 1,
+                    borderColor: item === filterStatus ? PURPLE_600 : "#d4d4d8",
+                    backgroundColor: item === filterStatus ? PURPLE_600 : "transparent",
+                  }}
+                >
+                  <Text style={{ fontSize: 13, fontWeight: "600", color: item === filterStatus ? "white" : text }}>{item}</Text>
+                </TouchableOpacity>
+              )}
+            />
+          </View>
+
+          <View>
+            <Text style={{ color: text, fontSize: 16, fontWeight: "700", marginBottom: 8 }}>Categoria</Text>
+            <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8 }}>
+              <TouchableOpacity
+                testID="filter-category-Todas"
+                onPress={() => setFilterCategory('Todas')}
+                style={{
+                  paddingHorizontal: 12,
+                  paddingVertical: 8,
+                  borderRadius: 999,
+                  borderWidth: 1,
+                  borderColor: filterCategory==='Todas' ? PURPLE_600 : "#d4d4d8",
+                  backgroundColor: filterCategory==='Todas' ? "#f3e8ff" : "transparent",
+                }}
+              >
+                <Text style={{ fontSize: 12, color: filterCategory==='Todas' ? PURPLE_600 : text }}>Todas</Text>
+              </TouchableOpacity>
+              {categoryOptions.map(cat => (
+                <TouchableOpacity
+                  key={cat}
+                  testID={`filter-category-${cat}`}
+                  onPress={() => setFilterCategory(cat)}
+                  style={{
+                    paddingHorizontal: 12,
+                    paddingVertical: 8,
+                    borderRadius: 999,
+                    borderWidth: 1,
+                    borderColor: filterCategory===cat ? PURPLE_600 : "#d4d4d8",
+                    backgroundColor: filterCategory===cat ? PURPLE_600 : "transparent",
+                  }}
+                >
+                  <Text style={{ fontSize: 12, color: filterCategory===cat ? "white" : text, textTransform: "capitalize" }}>{cat}</Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+          </View>
+
+          <TouchableOpacity onPress={() => filterSheetRef.current?.dismiss()} testID="goals-apply-filter" style={{ backgroundColor: PURPLE_600, borderRadius: 12, padding: 14, alignItems: "center", marginTop: 8 }}>
+            <Text style={{ color: "white", fontWeight: "700" }}>Aplicar filtros</Text>
+          </TouchableOpacity>
+        </BottomSheetScrollView>
+      </Sheet>
     </View>
   );
 }

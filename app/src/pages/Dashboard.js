@@ -442,7 +442,21 @@ export default function Dashboard() {
                     withHorizontalLabels
                     withVerticalLabels={false}
                     onDataPointClick={({ index }) => setSelectedLineIndex((prev) => (prev === index ? null : index))}
-                      decorator={() => null}
+                      decorator={({ width: w, height: h, paddingTop, paddingRight, data }) => {
+                        if (selectedLineIndex === null || !data || !data[0] || selectedLineIndex < 0 || selectedLineIndex >= data[0].data.length) return null;
+                        try {
+                          const { G, Line } = require("react-native-svg");
+                          const x = paddingRight + (selectedLineIndex * (w - paddingRight)) / data[0].data.length;
+                          // destaca o período selecionado com linha vertical tracejada e realce
+                          return (
+                            <G key={`sel-${selectedLineIndex}`}>
+                              <Line x1={x} y1={paddingTop} x2={x} y2={h * 0.75 + paddingTop} stroke={PURPLE_900} strokeWidth={2} strokeDasharray="6,4" opacity={0.6} />
+                            </G>
+                          );
+                        } catch {
+                          return null;
+                        }
+                      }}
                     />
                     {/* Overlay com tolerância para dedo: 6 áreas verticais cobrindo cada intervalo, aumentando hitSlop */}
                     <View

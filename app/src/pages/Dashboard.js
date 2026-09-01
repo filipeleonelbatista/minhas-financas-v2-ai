@@ -391,7 +391,7 @@ export default function Dashboard() {
               Adicione transações para ver a evolução
             </Text>
           ) : (
-            <View style={{ width: "100%", alignItems: "center", marginTop: 8 }} testID="line-chart">
+            <View style={{ width: "100%", alignItems: "center", marginTop: 8, position: "relative" }} testID="line-chart">
               {LineChartComp ? (
                 <>
                   <LineChartComp
@@ -439,29 +439,32 @@ export default function Dashboard() {
                     withOuterLines
                     withVerticalLines
                     withHorizontalLabels
-                    withVerticalLabels={false}
+                    withVerticalLabels
                     onDataPointClick={({ index }) => setSelectedLineIndex((prev) => (prev === index ? null : index))}
                     decorator={() => null}
                   />
-                  {/* Tooltip dentro do pai, em fluxo normal - não absoluto, para ficar contido no card */}
+                  {/* Tooltip sobre o intervalo, no topo do gráfico, ao clicar em um ponto - contido no pai */}
                   {selectedLineIndex !== null && lineData.labels[selectedLineIndex] !== undefined ? (
                     <View
                       testID="line-tooltip"
                       style={{
-                        marginTop: 12,
-                        width: chartInnerWidth,
+                        position: "absolute",
+                        top: 10,
+                        alignSelf: "center",
                         backgroundColor: isDark ? "#27272a" : "white",
                         borderRadius: 12,
                         paddingHorizontal: 14,
                         paddingVertical: 10,
                         shadowColor: "#000",
-                        shadowOpacity: 0.08,
-                        shadowRadius: 6,
-                        elevation: 2,
+                        shadowOpacity: 0.15,
+                        shadowRadius: 8,
+                        elevation: 6,
                         borderWidth: 1,
                         borderColor: isDark ? "#3f3f46" : "#e5e7eb",
+                        minWidth: 180,
+                        maxWidth: chartInnerWidth - 16,
                         alignItems: "flex-start",
-                        alignSelf: "center",
+                        zIndex: 10,
                       }}
                     >
                       <Text style={{ fontSize: 13, fontWeight: "700", color: titleText, marginBottom: 6, textTransform: "capitalize" }}>
@@ -492,30 +495,6 @@ export default function Dashboard() {
                       </TouchableOpacity>
                     </View>
                   ) : null}
-                  {/* Fallback tátil: labels abaixo do gráfico também disparam o tooltip, garantindo clique mesmo se SVG falhar */}
-                  <View style={{ flexDirection: "row", justifyContent: "space-between", width: chartInnerWidth, marginTop: 6 }} testID="line-x-pressables">
-                    {lineData.labels.map((label, idx) => {
-                      const isSelected = selectedLineIndex === idx;
-                      return (
-                        <TouchableOpacity
-                          key={`x-${label}-${idx}`}
-                          onPress={() => setSelectedLineIndex((prev) => (prev === idx ? null : idx))}
-                          testID={`line-point-${idx}`}
-                          accessibilityLabel={`Ponto ${label}`}
-                          style={{
-                            paddingHorizontal: 6,
-                            paddingVertical: 4,
-                            borderRadius: 6,
-                            backgroundColor: isSelected ? (isDark ? "#3f3f46" : "#f3e8ff") : "transparent",
-                            borderWidth: isSelected ? 1 : 0,
-                            borderColor: isSelected ? PURPLE_900 : "transparent",
-                          }}
-                        >
-                          <Text style={{ fontSize: 10, color: isSelected ? PURPLE_900 : subText }}>{label}</Text>
-                        </TouchableOpacity>
-                      );
-                    })}
-                  </View>
                 </>
               ) : (
                 <Text testID="line-fallback">{lineData.labels.join(" | ")}</Text>

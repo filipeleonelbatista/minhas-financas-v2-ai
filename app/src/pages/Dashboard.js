@@ -602,31 +602,59 @@ export default function Dashboard() {
           )}
         </View>
 
-        {/* Metas urgentes */}
+        {/* Metas e objetivos */}
         <View style={{ marginHorizontal: 16, marginTop: 16, marginBottom: 24, backgroundColor: cardBgWhite, borderRadius: 16, padding: 16, shadowColor: "#000", shadowOpacity: 0.05, elevation: 2 }}>
           <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
             <Text style={{ fontSize: 18, fontWeight: "700", color: titleText }} testID="goals-title">
-              Metas urgentes
+              Metas e objetivos
             </Text>
+            {goals.length > 0 && (
+              <TouchableOpacity
+                onPress={() => navigation.navigate("Goals")}
+                testID="goals-ver-tudo"
+                hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                style={{ paddingHorizontal: 10, paddingVertical: 6, borderRadius: 999, backgroundColor: isDark ? "#3f3f46" : "#f3e8ff", borderWidth: 1, borderColor: isDark ? "#52525b" : "#e9d5ff" }}
+              >
+                <Text style={{ fontSize: 12, fontWeight: "700", color: PURPLE_600 }}>Ver tudo</Text>
+              </TouchableOpacity>
+            )}
           </View>
-          {urgentGoals.length === 0 ? (
-            <Text style={{ fontSize: 14, color: subText, marginTop: 8 }} testID="goals-empty">
-              Nenhuma meta com prazo nos próximos 30 dias
-            </Text>
+          {goals.length === 0 ? (
+            <View style={{ alignItems: "center", paddingVertical: 24, gap: 12 }} testID="goals-empty">
+              <View style={{ width: 64, height: 64, borderRadius: 32, backgroundColor: isDark ? "#3f3f46" : "#f3e8ff", alignItems: "center", justifyContent: "center" }}>
+                <Feather name="target" size={28} color={PURPLE_600} />
+              </View>
+              <Text style={{ fontSize: 14, fontWeight: "600", color: titleText, textAlign: "center" }}>Nenhuma meta ainda</Text>
+              <Text style={{ fontSize: 12, color: subText, textAlign: "center", paddingHorizontal: 16 }}>Crie sua primeira meta e acompanhe seu progresso financeiro</Text>
+              <TouchableOpacity
+                onPress={() => navigation.navigate("Goals", { openAdd: true })}
+                testID="goals-empty-criar"
+                style={{ marginTop: 8, backgroundColor: PURPLE_600, paddingHorizontal: 20, paddingVertical: 10, borderRadius: 12, flexDirection: "row", alignItems: "center", gap: 6 }}
+              >
+                <Feather name="plus" size={16} color="white" />
+                <Text style={{ color: "white", fontWeight: "700", fontSize: 13 }}>Criar meta</Text>
+              </TouchableOpacity>
+            </View>
           ) : (
             <View style={{ marginTop: 12, gap: 12 }} testID="goals-list">
-              {urgentGoals.map((goal) => {
+              {(urgentGoals.length > 0 ? urgentGoals.slice(0, 3) : [...goals].sort((a, b) => Number(a.date) - Number(b.date)).slice(0, 3)).map((goal) => {
                 const progress = calcGoalProgress(goal);
                 const days = differenceInCalendarDays(new Date(goal.date), Date.now());
+                const isConcluded = progress >= 1;
+                const daysText = isConcluded ? "Concluída" : days < 0 ? `Vencida há ${Math.abs(days)} dias` : days === 0 ? "Vence hoje" : `Restam ${days} dias`;
                 return (
-                  <View key={goal.id} style={{ backgroundColor: isDark ? "#3f3f46" : "#f9fafb", borderRadius: 12, padding: 12 }} testID={`goal-${goal.id}`}>
+                  <TouchableOpacity
+                    key={goal.id}
+                    onPress={() => navigation.navigate("Goals", { editId: goal.id })}
+                    activeOpacity={0.8}
+                    testID={`goal-${goal.id}`}
+                    style={{ backgroundColor: isDark ? "#3f3f46" : "#f9fafb", borderRadius: 12, padding: 12, borderWidth: 1, borderColor: isDark ? "#52525b" : "#f3f4f6" }}
+                  >
                     <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
                       <Text style={{ fontWeight: "600", color: titleText, flex: 1 }} numberOfLines={1}>
                         {goal.description}
                       </Text>
-                      <Text style={{ fontSize: 12, fontWeight: "700", color: PURPLE_600, marginLeft: 8 }}>
-                        Restam {days} dias
-                      </Text>
+                      <Text style={{ fontSize: 12, fontWeight: "700", color: isConcluded ? "#16a34a" : PURPLE_600, marginLeft: 8 }}>{daysText}</Text>
                     </View>
                     <View style={{ flexDirection: "row", justifyContent: "space-between", marginTop: 4 }}>
                       <Text style={{ fontSize: 12, color: subText }}>
@@ -635,11 +663,14 @@ export default function Dashboard() {
                       <Text style={{ fontSize: 12, fontWeight: "600", color: isDark ? "#e4e4e7" : PURPLE_900 }}>{Math.round(progress * 100)}%</Text>
                     </View>
                     <View style={{ height: 8, backgroundColor: isDark ? "#52525b" : "#e5e7eb", borderRadius: 999, marginTop: 8, overflow: "hidden" }}>
-                      <View style={{ width: `${progress * 100}%`, height: 8, backgroundColor: progress >= 1 ? "#c4b5fd" : PURPLE_600, borderRadius: 999 }} />
+                      <View style={{ width: `${progress * 100}%`, height: 8, backgroundColor: progress >= 1 ? "#16a34a" : PURPLE_600, borderRadius: 999 }} />
                     </View>
-                  </View>
+                  </TouchableOpacity>
                 );
               })}
+              {goals.length > 3 && (
+                <Text style={{ fontSize: 11, color: subText, textAlign: "center", marginTop: 2 }}>+ {goals.length - 3} {goals.length - 3 === 1 ? "meta" : "metas"} • Toque em Ver tudo</Text>
+              )}
             </View>
           )}
         </View>

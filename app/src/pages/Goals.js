@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useState, useMemo } from "react";
 import { ScrollView, View, Text, TextInput, TouchableOpacity, Modal, Alert } from "react-native";
 import { Feather } from "@expo/vector-icons";
-import { useIsFocused } from "@react-navigation/native";
+import { useIsFocused, useNavigation, useRoute } from "@react-navigation/native";
 import { differenceInCalendarDays } from "date-fns";
 import { goalRepo, DEFAULT_GOAL_CATEGORIES, filterGoalsByStatus, calcGoalProgress, getDaysRemaining } from "../repositories/goal";
 import GoalCard from "../components/ui/GoalCard";
@@ -83,6 +83,10 @@ function CategoryPicker({ selected, onSelect, customValue, onCustomChange, showC
 
 export default function Goals() {
   const isFocused = useIsFocused ? useIsFocused() : true;
+  let navigation = { canGoBack: () => false, goBack: () => {}, navigate: () => {}, setParams: () => {} };
+  let route = { params: {} };
+  try { const n = useNavigation(); if (n) navigation = n; } catch {}
+  try { const r = useRoute(); if (r) route = r; } catch {}
   const [goals, setGoals] = useState([]);
   const [filterStatus, setFilterStatus] = useState('Todas');
   const [filterCategory, setFilterCategory] = useState('Todas');
@@ -108,6 +112,30 @@ export default function Goals() {
   useEffect(() => {
     if (isFocused) load();
   }, [isFocused, load]);
+
+  // Stack navigation: abrir form via params de Dashboard (Criar meta / editar)
+  useEffect(() => {
+    if (!isFocused) return;
+    const params = route.params;
+    if (!params) return;
+    if (params.openAdd) {
+      const t = setTimeout(() => {
+        openAdd();
+        navigation.setParams({ openAdd: undefined });
+      }, 250);
+      return () => clearTimeout(t);
+    }
+    if (params.editId) {
+      const target = goals.find((g) => g.id === params.editId);
+      if (target) {
+        const t = setTimeout(() => {
+          openEdit(target);
+          navigation.setParams({ editId: undefined });
+        }, 250);
+        return () => clearTimeout(t);
+      }
+    }
+  }, [isFocused, goals, route.params]);
 
   const filtered = useMemo(() => {
     let list = filterGoalsByStatus(goals, filterStatus);
@@ -203,9 +231,19 @@ export default function Goals() {
 
   const categoryOptions = useMemo(() => getCategoryOptions(goals), [goals]);
 
+  const canGoBack = navigation.canGoBack?.() ?? false;
   return (
     <View className="flex-1 bg-gray-50 dark:bg-gray-900">
-      <Header title="Metas" />
+      <Header
+        title="Metas"
+        isLeftIconComponent={
+          canGoBack ? (
+            <TouchableOpacity onPress={() => navigation.goBack()} testID="goals-back" style={{ width: 40, height: 40, alignItems: "center", justifyContent: "center", borderRadius: 999 }}>
+              <Feather name="arrow-left" size={22} color="white" />
+            </TouchableOpacity>
+          ) : false
+        }
+      />
       <View className="px-4 pt-2">
         {/* Filters Ativas/Concluídas */}
         <View className="flex-row mb-3" testID="filter-status">

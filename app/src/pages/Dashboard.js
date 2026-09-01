@@ -492,59 +492,73 @@ export default function Dashboard() {
                         </TouchableOpacity>
                       ))}
                     </View>
-                    {/* Tooltip sobre o intervalo, no topo do gráfico, contido no pai */}
+                    {/* Tooltip compacto sobre o intervalo, deslocado para o lado para não ficar em cima da linha nem cortado */}
                     {selectedLineIndex !== null && lineData.labels[selectedLineIndex] !== undefined ? (
-                      <View
-                        testID="line-tooltip"
-                        style={{
-                          position: "absolute",
-                          top: 10,
-                          alignSelf: "center",
-                          left: 8,
-                          right: 8,
-                          backgroundColor: isDark ? "#27272a" : "white",
-                          borderRadius: 12,
-                          paddingHorizontal: 14,
-                          paddingVertical: 10,
-                          shadowColor: "#000",
-                          shadowOpacity: 0.15,
-                          shadowRadius: 8,
-                          elevation: 6,
-                          borderWidth: 1,
-                          borderColor: isDark ? "#3f3f46" : "#e5e7eb",
-                          minWidth: 180,
-                          maxWidth: chartInnerWidth - 16,
-                          alignItems: "flex-start",
-                          zIndex: 10,
-                        }}
-                      >
-                        <Text style={{ fontSize: 13, fontWeight: "700", color: titleText, marginBottom: 6, textTransform: "capitalize" }}>
-                          {lineData.labels[selectedLineIndex]}
-                        </Text>
-                        <View style={{ flexDirection: "row", alignItems: "center", gap: 8, marginTop: 2 }}>
-                          <View style={{ width: 10, height: 10, borderRadius: 5, backgroundColor: "#12a454" }} />
-                          <Text style={{ fontSize: 12, color: subText }}>Entradas: </Text>
-                          <Text style={{ fontSize: 12, fontWeight: "700", color: titleText }}>{formatCurrency(lineData.incomings[selectedLineIndex])}</Text>
-                        </View>
-                        <View style={{ flexDirection: "row", alignItems: "center", gap: 8, marginTop: 4 }}>
-                          <View style={{ width: 10, height: 10, borderRadius: 5, backgroundColor: "#e83e5a" }} />
-                          <Text style={{ fontSize: 12, color: subText }}>Saídas: </Text>
-                          <Text style={{ fontSize: 12, fontWeight: "700", color: titleText }}>{formatCurrency(lineData.expenses[selectedLineIndex])}</Text>
-                        </View>
-                        <View style={{ flexDirection: "row", alignItems: "center", gap: 8, marginTop: 4 }}>
-                          <View style={{ width: 10, height: 10, borderRadius: 5, backgroundColor: "#581C87" }} />
-                          <Text style={{ fontSize: 12, color: subText }}>Saldo: </Text>
-                          <Text style={{ fontSize: 12, fontWeight: "700", color: titleText }}>{formatCurrency(lineData.net[selectedLineIndex])}</Text>
-                        </View>
-                        <TouchableOpacity
-                          onPress={() => setSelectedLineIndex(null)}
-                          hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-                          style={{ marginTop: 8, alignSelf: "center" }}
-                          testID="line-tooltip-close"
-                        >
-                          <Text style={{ fontSize: 11, color: subText }}>Fechar</Text>
-                        </TouchableOpacity>
-                      </View>
+                      (() => {
+                        const paddingRight = 64;
+                        const x = paddingRight + (selectedLineIndex * (chartInnerWidth - paddingRight)) / lineData.labels.length;
+                        const isLeftSide = selectedLineIndex <= 2;
+                        const tooltipWidth = 148;
+                        // posiciona ao lado da linha: se está à esquerda, vai para direita da linha; se à direita, vai para esquerda
+                        const left = isLeftSide ? Math.min(x + 10, chartInnerWidth - tooltipWidth - 8) : undefined;
+                        const right = !isLeftSide ? Math.max(chartInnerWidth - x + 10, 8) : undefined;
+                        // fallback centralizado se não couber
+                        const clampedLeft = left !== undefined && left < 8 ? 8 : left;
+                        const clampedRight = right !== undefined && right < 8 ? 8 : right;
+                        return (
+                          <View
+                            testID="line-tooltip"
+                            style={{
+                              position: "absolute",
+                              top: 8,
+                              left: clampedLeft,
+                              right: clampedRight,
+                              backgroundColor: isDark ? "#27272a" : "white",
+                              borderRadius: 10,
+                              paddingHorizontal: 10,
+                              paddingVertical: 8,
+                              shadowColor: "#000",
+                              shadowOpacity: 0.12,
+                              shadowRadius: 6,
+                              elevation: 4,
+                              borderWidth: 1,
+                              borderColor: isDark ? "#3f3f46" : "#e5e7eb",
+                              minWidth: 130,
+                              maxWidth: 160,
+                              width: tooltipWidth,
+                              alignItems: "flex-start",
+                              zIndex: 10,
+                            }}
+                          >
+                            <Text style={{ fontSize: 12, fontWeight: "700", color: titleText, marginBottom: 4, textTransform: "capitalize" }}>
+                              {lineData.labels[selectedLineIndex]}
+                            </Text>
+                            <View style={{ flexDirection: "row", alignItems: "center", gap: 6, marginTop: 1 }}>
+                              <View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: "#12a454" }} />
+                              <Text style={{ fontSize: 11, color: subText }}>Entradas: </Text>
+                              <Text style={{ fontSize: 11, fontWeight: "700", color: titleText }}>{formatCurrency(lineData.incomings[selectedLineIndex])}</Text>
+                            </View>
+                            <View style={{ flexDirection: "row", alignItems: "center", gap: 6, marginTop: 3 }}>
+                              <View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: "#e83e5a" }} />
+                              <Text style={{ fontSize: 11, color: subText }}>Saídas: </Text>
+                              <Text style={{ fontSize: 11, fontWeight: "700", color: titleText }}>{formatCurrency(lineData.expenses[selectedLineIndex])}</Text>
+                            </View>
+                            <View style={{ flexDirection: "row", alignItems: "center", gap: 6, marginTop: 3 }}>
+                              <View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: "#581C87" }} />
+                              <Text style={{ fontSize: 11, color: subText }}>Saldo: </Text>
+                              <Text style={{ fontSize: 11, fontWeight: "700", color: titleText }}>{formatCurrency(lineData.net[selectedLineIndex])}</Text>
+                            </View>
+                            <TouchableOpacity
+                              onPress={() => setSelectedLineIndex(null)}
+                              hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                              style={{ marginTop: 6, alignSelf: "center" }}
+                              testID="line-tooltip-close"
+                            >
+                              <Text style={{ fontSize: 10, color: subText }}>Fechar</Text>
+                            </TouchableOpacity>
+                          </View>
+                        );
+                      })()
                     ) : null}
                   </View>
                   {/* Legendas dos meses abaixo, na posição correta do gráfico, clicáveis com realce */}

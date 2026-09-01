@@ -5,6 +5,7 @@ import { Feather } from "@expo/vector-icons";
 import dayjs from "dayjs";
 import { differenceInCalendarDays } from "date-fns";
 import Header from "../components/Header";
+import InteractivePieChart from "../components/InteractivePieChart";
 import { financeRepo } from "../repositories/finance";
 import { goalRepo } from "../repositories/goal";
 import { useSettingsStore } from "../stores/settings";
@@ -163,6 +164,7 @@ export default function Dashboard() {
   const [finances, setFinances] = useState([]);
   const [goals, setGoals] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [selectedPieIndex, setSelectedPieIndex] = useState(null);
   const tabBarHeight = (() => { try { const { useBottomTabBarHeight } = require("@react-navigation/bottom-tabs"); return useBottomTabBarHeight(); } catch { return 80; } })();
 
   const load = useCallback(async () => {
@@ -187,6 +189,12 @@ export default function Dashboard() {
   const pieData = useMemo(() => getExpensesByCategory(finances), [finances]);
   const lineData = useMemo(() => getLast6MonthsLineData(finances), [finances]);
   const urgentGoals = useMemo(() => getUrgentGoals(goals), [goals]);
+
+  useEffect(() => {
+    if (selectedPieIndex !== null && selectedPieIndex >= pieData.length) {
+      setSelectedPieIndex(null);
+    }
+  }, [pieData.length, selectedPieIndex]);
 
   const hasFinances = finances.length > 0;
   const chartWidth = width * 0.92;
@@ -273,21 +281,89 @@ export default function Dashboard() {
               Sem gastos para exibir
             </Text>
           ) : (
-            <View style={{ alignItems: "center", marginTop: 8 }} testID="pizza-chart">
-              {PieChartComp ? (
-                <PieChartComp
-                  data={pieData}
-                  width={chartWidth - 32}
-                  height={180}
-                  chartConfig={{ color: (opacity = 1) => `rgba(0,0,0,${opacity})` }}
-                  accessor="population"
-                  backgroundColor="transparent"
-                  paddingLeft="15"
-                  absolute
-                />
-              ) : (
-                <Text testID="pizza-fallback">{pieData.map((d) => `${d.name}: ${formatCurrency(d.population)}`).join(", ")}</Text>
-              )}
+            <View style={{ marginTop: 8 }} testID="pizza-chart">
+              {/* Chart with selectable slices - hasLegend false, tooltip overlay */}
+              <View style={{ alignItems: "center", justifyContent: "center" }}>
+                <View style={{ width: chartWidth - 32, height: 180, alignItems: "center", justifyContent: "center" }}>
+                  <InteractivePieChart
+                    data={pieData}
+                    width={chartWidth - 32}
+                    height={180}
+                    accessor="population"
+                    backgroundColor="transparent"
+                    paddingLeft="15"
+                    selectedIndex={selectedPieIndex}
+                    onSelect={(idx) => setSelectedPieIndex((prev) => (prev === idx ? null : idx))}
+                    chartConfig={{ color: (opacity = 1) => `rgba(0,0,0,${opacity})` }}
+                    testID="interactive-pie"
+                  />
+
+                  {selectedPieIndex !== null && pieData[selectedPieIndex] ? (
+                    <View
+                      testID="pizza-tooltip"
+                      style={{
+                        position: "absolute",
+                        backgroundColor: isDark ? "#27272a" : "white",
+                        borderRadius: 12,
+                        paddingHorizontal: 14,
+                        paddingVertical: 10,
+                        shadowColor: "#000",
+                        shadowOpacity: 0.15,
+                        shadowRadius: 8,
+                        elevation: 6,
+                        borderWidth: 1,
+                        borderColor: pieData[selectedPieIndex].color,
+                        alignItems: "center",
+                        minWidth: 140,
+                      }}
+                    >
+                      <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
+                        <View style={{ width: 12, height: 12, borderRadius: 6, backgroundColor: pieData[selectedPieIndex].color }} />
+                        <Text style={{ fontSize: 13, fontWeight: "700", color: titleText }}>{pieData[selectedPieIndex].name}</Text>
+                      </View>
+                      <Text style={{ fontSize: 14, fontWeight: "700", color: titleText, marginTop: 4 }}>{formatCurrency(pieData[selectedPieIndex].population)}</Text>
+                      <TouchableOpacity
+                        onPress={() => setSelectedPieIndex(null)}
+                        hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                        style={{ marginTop: 4 }}
+                        testID="pizza-tooltip-close"
+                      >
+                        <Text style={{ fontSize: 11, color: subText }}>Fechar</Text>
+                      </TouchableOpacity>
+                    </View>
+                  ) : null}
+                </View>
+              </View>
+              {/* Legenda custom - apenas categoria, sem valor; ao pressionar destaca e mostra tooltip */}
+              <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8, marginTop: 12, justifyContent: "center" }} testID="pizza-legend">
+                {pieData.map((item, idx) => {
+                  const isSelected = selectedPieIndex === idx;
+                  const isDimmed = selectedPieIndex !== null && !isSelected;
+                  return (
+                    <TouchableOpacity
+                      key={`${item.name}-${idx}`}
+                      onPress={() => setSelectedPieIndex((prev) => (prev === idx ? null : idx))}
+                      testID={`legend-${item.name}`}
+                      accessibilityLabel={item.name}
+                      style={{
+                        flexDirection: "row",
+                        alignItems: "center",
+                        paddingHorizontal: 10,
+                        paddingVertical: 6,
+                        borderRadius: 999,
+                        backgroundColor: isSelected ? (isDark ? "#3f3f46" : "#f3e8ff") : isDark ? "#27272a" : "#f5f5f4",
+                        borderWidth: isSelected ? 1.5 : 1,
+                        borderColor: isSelected ? item.color : isDark ? "#3f3f46" : "#e5e7eb",
+                        opacity: isDimmed ? 0.5 : 1,
+                      }}
+                    >
+                      <View style={{ width: 12, height: 12, borderRadius: 6, backgroundColor: item.color, marginRight: 6 }} />
+                      <Text style={{ fontSize: 12, fontWeight: isSelected ? "700" : "500", color: isSelected ? item.color : subText }}>{item.name}</Text>
+                    </TouchableOpacity>
+                  );
+                })}
+              </View>
+
             </View>
           )}
         </View>

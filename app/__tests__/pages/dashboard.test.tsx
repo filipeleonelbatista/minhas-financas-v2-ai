@@ -29,7 +29,28 @@ jest.mock('react-native-chart-kit', () => ({
   },
 }));
 
-import { render, waitFor } from '@testing-library/react-native';
+// Mock InteractivePieChart - inner pie with onSelect support
+jest.mock('../../src/components/InteractivePieChart', () => ({
+  __esModule: true,
+  default: ({ data, onSelect, testID }: any) => {
+    const { View, Text, TouchableOpacity } = require('react-native');
+    return (
+      <View testID={testID || 'interactive-pie'}>
+        <View testID="pie-mocked">
+          {data.map((d: any) => (
+            <Text key={d.name}>{d.name}</Text>
+          ))}
+        </View>
+        {/* expose slice press for tests */}
+        {data.map((_: any, idx: number) => (
+          <TouchableOpacity key={idx} testID={`pie-slice-${idx}`} onPress={() => onSelect && onSelect(idx)} />
+        ))}
+      </View>
+    );
+  },
+}));
+
+import { render, waitFor, fireEvent, within } from '@testing-library/react-native';
 import Dashboard from '../../src/pages/Dashboard';
 import React from 'react';
 
@@ -115,7 +136,7 @@ describe('Dashboard component Início com hero + pizza/linha + metas', () => {
     expect(getByTestId('pizza-title')).toBeTruthy();
     expect(getByTestId('line-title')).toBeTruthy();
     expect(getByTestId('goals-title')).toBeTruthy();
-    expect(getByText('Início')).toBeTruthy();
+    expect(getByText('Minhas Financa')).toBeTruthy();
   });
 
   test('pizza e linha exibem quando há dados, senão empty', async () => {
@@ -130,6 +151,32 @@ describe('Dashboard component Início com hero + pizza/linha + metas', () => {
     const { getByTestId: get2 } = render(<Dashboard />);
     await waitFor(() => expect(get2('pie-mocked')).toBeTruthy());
     expect(get2('line-mocked')).toBeTruthy();
+  });
+
+  test('legenda mostra só categoria e ao clicar no gráfico/legenda mostra tooltip com valor 2 casas', async () => {
+    await financeRepo.add({ description: 'Casa', amount: 123.4567, category: 'Moradia', date: Date.now(), paymentDate: Date.now(), paymentStatus: 1, isEnabled: 1, isFavorited: 0 });
+    await financeRepo.add({ description: 'Cartão', amount: 50, category: 'Cartão', date: Date.now(), paymentDate: Date.now(), paymentStatus: 1, isEnabled: 1, isFavorited: 0 });
+    const { getByTestId, getByText, queryByTestId } = render(<Dashboard />);
+    await waitFor(() => expect(getByTestId('pizza-legend')).toBeTruthy());
+    // legend shows only category, no value
+    expect(getByTestId('legend-Moradia')).toBeTruthy();
+    expect(getByTestId('legend-Cartão')).toBeTruthy();
+    expect(queryByTestId('pizza-tooltip')).toBeFalsy();
+    // click slice -> tooltip
+    fireEvent.press(getByTestId('pie-slice-0'));
+    await waitFor(() => expect(getByTestId('pizza-tooltip')).toBeTruthy());
+    const tooltip = getByTestId('pizza-tooltip');
+    expect(within(tooltip).getByText('Moradia')).toBeTruthy();
+    // 123.4567 -> R$ 123,46 (2 casas)
+    expect(within(tooltip).getByText(/123,46/)).toBeTruthy();
+    // tooltip should not show extra decimals - not 123,456
+    expect(within(tooltip).queryByText(/123,456/)).toBeFalsy();
+    // click legend toggles off
+    fireEvent.press(getByTestId('legend-Moradia'));
+    await waitFor(() => expect(queryByTestId('pizza-tooltip')).toBeFalsy());
+    // click legend again opens
+    fireEvent.press(getByTestId('legend-Moradia'));
+    await waitFor(() => expect(getByTestId('pizza-tooltip')).toBeTruthy());
   });
 
   test('metas urgentes aparecem ≤30 dias', async () => {

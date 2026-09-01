@@ -2,6 +2,7 @@ import React from "react";
 
 import { NavigationContainer } from "@react-navigation/native";
 import { createStackNavigator } from "@react-navigation/stack";
+import { BottomSheetModalProvider } from "@gorhom/bottom-sheet";
 
 import Onboarding from "./pages/Onboarding";
 import BottomTabRoutes from "./bottom-tab-routes";
@@ -17,18 +18,20 @@ export default function Routes() {
 
   return (
     <NavigationContainer theme={{ colors: { background: colorModeState === "dark" ? "#1c1e21" : "#f0f2f5" } }}>
-      <Stack.Navigator
-        initialRouteName={"Onboarding"}
-        screenOptions={{
-          headerShown: false,
-        }}
-      >
-        <Stack.Screen name="Onboarding" component={Onboarding} />
-        <Stack.Screen name="Configuracoes" component={AboutUs} />
-        <Stack.Screen name="IAPage" component={IAPage} />
-        <Stack.Screen name="AIProviders" component={AIProviders} />
-        <Stack.Screen name="TabNavigator" component={BottomTabRoutes} />
-      </Stack.Navigator>
+      <BottomSheetModalProvider>
+        <Stack.Navigator
+          initialRouteName={"Onboarding"}
+          screenOptions={{
+            headerShown: false,
+          }}
+        >
+          <Stack.Screen name="Onboarding" component={Onboarding} />
+          <Stack.Screen name="Configuracoes" component={AboutUs} />
+          <Stack.Screen name="IAPage" component={IAPage} />
+          <Stack.Screen name="AIProviders" component={AIProviders} />
+          <Stack.Screen name="TabNavigator" component={BottomTabRoutes} />
+        </Stack.Navigator>
+      </BottomSheetModalProvider>
     </NavigationContainer>
   );
 }

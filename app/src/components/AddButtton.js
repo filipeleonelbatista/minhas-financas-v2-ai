@@ -1,6 +1,9 @@
 import { Feather } from "@expo/vector-icons";
-import { useMemo, useState } from "react";
-import { Modal, View, Pressable, useWindowDimensions } from "react-native";
+import { useMemo, useState, useCallback } from "react";
+import { Modal, View, Pressable, useWindowDimensions, KeyboardAvoidingView, Platform, ScrollView } from "react-native";
+import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
+import { BottomSheetScrollView } from "@gorhom/bottom-sheet";
+import { Sheet, useSheetRef } from "./nativewindui/Sheet";
 import { useIsKeyboardOpen } from "../hooks/useIsKeyboardOpen";
 import { usePagesStore } from "../stores/pages";
 import { useSettingsStore } from "../stores/settings";
@@ -12,6 +15,17 @@ import AddListForm from "./AddListForm";
 import AddShoppingCartItem from "./AddShoppingCartItem";
 import ErrorSheet from "./ErrorSheet";
 
+let RadiantButton: any = null;
+try {
+  // eslint-disable-next-line global-require
+  RadiantButton = require('./ui').RadiantButton ?? require('./ui/index').RadiantButton ?? require('./ui/index').default ?? null;
+} catch {
+  try {
+    // eslint-disable-next-line global-require
+    RadiantButton = require('./ui/index.tsx').RadiantButton ?? null;
+  } catch {}
+}
+// Fallback keep ChromaRing for legacy if RadiantButton unavailable
 let ChromaRing: any = null;
 try {
   // eslint-disable-next-line global-require
@@ -30,18 +44,38 @@ export default function AddButton() {
   const colorModeState = useSettingsStore((s) => s.colorModeState);
   const isDark = colorModeState === "dark";
   const bg = isDark ? "#1c1e21" : "#f5f5f4";
+  const insets = useSafeAreaInsets();
   const { height } = useWindowDimensions();
   const isKeyboardOpen = useIsKeyboardOpen();
 
+  // NativeWindUI Sheet ref for modern bottom-sheet
+  const sheetRef = useSheetRef();
+  const [useNativeSheet] = useState(false); // toggle to true to use @gorhom/bottom-sheet native sheet
+
   const [isOpen, setIsOpen] = useState(false);
-  const onOpen = () => setIsOpen(true);
-  const onClose = () => setIsOpen(false);
+  const onOpen = useCallback(() => {
+    if (useNativeSheet) {
+      sheetRef.current?.present();
+    } else {
+      setIsOpen(true);
+    }
+  }, [useNativeSheet]);
+  const onClose = useCallback(() => {
+    if (useNativeSheet) {
+      sheetRef.current?.dismiss();
+    } else {
+      setIsOpen(false);
+    }
+  }, [useNativeSheet]);
 
   const selectedSheet = usePagesStore((s) => s.selectedSheet);
 
   const selectedComponent = useMemo(() => {
     switch (selectedSheet) {
       case "Finanças":
+      case "Início":
+      case null:
+      case undefined:
         return <AddItemForm onClose={onClose} />;
       case "Combustível":
         return <AddFuelForm onClose={onClose} />;
@@ -54,7 +88,7 @@ export default function AddButton() {
       case "Relatórios":
         return <AddGoalForm onClose={onClose} />;
       default:
-        return <ErrorSheet />;
+        return <AddItemForm onClose={onClose} />;
     }
   }, [selectedSheet]);
 
@@ -67,7 +101,36 @@ export default function AddButton() {
 
   return (
     <>
-      {ChromaRing ? (
+      {RadiantButton ? (
+        <View testID="add-button-fab" accessibilityLabel="Adicionar" style={{ marginTop: -24 }}>
+          <RadiantButton
+            onPress={onOpen}
+            borderRadius={fabSize / 2}
+            borderWidth={2}
+            duration={2800}
+            showDots={false}
+            showShimmer={true}
+            showGlow={true}
+            glowBlur={18}
+            glowWidth={0.7}
+            breathingEnabled={true}
+            paddingHorizontal={0}
+            paddingVertical={0}
+            style={{ width: fabSize, height: fabSize, borderRadius: fabSize / 2 }}
+            theme={{
+              background: PURPLE_600,
+              backgroundSubtle: PURPLE_900,
+              foreground: "#ffffff",
+              highlight: "#e9d5ff",
+              highlightSubtle: "#c084fc",
+            }}
+          >
+            <View style={{ width: fabSize, height: fabSize, alignItems: 'center', justifyContent: 'center' }}>
+              <Feather name="plus" size={26} color="white" />
+            </View>
+          </RadiantButton>
+        </View>
+      ) : ChromaRing ? (
         <Pressable testID="add-button-fab" accessibilityLabel="Adicionar" onPress={onOpen} style={{ marginTop: -24 }}>
           <ChromaRing width={fabSize} height={fabSize} borderWidth={2} speed={1.0} base={PURPLE_900} glow={PURPLE_600} background={PURPLE_600} style={{ width: fabSize, height: fabSize, borderRadius: fabSize / 2 }}>
             {FabContent}
@@ -95,17 +158,35 @@ export default function AddButton() {
           <Feather name="plus" size={26} color="white" />
         </Pressable>
       )}
-      <Modal visible={isOpen} animationType="slide" onRequestClose={onClose} transparent={false}>
-        <View style={{ flex: 1, height: height * (isKeyboardOpen ? 0.9 : 1.09), paddingTop: 24, backgroundColor: bg }}>
-          <Pressable onPress={onClose} style={{ alignSelf: "flex-end", padding: 16 }}>
-            <Feather name="x" size={24} color={isDark ? "#e4e4e7" : "#52525b"} />
-          </Pressable>
-          <View style={{ flex: 1, paddingBottom: isKeyboardOpen ? 24 : 0 }}>
-            {selectedComponent}
-            <View style={{ height: 64, width: "100%" }} />
+      {/* Fallback Modal with NativeWindUI styling + SafeArea - preferred for jest */}
+      <Modal visible={isOpen} animationType="slide" onRequestClose={onClose} transparent={false} statusBarTranslucent>
+        <SafeAreaView style={{ flex: 1, backgroundColor: bg }} edges={["top", "bottom"]}>
+          {/* NativeWindUI sheet handle indicator */}
+          <View style={{ alignItems: "center", paddingTop: 12, paddingBottom: 8 }}>
+            <View style={{ width: 36, height: 4, borderRadius: 2, backgroundColor: isDark ? "#3f3f46" : "#e4e4e7" }} />
           </View>
-        </View>
+          <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", paddingHorizontal: 16, paddingBottom: 8 }}>
+            <View style={{ width: 40 }} />
+            <Pressable onPress={onClose} style={{ padding: 12, borderRadius: 999, backgroundColor: isDark ? "#27272a" : "#f5f5f4" }}>
+              <Feather name="x" size={20} color={isDark ? "#e4e4e7" : "#52525b"} />
+            </Pressable>
+          </View>
+          <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : "height"} keyboardVerticalOffset={insets.top + 12} style={{ flex: 1 }}>
+            <View style={{ flex: 1, paddingBottom: insets.bottom }}>
+              {selectedComponent}
+            </View>
+          </KeyboardAvoidingView>
+        </SafeAreaView>
       </Modal>
+
+      {/* NativeWindUI Sheet (bottom-sheet) - alternative native feeling sheet */}
+      <Sheet ref={sheetRef} snapPoints={["92%"]} enableDynamicSizing={false} keyboardBehavior="interactive" keyboardBlurBehavior="restore" android_keyboardInputMode="adjustResize">
+        <BottomSheetScrollView contentContainerStyle={{ paddingBottom: insets.bottom + 24, backgroundColor: bg }} style={{ flex: 1, backgroundColor: bg }}>
+          <View style={{ paddingHorizontal: 16, paddingTop: 8 }}>
+            {selectedComponent}
+          </View>
+        </BottomSheetScrollView>
+      </Sheet>
     </>
   );
 }

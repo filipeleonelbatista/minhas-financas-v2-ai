@@ -11,12 +11,16 @@ import {
   useFonts,
 } from "@expo-google-fonts/poppins";
 
+import { GestureHandlerRootView } from "react-native-gesture-handler";
+import { SafeAreaProvider } from "react-native-safe-area-context";
 import { useSettingsStore } from "./src/stores/settings";
 import Loading from "./src/components/Loading";
 import { LogBox } from "react-native";
 
 LogBox.ignoreLogs([
   "In React 18, SSRProvider is not necessary and is a noop. You can remove it from your app.",
+  "Due to changes in Androids permission",
+  "The result of getSnapshot should be cached",
 ]);
 
 // BiometricGate migrated to useSettingsStore
@@ -129,7 +133,33 @@ export default function App() {
   const load = useSettingsStore((s) => s.load);
 
   useEffect(() => {
-    load();
+    (async () => {
+      await load();
+      if (process.env.NODE_ENV !== 'test') {
+        try {
+          const m = await import('./src/db/seed');
+          const res = await m.ensureSeeded?.();
+          if (res) {
+            // recarrega todas as stores para refletir seed (finanças, corridas, estoque, listas, metas)
+            try {
+              const { useFinanceStore } = await import('./src/stores/finance');
+              const { useRunsStore } = await import('./src/stores/runs');
+              const { useMarketStore } = await import('./src/stores/market');
+              const { useListsStore } = await import('./src/stores/lists');
+              const { useGoalsStore } = await import('./src/stores/goals');
+              await Promise.all([
+                useFinanceStore.getState().load?.(),
+                useRunsStore.getState().load?.(),
+                useMarketStore.getState().load?.(),
+                useListsStore.getState().load?.(),
+                useGoalsStore.getState().load?.(),
+                load(),
+              ]);
+            } catch {}
+          }
+        } catch {}
+      }
+    })();
   }, []);
 
   if (!fontsLoaded) {
@@ -137,18 +167,20 @@ export default function App() {
   }
 
   return (
-    <>
-      <View
-        style={{
-          height: RNStatusBar.currentHeight,
-          backgroundColor: "#581c87",
-        }}
-      >
-        <StatusBar style="light" />
-      </View>
-      <BiometricGate>
-        <Routes />
-      </BiometricGate>
-    </>
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      <SafeAreaProvider>
+        <View
+          style={{
+            height: RNStatusBar.currentHeight,
+            backgroundColor: "#581c87",
+          }}
+        >
+          <StatusBar style="light" />
+        </View>
+        <BiometricGate>
+          <Routes />
+        </BiometricGate>
+      </SafeAreaProvider>
+    </GestureHandlerRootView>
   );
 }

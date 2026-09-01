@@ -1,7 +1,7 @@
 import React, { useMemo, useState, useEffect } from "react";
 import { View, Text, ScrollView, Pressable, TextInput, TouchableOpacity, Modal, useWindowDimensions } from "react-native";
 import { Feather, MaterialCommunityIcons, Ionicons } from "@expo/vector-icons";
-import { DateTimePickerAndroid } from "@react-native-community/datetimepicker";
+import { openThemedDatePicker } from "../utils/datePicker";
 import { useIsFocused, useNavigation } from "@react-navigation/native";
 import dayjs from "dayjs";
 import isSameOrAfter from "dayjs/plugin/isSameOrAfter";
@@ -16,6 +16,9 @@ import { useSettingsStore } from "../stores/settings";
 import { usePagesStore } from "../stores/pages";
 import ErrorSheet from "../components/ErrorSheet";
 import EditVeicleForm from "../components/EditVeicleForm";
+import { Sheet, useSheetRef } from "../components/nativewindui/Sheet";
+import { BottomSheetScrollView } from "@gorhom/bottom-sheet";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 dayjs.extend(isSameOrAfter);
 dayjs.extend(isSameOrBefore);
@@ -24,10 +27,10 @@ export default function Runs() {
   const colorModeState = useSettingsStore((s) => s.colorModeState);
   const isDark = colorModeState === "dark";
   const bg = isDark ? "#1c1e21" : "#f5f5f4";
-  const bgCard = isDark ? "#27272a" : "#f5f5f4";
+  const bgCard = isDark ? "#27272a" : "white";
   const headerText = isDark ? "#27272a" : "white";
   const text = isDark ? "#e4e4e7" : "#52525b";
-  const bgCardPressed = isDark ? "#3f3f46" : "#e7e5e4";
+  const bgCardPressed = isDark ? "#3f3f46" : "#f5f5f4";
   const isAiEnabled = useSettingsStore((s) => !!s.isAiEnabled);
   const veicleAutonomy = useSettingsStore((s) => s.veicleAutonomy);
 
@@ -38,13 +41,16 @@ export default function Runs() {
   }, [isFocused]);
 
   const isKeyboardOpen = useIsKeyboardOpen();
+  const tabBarHeight = (() => { try { const { useBottomTabBarHeight } = require("@react-navigation/bottom-tabs"); return useBottomTabBarHeight(); } catch { return 80; } })();
   const [isOpen, setIsOpen] = useState(false);
   const onOpen = () => setIsOpen(true);
   const onClose = () => setIsOpen(false);
   const navigation = useNavigation();
   const { height } = useWindowDimensions();
+  const insets = useSafeAreaInsets();
+  const filterSheetRef = useSheetRef();
 
-  const [startDate, setStartDate] = useState(dayjs().startOf("month").format("DD/MM/YYYY"));
+  const [startDate, setStartDate] = useState(dayjs().subtract(5, "month").startOf("month").format("DD/MM/YYYY"));
   const [endDate, setEndDate] = useState(dayjs().endOf("month").format("DD/MM/YYYY"));
 
   const FuelList = useRunsStore((s) => s.runsList);
@@ -113,7 +119,7 @@ export default function Runs() {
         <Ionicons name="car-sport-outline" size={20} color="white" />
       </TouchableOpacity>
 
-      <ScrollView style={{ flex: 1, width: "100%", height: "100%" }}>
+      <ScrollView style={{ flex: 1, width: "100%", height: "100%" }} contentContainerStyle={{ paddingBottom: tabBarHeight + 24 }} showsVerticalScrollIndicator={false}>
         <Header
           title="Corrida"
           isRightIconComponent={
@@ -134,51 +140,37 @@ export default function Runs() {
 
           <Pressable
             onPress={() => { setSelectedSheetOpen("autonomy"); onOpen(); }}
-            style={({ pressed }) => ({ backgroundColor: pressed ? bgCardPressed : bgCard, marginHorizontal: 4, minWidth: 180, height: 110, borderRadius: 4, padding: 16, elevation: 2 })}
+            style={({ pressed }) => ({ marginHorizontal: 4, backgroundColor: pressed ? bgCardPressed : bgCard, minWidth: 180, height: 110, borderRadius: 4, padding: 16, elevation: 2, shadowColor: "#000", shadowOpacity: 0.1 })}
           >
-            <View>
-              <View style={{ flexDirection: "row", justifyContent: "space-between" }}>
-                <Text style={{ color: text, fontSize: 18 }}>Autonomia</Text>
-                <Feather name="arrow-up-circle" size={48} color="#22c55e" />
-              </View>
-              <Text style={{ color: text, fontSize: (veicleAutonomy ?? 0) < 10000 ? 26 : 20 }} numberOfLines={1}>{veicleAutonomy ?? 0}L</Text>
+            <View style={{ flexDirection: "row", justifyContent: "space-between" }}>
+              <Text style={{ color: text, fontSize: 18 }}>Autonomia</Text>
+              <Feather name="arrow-up-circle" size={48} color="#22c55e" />
             </View>
+            <Text style={{ color: text, fontSize: (veicleAutonomy ?? 0) < 10000 ? 26 : 20, maxWidth: 170 }} numberOfLines={1}>{veicleAutonomy ?? 0}L</Text>
           </Pressable>
 
-          <View style={{ marginHorizontal: 4, backgroundColor: bgCard, minWidth: 180, height: 110, borderRadius: 4, padding: 16, elevation: 2 }}>
+          <View style={{ marginHorizontal: 4, backgroundColor: bgCard, minWidth: 180, height: 110, borderRadius: 4, padding: 16, elevation: 2, shadowColor: "#000", shadowOpacity: 0.1 }}>
             <View style={{ flexDirection: "row", justifyContent: "space-between" }}>
               <Text style={{ color: text, fontSize: 18 }}>Km Atual</Text>
               <Feather name="arrow-up-circle" size={48} color="#22c55e" />
             </View>
-            <Text style={{ color: text, fontSize: (filteredList[0]?.currentDistance ?? 0) < 10000 ? 26 : 20 }} numberOfLines={1}>{filteredList[0]?.currentDistance ?? 0}</Text>
+            <Text style={{ color: text, fontSize: (filteredList[0]?.currentDistance ?? 0) < 10000 ? 26 : 20, maxWidth: 170 }} numberOfLines={1}>{filteredList[0]?.currentDistance ?? 0}</Text>
           </View>
         </ScrollView>
 
         <View style={{ paddingHorizontal: 16, marginTop: -36, gap: 8 }}>
           <Text style={{ fontSize: 14, color: text }}>* Totais referentes ao ultimo abastecimento</Text>
 
-          <View style={{ gap: 8 }}>
-            <Text style={{ color: text, fontSize: 16, fontWeight: "700" }}>Filtrar por período</Text>
-            <View style={{ width: "100%", flexDirection: "row", gap: 8 }}>
-              <View style={{ flex: 1, flexDirection: "row", alignItems: "center", borderWidth: 1, borderColor: "#d4d4d8", borderRadius: 4 }}>
-                <TextInput style={{ flex: 1, padding: 8, color: text }} placeholder="Data inicio" value={startDate} editable={false} placeholderTextColor="#a1a1aa" />
-                <TouchableOpacity
-                  style={{ width: "25%", backgroundColor: "#9c44dc", height: "100%", alignItems: "center", justifyContent: "center", padding: 4 }}
-                  onPress={() => DateTimePickerAndroid.open({ value: new Date(Date.now()), onChange: onChangeStartDate, mode: "date", is24Hour: false })}
-                >
-                  <Feather name="calendar" size={24} color="#FFF" />
-                </TouchableOpacity>
-              </View>
-              <View style={{ flex: 1, flexDirection: "row", alignItems: "center", borderWidth: 1, borderColor: "#d4d4d8", borderRadius: 4 }}>
-                <TextInput style={{ flex: 1, padding: 8, color: text }} placeholder="Data Fim" value={endDate} editable={false} placeholderTextColor="#a1a1aa" />
-                <TouchableOpacity
-                  style={{ width: "25%", backgroundColor: "#9c44dc", height: "100%", alignItems: "center", justifyContent: "center", padding: 4 }}
-                  onPress={() => DateTimePickerAndroid.open({ value: new Date(Date.now()), onChange: onChangeEndDate, mode: "date", is24Hour: false })}
-                >
-                  <Feather name="calendar" size={24} color="#FFF" />
-                </TouchableOpacity>
-              </View>
-            </View>
+          <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
+            <Text style={{ color: text, fontSize: 16, fontWeight: "700" }}>Período</Text>
+            <TouchableOpacity
+              onPress={() => filterSheetRef.current?.present()}
+              style={{ alignItems: "center", justifyContent: "center", paddingHorizontal: 28, paddingVertical: 6, borderWidth: 1, borderRadius: 20, backgroundColor: "transparent", borderColor: "#9c44dc" }}
+            >
+              <Text style={{ fontSize: 16, color: "#9c44dc" }}>
+                <Feather name="filter" size={18} color="#9c44dc" /> Filtros
+              </Text>
+            </TouchableOpacity>
           </View>
           <View>
             <Text style={{ color: text }}>Clique no item para excluir</Text>
@@ -234,6 +226,39 @@ export default function Runs() {
           <View style={{ height: 64, width: "100%" }} />
         </View>
       </Modal>
+
+      <Sheet ref={filterSheetRef} snapPoints={["55%"]} enableDynamicSizing={false} backgroundStyle={{ backgroundColor: bg }} handleIndicatorStyle={{ backgroundColor: isDark ? "#3f3f46" : "#e4e4e7" }}>
+        <BottomSheetScrollView contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: insets.bottom + 24, gap: 16 }} style={{ flex: 1, backgroundColor: bg }}>
+          <View style={{ alignItems: "center", paddingTop: 8 }}>
+            <Text style={{ fontSize: 18, fontWeight: "700", color: text }}>Filtros de período</Text>
+            <Text style={{ fontSize: 12, color: text, marginTop: 4 }}>Selecione o intervalo de datas</Text>
+          </View>
+
+          <View style={{ gap: 8 }}>
+            <Text style={{ color: text, fontSize: 16, fontWeight: "700" }}>Data início</Text>
+            <Pressable onPress={() => openThemedDatePicker({ value: new Date(), onChange: onChangeStartDate, isDark })} style={{ flexDirection: "row", alignItems: "center", borderWidth: 1, borderColor: "#d4d4d8", borderRadius: 4, height: 48, overflow: "hidden", backgroundColor: isDark ? "#27272a" : "white" }}>
+              <TextInput style={{ flex: 1, padding: 8, color: text }} placeholder="Data inicio" value={startDate} editable={false} pointerEvents="none" placeholderTextColor="#a1a1aa" />
+              <View style={{ width: 56, backgroundColor: "#9c44dc", height: "100%", alignItems: "center", justifyContent: "center" }}>
+                <Feather name="calendar" size={24} color="#FFF" />
+              </View>
+            </Pressable>
+          </View>
+
+          <View style={{ gap: 8 }}>
+            <Text style={{ color: text, fontSize: 16, fontWeight: "700" }}>Data fim</Text>
+            <Pressable onPress={() => openThemedDatePicker({ value: new Date(), onChange: onChangeEndDate, isDark })} style={{ flexDirection: "row", alignItems: "center", borderWidth: 1, borderColor: "#d4d4d8", borderRadius: 4, height: 48, overflow: "hidden", backgroundColor: isDark ? "#27272a" : "white" }}>
+              <TextInput style={{ flex: 1, padding: 8, color: text }} placeholder="Data Fim" value={endDate} editable={false} pointerEvents="none" placeholderTextColor="#a1a1aa" />
+              <View style={{ width: 56, backgroundColor: "#9c44dc", height: "100%", alignItems: "center", justifyContent: "center" }}>
+                <Feather name="calendar" size={24} color="#FFF" />
+              </View>
+            </Pressable>
+          </View>
+
+          <TouchableOpacity onPress={() => filterSheetRef.current?.dismiss()} style={{ backgroundColor: "#9c44dc", borderRadius: 12, padding: 14, alignItems: "center", marginTop: 8 }}>
+            <Text style={{ color: "white", fontWeight: "700" }}>Aplicar filtros</Text>
+          </TouchableOpacity>
+        </BottomSheetScrollView>
+      </Sheet>
     </View>
   );
 }

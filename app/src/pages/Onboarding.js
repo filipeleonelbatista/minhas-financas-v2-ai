@@ -104,7 +104,7 @@ export default function Onboarding() {
         await setHasSeenTour(false);
       } catch {}
       setIsOnboardingPassed("passed");
-      navigation.navigate("TabNavigator", { screen: "Finanças" });
+      navigation.navigate("TabNavigator", { screen: "Início" });
     } catch (e) {
       console.error(e);
     }
@@ -118,7 +118,7 @@ export default function Onboarding() {
         await setHasSeenTour(true);
       } catch {}
       setIsOnboardingPassed("passed");
-      navigation.navigate("TabNavigator", { screen: "Finanças" });
+      navigation.navigate("TabNavigator", { screen: "Início" });
     } catch (e) {
       console.error(e);
     }
@@ -142,7 +142,7 @@ export default function Onboarding() {
           if (value !== null) {
             if (JSON.parse(value)) {
               setIsOnboardingPassed("passed");
-              navigation.navigate("TabNavigator", { screen: "Finanças" });
+              navigation.navigate("TabNavigator", { screen: "Início" });
             }
           } else {
             setIsOnboardingPassed("no-passed");

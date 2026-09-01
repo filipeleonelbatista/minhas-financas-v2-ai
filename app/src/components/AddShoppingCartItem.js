@@ -65,7 +65,7 @@ export default function AddShoppingCartItem({ onClose }) {
   }
 
   return (
-    <ScrollView style={{ width: "100%", paddingHorizontal: 16 }} contentContainerStyle={{ paddingBottom: 32 }}>
+    <ScrollView style={{ flex: 1, width: "100%", paddingHorizontal: 16 }} contentContainerStyle={{ paddingBottom: 48, flexGrow: 1 }} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled" keyboardDismissMode="interactive">
       <Text style={{ fontWeight: "700", fontSize: 24, color: text }}>Adicionar produto ao estoque</Text>
       <Text style={{ color: text, marginBottom: 16 }}>Adicione itens para suas compras de mercado.</Text>
 

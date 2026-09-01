@@ -43,6 +43,7 @@ export default function AboutUs() {
   const bg = isDark ? "#1c1e21" : "#f5f5f4";
   const headerText = isDark ? "#27272a" : "white";
   const text = isDark ? "#e4e4e7" : "#52525b";
+  const subText = isDark ? "#a1a1aa" : "#6b7280";
   const theme = {
     colors: {
       warmGray: { 50: "#f5f5f4" },
@@ -73,8 +74,6 @@ export default function AboutUs() {
   const handleSetSimpleFinancesItem = (v) => s.update('simpleFinancesItem', v ? 1 : 0);
   const marketSimplifiedItems = !!s.marketSimplifiedItems;
   const handleSetmarketSimplifiedItems = (v) => s.update('marketSimplifiedItems', v ? 1 : 0);
-  const isShowLabelOnNavigation = !!s.isShowLabelOnNavigation;
-  const handleSetIsShowLabelOnNavigation = (v) => s.update('isShowLabelOnNavigation', v ? 1 : 0);
   const isAiEnabled = !!s.isAiEnabled;
   const handleSetIsAiEnabled = (v) => s.update('isAiEnabled', v ? 1 : 0);
   const selectedFolderToSave = s.selectedFolderToSave;
@@ -523,45 +522,35 @@ export default function AboutUs() {
   }, [apiKey]);
 
   return (
-    <View style={{flex:1}}>
-      <View flex={1} bg={bg}>
-      <ScrollView flex={1} w={"100%"} h={"100%"}>
+    <View style={{flex:1, backgroundColor:bg}}>
+      <View style={{flex:1, backgroundColor:bg}}>
+      <ScrollView style={{flex:1}} contentContainerStyle={{paddingBottom:24}} showsVerticalScrollIndicator={false}>
         <Header
           title="Configuraçõe"
           isLeftIconComponent={
             <TouchableOpacity
-              size={10}
-              borderRadius="full"
-              icon={<Feather name="arrow-left" size={20} color={headerText} />}
               onPress={() => navigation.goBack()}
-              _pressed={{
-                bgColor: theme.colors.purple[900],
-              }}
-            />
+              style={{ width: 40, height: 40, borderRadius: 999, alignItems: "center", justifyContent: "center" }}
+            >
+              <Feather name="arrow-left" size={20} color={headerText} />
+            </TouchableOpacity>
           }
         />
 
-        <View alignItems={"center"} mt={-16}>
+        <View style={{alignItems:"center", marginTop:-16}}>
           <View
-            borderRadius={"full"}
-            w={32}
-            h={32}
-            borderWidth={6}
-            borderColor={theme.colors.purple[900]}
-            bg={bg}
-            alignItems={"center"}
-            justifyContent={"center"}
+            style={{width:128, height:128, borderRadius:999, borderWidth:6, borderColor:theme.colors.purple[900], backgroundColor:bg, alignItems:"center", justifyContent:"center"}}
           >
             <Image
               alt="logo"
               source={userImg}
-              borderRadius={"full"}
-              size={105}
+              style={{width:105, height:105, borderRadius:999}}
             />
           </View>
         </View>
-        <View space={2} px={4}>
-          <View alignItems={"center"}>
+        <View style={{gap:8, paddingHorizontal:16}}>
+          <View style={{flexDirection:"row", justifyContent:"space-between", alignItems:"center", paddingVertical:8, paddingHorizontal:12, backgroundColor: isDark ? "#27272a" : "white", borderRadius:12, borderWidth:1, borderColor: isDark ? "#3f3f46" : "#e4e4e7", marginBottom:8}}>
+            <Text style={{color:text, fontSize:15, fontWeight:"500", flex:1, marginRight:12}} numberOfLines={2}>Habilitar Tema Escuro</Text>
             <Switch
               trackColor={{
                 false: theme.colors.gray[400],
@@ -576,31 +565,10 @@ export default function AboutUs() {
               onValueChange={handleToggleTheme}
               value={colorMode === "dark"}
             />
-            <Text color={text} fontSize={16} maxW={"90%"} numberOfLines={2}>
-              Habilitar Tema Escuro
-            </Text>
           </View>
 
-          <View alignItems={"center"}>
-            <Switch
-              trackColor={{
-                false: theme.colors.gray[400],
-                true: theme.colors.gray[400],
-              }}
-              thumbColor={
-                isShowLabelOnNavigation
-                  ? theme.colors.purple[600]
-                  : theme.colors.gray[600]
-              }
-              ios_backgroundColor={theme.colors.gray[600]}
-              onValueChange={handleSetIsShowLabelOnNavigation}
-              value={isShowLabelOnNavigation}
-            />
-            <Text color={text} fontSize={16} maxW={"90%"} numberOfLines={2}>
-              Titulos nos icones da navegação
-            </Text>
-          </View>
-          <View alignItems={"center"}>
+          <View style={{flexDirection:"row", justifyContent:"space-between", alignItems:"center", paddingVertical:8, paddingHorizontal:12, backgroundColor: isDark ? "#27272a" : "white", borderRadius:12, borderWidth:1, borderColor: isDark ? "#3f3f46" : "#e4e4e7", marginBottom:8}}>
+            <Text style={{color:text, fontSize:15, fontWeight:"500", flex:1, marginRight:12}} numberOfLines={2}>Habilitar Inteligência artificial (Beta)</Text>
             <Switch
               trackColor={{
                 false: theme.colors.gray[400],
@@ -613,61 +581,45 @@ export default function AboutUs() {
               onValueChange={handleSetIsAiEnabled}
               value={isAiEnabled}
             />
-            <Text color={text} fontSize={16} maxW={"90%"} numberOfLines={2}>
-              Habilitar Inteligência artificial (Beta)
-            </Text>
           </View>
 
           {isAiEnabled && (
-            <View space={1}>
-              <Text color={text} fontSize={16}>
-                Chave de API
-              </Text>
-              <TextInput
-                placeholder="Chave de API"
-                onChangeText={(text) => {
-                  setInputOpenAiText(text);
-                }}
-                value={inputOpenAiText}
-                editable={isAiEnabled}
-                rightElement={
-                  <TouchableOpacity
-                    size="xs"
-                    rounded="none"
-                    w="1/6"
-                    p={0}
-                    h="full"
-                    bgColor={theme.colors.purple[600]}
-                    onPress={() => {
-                      handleSaveApiKey(inputOpenAiText);
-                    }}
-                  >
-                    <Feather name="save" size={24} color="#FFF" />
-                  </TouchableOpacity>
-                }
-              />
-              <Text color="gray.400">
+            <View style={{gap:4}}>
+              <Text style={{color:text, fontSize:15, fontWeight:"600"}}>Chave de API</Text>
+              <View style={{ flexDirection: "row", alignItems: "stretch", height: 48, borderWidth: 1, borderColor: "#d4d4d8", borderRadius: 12, overflow: "hidden", backgroundColor: isDark ? "#27272a" : "white" }}>
+                <TextInput
+                  placeholder="Chave de API"
+                  placeholderTextColor="#a1a1aa"
+                  onChangeText={(text) => setInputOpenAiText(text)}
+                  value={inputOpenAiText}
+                  editable={isAiEnabled}
+                  style={{ flex: 1, paddingHorizontal: 12, color: text }}
+                />
+                <TouchableOpacity
+                  onPress={() => handleSaveApiKey(inputOpenAiText)}
+                  style={{ backgroundColor: theme.colors.purple[600], width: 56, justifyContent: "center", alignItems: "center" }}
+                >
+                  <Feather name="save" size={20} color="#FFF" />
+                </TouchableOpacity>
+              </View>
+              <Text style={{color: subText, fontSize:13, marginTop:4}}>
                 Coloque aqui sua Chave de Api da OpenAI
               </Text>
-              <TouchableOpacity
-                href={"https://platform.openai.com/account/api-keys"}
-                _text={{ color: "purple.500" }}
-              >
-                Toque aqui para obter uma Chave de API OpenAi
+              <TouchableOpacity onPress={() => Linking.openURL("https://platform.openai.com/account/api-keys")}>
+                <Text style={{ color: "#9c44dc" }}>Toque aqui para obter uma Chave de API OpenAi</Text>
               </TouchableOpacity>
             </View>
           )}
 
-          <View my={2}>
-            <View />
-          </View>
+          <View style={{height:1, backgroundColor: isDark ? "#3f3f46" : "#e4e4e7", marginVertical:16}} />
         </View>
 
-        <View space={2} px={4}>
-          <Text color={text} bold fontSize={22}>
+        <View style={{gap:12, paddingHorizontal:16, paddingVertical:8}}>
+          <Text style={{color:text, fontWeight:"700", fontSize:20}}>
             Finanças
           </Text>
-          <View alignItems={"center"}>
+          <View style={{flexDirection:"row", justifyContent:"space-between", alignItems:"center", paddingVertical:8, paddingHorizontal:12, backgroundColor: isDark ? "#27272a" : "white", borderRadius:12, borderWidth:1, borderColor: isDark ? "#3f3f46" : "#e4e4e7", marginBottom:8}}>
+            <Text style={{color:text, fontSize:15, fontWeight:"500", flex:1, marginRight:12}} numberOfLines={2}>Usar formulário simplificado de itens</Text>
             <Switch
               trackColor={{
                 false: theme.colors.gray[400],
@@ -682,11 +634,9 @@ export default function AboutUs() {
               onValueChange={handleSetSimpleFinancesItem}
               value={simpleFinancesItem}
             />
-            <Text color={text} fontSize={16} maxW={"90%"} numberOfLines={2}>
-              Usar formulário simplificado de itens
-            </Text>
           </View>
-          <View alignItems={"center"}>
+          <View style={{flexDirection:"row", justifyContent:"space-between", alignItems:"center", paddingVertical:8, paddingHorizontal:12, backgroundColor: isDark ? "#27272a" : "white", borderRadius:12, borderWidth:1, borderColor: isDark ? "#3f3f46" : "#e4e4e7", marginBottom:8}}>
+            <Text style={{color:text, fontSize:15, fontWeight:"500", flex:1, marginRight:12}} numberOfLines={2}>Habilitar card de Saldo</Text>
             <Switch
               trackColor={{
                 false: theme.colors.gray[400],
@@ -701,11 +651,9 @@ export default function AboutUs() {
               onValueChange={handleSwitchViewTotalHistoryCard}
               value={isEnableTotalHistoryCard}
             />
-            <Text color={text} fontSize={16} maxW={"90%"} numberOfLines={2}>
-              Habilitar card de Saldo
-            </Text>
           </View>
-          <View alignItems={"center"}>
+          <View style={{flexDirection:"row", justifyContent:"space-between", alignItems:"center", paddingVertical:8, paddingHorizontal:12, backgroundColor: isDark ? "#27272a" : "white", borderRadius:12, borderWidth:1, borderColor: isDark ? "#3f3f46" : "#e4e4e7", marginBottom:8}}>
+            <Text style={{color:text, fontSize:15, fontWeight:"500", flex:1, marginRight:12}} numberOfLines={2}>Habilitar card de Dízimo</Text>
             <Switch
               trackColor={{
                 false: theme.colors.gray[400],
@@ -720,11 +668,9 @@ export default function AboutUs() {
               onValueChange={handleSwitchViewTitheCard}
               value={isEnableTitheCard}
             />
-            <Text color={text} fontSize={16} maxW={"90%"} numberOfLines={2}>
-              Habilitar card de Dízimo
-            </Text>
           </View>
-          <View alignItems={"center"}>
+          <View style={{flexDirection:"row", justifyContent:"space-between", alignItems:"center", paddingVertical:8, paddingHorizontal:12, backgroundColor: isDark ? "#27272a" : "white", borderRadius:12, borderWidth:1, borderColor: isDark ? "#3f3f46" : "#e4e4e7", marginBottom:8}}>
+            <Text style={{color:text, fontSize:15, fontWeight:"500", flex:1, marginRight:12}} numberOfLines={2}>Remover itens com o prefixo da soma do Dízimo</Text>
             <Switch
               trackColor={{
                 false: theme.colors.gray[400],
@@ -739,65 +685,46 @@ export default function AboutUs() {
               onValueChange={handleWillRemovePrefixToRemove}
               value={willUsePrefixToRemoveTihteSum}
             />
-            <Text color={text} fontSize={16} maxW={"90%"} numberOfLines={2}>
-              Remover itens com o prefixo da soma do Dízimo
-            </Text>
           </View>
 
-          <View space={2}>
-            <Text color={text} fontSize={16}>
-              Prefixo
-            </Text>
+          <View style={{gap:8}}>
+            <Text style={{color:text, fontSize:15, fontWeight:"600"}}>Prefixo</Text>
             <TextInput
               placeholder="Prefixo"
+              placeholderTextColor="#a1a1aa"
               onChangeText={handleSetPrefixTithe}
               value={prefixTithe}
               editable={willUsePrefixToRemoveTihteSum}
+              style={{borderWidth:1, borderColor: isDark ? "#3f3f46" : "#e4e4e7", borderRadius:12, padding:12, color:text, backgroundColor: isDark ? "#27272a" : "white"}}
             />
-            <Text color="gray.400">
+            <Text style={{color: subText, fontSize:13, marginTop:4}}>
               Se o título da transação tiver este prefixo não será contado na
               soma do dízimo
             </Text>
           </View>
         </View>
 
-        <View px={4} space={2} my={2}>
+        <View style={{gap:12, paddingHorizontal:16, marginVertical:8}}>
           <TouchableOpacity
             onPress={handleGenerateCSV}
-            shadow={2}
-            colorScheme={"purple"}
-            borderRadius={"full"}
-            leftIcon={<Feather name="file-text" size={24} color="#FFF" />}
-            _text={{
-              color: "white",
-              fontSize: 16,
-            }}
-            _pressed={{
-              bgColor: theme.colors.purple[900],
-            }}
+            style={{ backgroundColor: theme.colors.purple[600], borderRadius: 999, paddingVertical: 14, paddingHorizontal: 16, flexDirection: "row", alignItems: "center", justifyContent: "center", elevation: 2, gap: 8 }}
+            activeOpacity={0.8}
           >
-            Exportar finanças
+            <Feather name="file-text" size={20} color="#FFF" />
+            <Text style={{ color: "white", fontSize: 16, fontWeight: "600" }}>{"Exportar finanças"}</Text>
           </TouchableOpacity>
           <TouchableOpacity
             onPress={handleImportCSV}
-            shadow={2}
-            colorScheme={"purple"}
-            borderRadius={"full"}
-            leftIcon={<Feather name="file-text" size={24} color="#FFF" />}
-            _text={{
-              color: "white",
-              fontSize: 16,
-            }}
-            _pressed={{
-              bgColor: theme.colors.purple[900],
-            }}
+            style={{ backgroundColor: theme.colors.purple[600], borderRadius: 999, paddingVertical: 14, paddingHorizontal: 16, flexDirection: "row", alignItems: "center", justifyContent: "center", elevation: 2, gap: 8 }}
+            activeOpacity={0.8}
           >
-            Importar finanças
+            <Feather name="file-text" size={20} color="#FFF" />
+            <Text style={{ color: "white", fontSize: 16, fontWeight: "600" }}>{"Importar finanças"}</Text>
           </TouchableOpacity>
 
-          <Text color={text} px={2} textAlign="center">
+          <Text style={{color:text, paddingHorizontal:8, textAlign:"center"}}>
             Use um arquivo{" "}
-            <Text color={text} bold fontSize={16}>
+            <Text style={{color:text, fontWeight:"700", fontSize:16}}>
               .csv{" "}
             </Text>
             gerado pelo sistema para importar os dados de um amigo ou familiar.
@@ -805,31 +732,24 @@ export default function AboutUs() {
 
           <TouchableOpacity
             onPress={handleClearFinances}
-            shadow={2}
-            colorScheme={"purple"}
-            borderRadius={"full"}
-            leftIcon={<Feather name="trash" size={24} color="#FFF" />}
-            _text={{
-              color: "white",
-              fontSize: 16,
-            }}
-            _pressed={{
-              bgColor: theme.colors.purple[900],
-            }}
+            style={{ backgroundColor: theme.colors.purple[600], borderRadius: 999, paddingVertical: 14, paddingHorizontal: 16, flexDirection: "row", alignItems: "center", justifyContent: "center", elevation: 2, gap: 8 }}
+            activeOpacity={0.8}
           >
-            Apagar finanças
+            <Feather name="trash" size={20} color="#FFF" />
+            <Text style={{ color: "white", fontSize: 16, fontWeight: "600" }}>{"Apagar finanças"}</Text>
           </TouchableOpacity>
         </View>
 
-        <View px={4} my={2}>
+        <View style={{paddingHorizontal:16, marginVertical:8}}>
           <View />
         </View>
 
-        <View space={2} px={4} py={2}>
-          <Text color={text} bold fontSize={22}>
+        <View style={{gap:12, paddingHorizontal:16, paddingVertical:12}}>
+          <Text style={{color:text, fontWeight:"700", fontSize:20}}>
             Corridas
           </Text>
-          <View alignItems={"center"}>
+          <View style={{flexDirection:"row", justifyContent:"space-between", alignItems:"center", paddingVertical:8, paddingHorizontal:12, backgroundColor: isDark ? "#27272a" : "white", borderRadius:12, borderWidth:1, borderColor: isDark ? "#3f3f46" : "#e4e4e7", marginBottom:8}}>
+            <Text style={{color:text, fontSize:15, fontWeight:"500", flex:1, marginRight:12}} numberOfLines={2}>Habilitar adicionar abastecimento automaticamente em finanças</Text>
             <Switch
               trackColor={{
                 false: theme.colors.gray[400],
@@ -844,46 +764,27 @@ export default function AboutUs() {
               onValueChange={handleToggleWillAddFuel}
               value={willAddFuelToTransactionList}
             />
-            <Text color={text} fontSize={16} maxW={"90%"} numberOfLines={2}>
-              Habilitar adicionar abastecimento automaticamente em finanças
-            </Text>
           </View>
           <TouchableOpacity
             onPress={handleExportRuns}
-            shadow={2}
-            colorScheme={"purple"}
-            borderRadius={"full"}
-            leftIcon={<Feather name="file-text" size={24} color="#FFF" />}
-            _text={{
-              color: "white",
-              fontSize: 16,
-            }}
-            _pressed={{
-              bgColor: theme.colors.purple[900],
-            }}
+            style={{ backgroundColor: theme.colors.purple[600], borderRadius: 999, paddingVertical: 14, paddingHorizontal: 16, flexDirection: "row", alignItems: "center", justifyContent: "center", elevation: 2, gap: 8 }}
+            activeOpacity={0.8}
           >
-            Exportar Abastecimentos
+            <Feather name="file-text" size={20} color="#FFF" />
+            <Text style={{ color: "white", fontSize: 16, fontWeight: "600" }}>{"Exportar Abastecimentos"}</Text>
           </TouchableOpacity>
           <TouchableOpacity
             onPress={handleImportRuns}
-            shadow={2}
-            colorScheme={"purple"}
-            borderRadius={"full"}
-            leftIcon={<Feather name="file-text" size={24} color="#FFF" />}
-            _text={{
-              color: "white",
-              fontSize: 16,
-            }}
-            _pressed={{
-              bgColor: theme.colors.purple[900],
-            }}
+            style={{ backgroundColor: theme.colors.purple[600], borderRadius: 999, paddingVertical: 14, paddingHorizontal: 16, flexDirection: "row", alignItems: "center", justifyContent: "center", elevation: 2, gap: 8 }}
+            activeOpacity={0.8}
           >
-            Importar Abastecimentos
+            <Feather name="file-text" size={20} color="#FFF" />
+            <Text style={{ color: "white", fontSize: 16, fontWeight: "600" }}>{"Importar Abastecimentos"}</Text>
           </TouchableOpacity>
 
-          <Text color={text} px={2} textAlign="center">
+          <Text style={{color:text, paddingHorizontal:8, textAlign:"center"}}>
             Use um arquivo{" "}
-            <Text color={text} bold fontSize={16}>
+            <Text style={{color:text, fontWeight:"700", fontSize:16}}>
               .csv{" "}
             </Text>
             gerado pelo sistema para importar os dados de um amigo ou familiar.
@@ -891,31 +792,24 @@ export default function AboutUs() {
 
           <TouchableOpacity
             onPress={handleClearRuns}
-            shadow={2}
-            colorScheme={"purple"}
-            borderRadius={"full"}
-            leftIcon={<Feather name="trash" size={24} color="#FFF" />}
-            _text={{
-              color: "white",
-              fontSize: 16,
-            }}
-            _pressed={{
-              bgColor: theme.colors.purple[900],
-            }}
+            style={{ backgroundColor: theme.colors.purple[600], borderRadius: 999, paddingVertical: 14, paddingHorizontal: 16, flexDirection: "row", alignItems: "center", justifyContent: "center", elevation: 2, gap: 8 }}
+            activeOpacity={0.8}
           >
-            Apagar Abastecimentos
+            <Feather name="trash" size={20} color="#FFF" />
+            <Text style={{ color: "white", fontSize: 16, fontWeight: "600" }}>{"Apagar Abastecimentos"}</Text>
           </TouchableOpacity>
         </View>
 
-        <View px={4} my={2}>
+        <View style={{paddingHorizontal:16, marginVertical:8}}>
           <View />
         </View>
 
-        <View space={2} px={4} py={2}>
-          <Text color={text} bold fontSize={22}>
+        <View style={{gap:12, paddingHorizontal:16, paddingVertical:12}}>
+          <Text style={{color:text, fontWeight:"700", fontSize:20}}>
             Compras
           </Text>
-          <View alignItems={"center"}>
+          <View style={{flexDirection:"row", justifyContent:"space-between", alignItems:"center", paddingVertical:8, paddingHorizontal:12, backgroundColor: isDark ? "#27272a" : "white", borderRadius:12, borderWidth:1, borderColor: isDark ? "#3f3f46" : "#e4e4e7", marginBottom:8}}>
+            <Text style={{color:text, fontSize:15, fontWeight:"500", flex:1, marginRight:12}} numberOfLines={2}>Usar formulário simplificado de itens</Text>
             <Switch
               trackColor={{
                 false: theme.colors.gray[400],
@@ -930,46 +824,27 @@ export default function AboutUs() {
               onValueChange={handleSetmarketSimplifiedItems}
               value={marketSimplifiedItems}
             />
-            <Text color={text} fontSize={16} maxW={"90%"} numberOfLines={2}>
-              Usar formulário simplificado de itens
-            </Text>
           </View>
           <TouchableOpacity
             onPress={handleExportStock}
-            shadow={2}
-            colorScheme={"purple"}
-            borderRadius={"full"}
-            leftIcon={<Feather name="file-text" size={24} color="#FFF" />}
-            _text={{
-              color: "white",
-              fontSize: 16,
-            }}
-            _pressed={{
-              bgColor: theme.colors.purple[900],
-            }}
+            style={{ backgroundColor: theme.colors.purple[600], borderRadius: 999, paddingVertical: 14, paddingHorizontal: 16, flexDirection: "row", alignItems: "center", justifyContent: "center", elevation: 2, gap: 8 }}
+            activeOpacity={0.8}
           >
-            Exportar Estoque
+            <Feather name="file-text" size={20} color="#FFF" />
+            <Text style={{ color: "white", fontSize: 16, fontWeight: "600" }}>{"Exportar Estoque"}</Text>
           </TouchableOpacity>
           <TouchableOpacity
             onPress={handleImportStock}
-            shadow={2}
-            colorScheme={"purple"}
-            borderRadius={"full"}
-            leftIcon={<Feather name="file-text" size={24} color="#FFF" />}
-            _text={{
-              color: "white",
-              fontSize: 16,
-            }}
-            _pressed={{
-              bgColor: theme.colors.purple[900],
-            }}
+            style={{ backgroundColor: theme.colors.purple[600], borderRadius: 999, paddingVertical: 14, paddingHorizontal: 16, flexDirection: "row", alignItems: "center", justifyContent: "center", elevation: 2, gap: 8 }}
+            activeOpacity={0.8}
           >
-            Importar Estoque
+            <Feather name="file-text" size={20} color="#FFF" />
+            <Text style={{ color: "white", fontSize: 16, fontWeight: "600" }}>{"Importar Estoque"}</Text>
           </TouchableOpacity>
 
-          <Text color={text} px={2} textAlign="center">
+          <Text style={{color:text, paddingHorizontal:8, textAlign:"center"}}>
             Use um arquivo{" "}
-            <Text color={text} bold fontSize={16}>
+            <Text style={{color:text, fontWeight:"700", fontSize:16}}>
               .csv{" "}
             </Text>
             gerado pelo sistema para importar os dados de um amigo ou familiar.
@@ -977,87 +852,55 @@ export default function AboutUs() {
 
           <TouchableOpacity
             onPress={handleImportList}
-            shadow={2}
-            colorScheme={"purple"}
-            borderRadius={"full"}
-            leftIcon={<Feather name="file-text" size={24} color="#FFF" />}
-            _text={{
-              color: "white",
-              fontSize: 16,
-            }}
-            _pressed={{
-              bgColor: theme.colors.purple[900],
-            }}
+            style={{ backgroundColor: theme.colors.purple[600], borderRadius: 999, paddingVertical: 14, paddingHorizontal: 16, flexDirection: "row", alignItems: "center", justifyContent: "center", elevation: 2, gap: 8 }}
+            activeOpacity={0.8}
           >
-            Importar Lista de compras
+            <Feather name="file-text" size={20} color="#FFF" />
+            <Text style={{ color: "white", fontSize: 16, fontWeight: "600" }}>{"Importar Lista de compras"}</Text>
           </TouchableOpacity>
 
-          <Text color={text} px={2} textAlign="center">
+          <Text style={{color:text, paddingHorizontal:8, textAlign:"center"}}>
             Para exportar pressione e segure o card da lista que quer exportar.
           </Text>
 
           <TouchableOpacity
             onPress={handleClearMarket}
-            shadow={2}
-            colorScheme={"purple"}
-            borderRadius={"full"}
-            leftIcon={<Feather name="trash" size={24} color="#FFF" />}
-            _text={{
-              color: "white",
-              fontSize: 16,
-            }}
-            _pressed={{
-              bgColor: theme.colors.purple[900],
-            }}
+            style={{ backgroundColor: theme.colors.purple[600], borderRadius: 999, paddingVertical: 14, paddingHorizontal: 16, flexDirection: "row", alignItems: "center", justifyContent: "center", elevation: 2, gap: 8 }}
+            activeOpacity={0.8}
           >
-            Apagar Compras
+            <Feather name="trash" size={20} color="#FFF" />
+            <Text style={{ color: "white", fontSize: 16, fontWeight: "600" }}>{"Apagar Compras"}</Text>
           </TouchableOpacity>
         </View>
 
-        <View px={4} my={2}>
+        <View style={{paddingHorizontal:16, marginVertical:8}}>
           <View />
         </View>
 
-        <View space={2} px={4} py={2}>
-          <Text color={text} bold fontSize={22}>
+        <View style={{gap:12, paddingHorizontal:16, paddingVertical:12}}>
+          <Text style={{color:text, fontWeight:"700", fontSize:20}}>
             Geral
           </Text>
 
           <TouchableOpacity
             onPress={handleResetSettings}
-            shadow={2}
-            colorScheme={"purple"}
-            borderRadius={"full"}
-            leftIcon={<Feather name="settings" size={24} color="#FFF" />}
-            _text={{
-              color: "white",
-              fontSize: 16,
-            }}
-            _pressed={{
-              bgColor: theme.colors.purple[900],
-            }}
+            style={{ backgroundColor: theme.colors.purple[600], borderRadius: 999, paddingVertical: 14, paddingHorizontal: 16, flexDirection: "row", alignItems: "center", justifyContent: "center", elevation: 2, gap: 8 }}
+            activeOpacity={0.8}
           >
-            Redefinir configurações
+            <Feather name="settings" size={20} color="#FFF" />
+            <Text style={{ color: "white", fontSize: 16, fontWeight: "600" }}>{"Redefinir configurações"}</Text>
           </TouchableOpacity>
 
           <TouchableOpacity
             onPress={handleCleanStorage}
-            shadow={2}
-            colorScheme={"purple"}
-            borderRadius={"full"}
-            leftIcon={<Feather name="trash" size={24} color="#FFF" />}
-            _text={{
-              color: "white",
-              fontSize: 16,
-            }}
-            _pressed={{
-              bgColor: theme.colors.purple[900],
-            }}
+            style={{ backgroundColor: theme.colors.purple[600], borderRadius: 999, paddingVertical: 14, paddingHorizontal: 16, flexDirection: "row", alignItems: "center", justifyContent: "center", elevation: 2, gap: 8 }}
+            activeOpacity={0.8}
           >
-            Apagar tabelas
+            <Feather name="trash" size={20} color="#FFF" />
+            <Text style={{ color: "white", fontSize: 16, fontWeight: "600" }}>{"Apagar tabelas"}</Text>
           </TouchableOpacity>
 
-          <Text color={text} px={2} textAlign="center">
+          <Text style={{color:text, paddingHorizontal:8, textAlign:"center"}}>
             Essa opção apagará todos os registros do app.
           </Text>
 
@@ -1070,69 +913,45 @@ export default function AboutUs() {
               );
               ToastAndroid.show("Pasta selecionada!", ToastAndroid.SHORT);
             }}
-            shadow={2}
-            colorScheme={"purple"}
-            borderRadius={"full"}
-            leftIcon={<Feather name="folder" size={24} color="#FFF" />}
-            _text={{
-              color: "white",
-              fontSize: 16,
-            }}
-            _pressed={{
-              bgColor: theme.colors.purple[900],
-            }}
+            style={{ backgroundColor: theme.colors.purple[600], borderRadius: 999, paddingVertical: 14, paddingHorizontal: 16, flexDirection: "row", alignItems: "center", justifyContent: "center", elevation: 2, gap: 8 }}
+            activeOpacity={0.8}
           >
-            Alterar pasta de exportação
+            <Feather name="folder" size={20} color="#FFF" />
+            <Text style={{ color: "white", fontSize: 16, fontWeight: "600" }}>Alterar pasta de exportação</Text>
           </TouchableOpacity>
 
           <TouchableOpacity
             onPress={saveStorageToExportedFile}
-            shadow={2}
-            colorScheme={"purple"}
-            borderRadius={"full"}
-            leftIcon={<Feather name="file-text" size={24} color="#FFF" />}
-            _text={{
-              color: "white",
-              fontSize: 16,
-            }}
-            _pressed={{
-              bgColor: theme.colors.purple[900],
-            }}
+            style={{ backgroundColor: theme.colors.purple[600], borderRadius: 999, paddingVertical: 14, paddingHorizontal: 16, flexDirection: "row", alignItems: "center", justifyContent: "center", elevation: 2, gap: 8 }}
+            activeOpacity={0.8}
           >
-            Exportar finanças antigo
+            <Feather name="file-text" size={20} color="#FFF" />
+            <Text style={{ color: "white", fontSize: 16, fontWeight: "600" }}>{"Exportar finanças antigo"}</Text>
           </TouchableOpacity>
 
-          <Text color={text} px={2} textAlign="center">
+          <Text style={{color:text, paddingHorizontal:8, textAlign:"center"}}>
             Essa opção exporta o modelo de finanças do app antigo.
           </Text>
         </View>
 
-        <View px={4} my={2}>
+        <View style={{paddingHorizontal:16, marginVertical:8}}>
           <View />
         </View>
 
-        <View space={2} px={4} py={2}>
+        <View style={{gap:8, paddingHorizontal:16, paddingVertical:8}}>
           <TouchableOpacity
             onPress={() => {
-              Linking.openURL("https://filipeleonelbatista.vercel.app/");
+              Linking.openURL("https://www.linkedin.com/in/filipeleonelbatista");
             }}
-            shadow={2}
-            colorScheme={"purple"}
-            borderRadius={"full"}
-            leftIcon={<Feather name="globe" size={24} color="#FFF" />}
-            _text={{
-              color: "white",
-              fontSize: 16,
-            }}
-            _pressed={{
-              bgColor: theme.colors.purple[900],
-            }}
+            style={{ backgroundColor: theme.colors.purple[600], borderRadius: 999, paddingVertical: 14, paddingHorizontal: 16, flexDirection: "row", alignItems: "center", justifyContent: "center", elevation: 2, gap: 8 }}
+            activeOpacity={0.8}
           >
-            Sobre o desenvolvedor
+            <Feather name="globe" size={20} color="#FFF" />
+            <Text style={{ color: "white", fontSize: 16, fontWeight: "600" }}>Sobre o desenvolvedor</Text>
           </TouchableOpacity>
 
-          <Text textAlign={"center"} fontSize={12} color={text} my={6}>
-            Versão {Constants.manifest.version}
+          <Text textAlign={"center"} fontSize={12} color={text} my={6} style={{ textAlign: "center", fontSize: 12, color: text, marginVertical: 24 }}>
+            Versão {Constants.expoConfig?.version ?? Constants.manifest?.version ?? Constants.manifest2?.extra?.expoClient?.version ?? "2.2.2"}
           </Text>
         </View>
       </ScrollView>

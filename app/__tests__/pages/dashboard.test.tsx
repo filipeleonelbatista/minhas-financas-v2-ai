@@ -98,6 +98,8 @@ describe('Dashboard component Início com hero + pizza/linha + metas', () => {
   beforeEach(async () => {
     if (financeRepo.clearMemory) await financeRepo.clearMemory();
     if (goalRepo.clearMemory) await goalRepo.clearMemory();
+    const { useSettingsStore } = require('../../src/stores/settings');
+    useSettingsStore.setState({ isEnableTitheCard: 1, isEnableTotalHistoryCard: 1, colorModeState: 'light' });
   });
 
   test('render hero Saldo/Entradas/Saídas/Dízimo', async () => {

@@ -1,5 +1,6 @@
-import React, { useMemo, useState, useEffect } from "react";
-import { View, Text, ScrollView, Pressable, TouchableOpacity, Modal, useWindowDimensions } from "react-native";
+import React, { useMemo, useState, useEffect, useCallback } from "react";
+import { View, Text, ScrollView, Pressable, TouchableOpacity, Modal, useWindowDimensions, KeyboardAvoidingView, Platform } from "react-native";
+import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 import { Feather } from "@expo/vector-icons";
 import { useIsFocused, useNavigation } from "@react-navigation/native";
 import { differenceInCalendarDays } from "date-fns";
@@ -36,6 +37,7 @@ export default function Reports() {
   }, [isFocused]);
 
   const isKeyboardOpen = useIsKeyboardOpen();
+  const insets = useSafeAreaInsets();
   const [isOpen, setIsOpen] = useState(false);
   const onOpen = () => setIsOpen(true);
   const onClose = () => setIsOpen(false);
@@ -67,6 +69,27 @@ export default function Reports() {
     const data = last8Elements.map((item) => (selectedRunsFilter === "litro" ? item.unityAmount : item.amount));
     return { labels, data, fullList: last8Elements };
   }, [FuelList, selectedRunsFilter]);
+
+  const pieChartConfig = useMemo(() => ({ color: (opacity = 1) => `rgba(255, 255, 255, ${opacity})` }), []);
+  const lineChartConfig = useMemo(() => ({
+    backgroundGradientFrom: bgCard,
+    backgroundGradientFromOpacity: 1,
+    backgroundGradientTo: bgCard,
+    backgroundGradientToOpacity: 1,
+    color: () => text,
+    barPercentage: 0.5,
+    useShadowColorFromDataset: true,
+    propsForVerticalLabels: { fontSize: 10 },
+  }), [bgCard, text]);
+  const lineChartData = useMemo(() => ({
+    labels: runsChartData.labels,
+    datasets: [{ data: runsChartData.data.length ? runsChartData.data : [0], color: () => "#581c87", strokeWidth: 1.5 }],
+  }), [runsChartData]);
+  const handleDataPointClick = useCallback(({ index }) => {
+    setCurrentSelectedSheet("fuel");
+    setSelectedValue(index);
+    onOpen();
+  }, []);
 
   const expensesByCatData = useMemo(() => {
     const getSum = (cat) => {
@@ -154,7 +177,7 @@ export default function Reports() {
                   data={expensesByCatData}
                   strokeWidth={16}
                   radius={32}
-                  chartConfig={{ color: (opacity = 1) => `rgba(255, 255, 255, ${opacity})` }}
+                  chartConfig={pieChartConfig}
                   accessor="population"
                   backgroundColor="transparent"
                   paddingLeft="15"
@@ -181,24 +204,11 @@ export default function Reports() {
                 </View>
                 <View style={{ marginLeft: -20 }}>
                   <LineChart
-                    onDataPointClick={({ index }) => {
-                      setCurrentSelectedSheet("fuel");
-                      setSelectedValue(index);
-                      onOpen();
-                    }}
-                    data={{ labels: runsChartData.labels, datasets: [{ data: runsChartData.data.length ? runsChartData.data : [0], color: () => "#581c87", strokeWidth: 1.5 }] }}
+                    onDataPointClick={handleDataPointClick}
+                    data={lineChartData}
                     width={width * 0.84}
                     height={220}
-                    chartConfig={{
-                      backgroundGradientFrom: bgCard,
-                      backgroundGradientFromOpacity: 1,
-                      backgroundGradientTo: bgCard,
-                      backgroundGradientToOpacity: 1,
-                      color: () => text,
-                      barPercentage: 0.5,
-                      useShadowColorFromDataset: true,
-                      propsForVerticalLabels: { fontSize: 10 },
-                    }}
+                    chartConfig={lineChartConfig}
                   />
                 </View>
               </View>
@@ -255,11 +265,17 @@ export default function Reports() {
       {isAiEnabled && <View style={{ width: "100%", height: 64 }} />}
       <AIComponent />
 
-      <Modal visible={isOpen} animationType="slide" onRequestClose={onClose} transparent={false}>
-        <View style={{ flex: 1, height: height * (isKeyboardOpen ? 0.9 : 1.09), paddingTop: 24, backgroundColor: bg }}>
-          <Pressable onPress={onClose} style={{ alignSelf: "flex-end", padding: 16 }}>
-            <Feather name="x" size={24} color={text} />
-          </Pressable>
+            <Modal visible={isOpen} animationType="slide" onRequestClose={onClose} transparent={false} statusBarTranslucent>
+        <SafeAreaView style={{ flex: 1, backgroundColor: bg }} edges={["top","bottom"]}>
+          <View style={{ alignItems: "center", paddingTop: 12, paddingBottom: 8 }}>
+            <View style={{ width: 36, height: 4, borderRadius: 2, backgroundColor: "#e4e4e7" }} />
+          </View>
+          <View style={{ flexDirection: "row", justifyContent: "flex-end", paddingHorizontal: 16, paddingBottom: 8 }}>
+            <Pressable onPress={onClose} style={{ padding: 12, borderRadius: 999, backgroundColor: "#f5f5f4" }}>
+              <Feather name="x" size={20} color={text} />
+            </Pressable>
+          </View>
+          <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : "height"} keyboardVerticalOffset={insets.top + 12} style={{ flex: 1 }}>
           {currentSelectedSheet === "editar" ? (
             <EditGoalForm onClose={onClose} selectedTransaction={selectedTransaction} />
           ) : currentSelectedSheet === "fuel" ? (
@@ -267,8 +283,9 @@ export default function Reports() {
           ) : (
             <ErrorSheet />
           )}
-          <View style={{ height: 64, width: "100%" }} />
-        </View>
+            <View style={{ height: 24, width: "100%" }} />
+          </KeyboardAvoidingView>
+        </SafeAreaView>
       </Modal>
     </View>
   );

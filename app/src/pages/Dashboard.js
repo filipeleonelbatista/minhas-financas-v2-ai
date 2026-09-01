@@ -7,30 +7,7 @@ import { differenceInCalendarDays } from "date-fns";
 import Header from "../components/Header";
 import { financeRepo } from "../repositories/finance";
 import { goalRepo } from "../repositories/goal";
-
-let LinearGradient;
-try {
-  // eslint-disable-next-line global-require
-  LinearGradient = require("expo-linear-gradient").LinearGradient;
-} catch {
-  LinearGradient = ({ children, colors, style, ...rest }) => (
-    <View style={[{ backgroundColor: (colors && colors[0]) || "#581C87" }, style]} {...rest}>
-      {children}
-    </View>
-  );
-}
-
-// Reanimated wrapper fallback
-let AnimatedView = View;
-let FadeInUp = undefined;
-try {
-  // eslint-disable-next-line global-require
-  const Reanimated = require("react-native-reanimated");
-  AnimatedView = Reanimated.default ? Reanimated.default.View : View;
-  FadeInUp = Reanimated.FadeInUp;
-} catch {
-  AnimatedView = View;
-}
+import { useSettingsStore } from "../stores/settings";
 
 // Charts fallback (jest without native svg may fail)
 let PieChartComp = null;
@@ -46,6 +23,11 @@ try {
 }
 
 const { width } = Dimensions.get("window");
+
+const PURPLE_600 = "#9c44dc";
+const PURPLE_900 = "#581c87";
+const GREEN_500 = "#22c55e";
+const RED_500 = "#ef4444";
 
 function formatCurrency(value) {
   const n = Number(value) || 0;
@@ -75,17 +57,12 @@ export function calcHeroValues(list = []) {
       Incomings += amount;
     }
   }
-  // Tithe 10% sobre entradas com prefix logic simplified: if description includes Dízimo should subtract? For dashboard hero we use simple 10% of Incomings
-  // Keep compatibility with financeRepo calcTithePure if needed; pure here 10% of Incomings minus prefixed saidas if any
-  // For simplicity: Tithe = 10% of Incomings clamped
-  // If caller wants prefix, they can use financeRepo.calcTithe; here we just compute 10%
   Tithe = (Incomings * 10) / 100;
   if (Tithe < 0) Tithe = 0;
   return { Saldo, Incomings, Expenses, Tithe, Total: Saldo };
 }
 
 export function getExpensesByCategory(list = []) {
-  // Colors palette matching Reports
   const palette = ["#581C87", "#7D24BC", "#9C44DC", "#AA5DE0", "#C693EA", "#D4AEF0", "#2D0D45", "#391056", "#4F1778", "#661D9A", "#9231D8", "#9C44DC"];
   const cats = [
     "Cartão",
@@ -125,7 +102,6 @@ export function getExpensesByCategory(list = []) {
 }
 
 export function getLast6MonthsLineData(list = []) {
-  // Returns labels (MM/YY) and datasets for 6 months including current month
   const now = dayjs();
   const months = [];
   for (let i = 5; i >= 0; i--) {
@@ -147,7 +123,6 @@ export function getLast6MonthsLineData(list = []) {
       .filter((it) => it.isEnabled && it.date >= start && it.date <= end)
       .reduce((acc, it) => acc + (Number(it.amount) || 0), 0);
   });
-  // also net total
   const net = months.map((_, idx) => incomings[idx] - expenses[idx]);
   return { labels, incomings, expenses, net };
 }
@@ -173,9 +148,22 @@ export default function Dashboard() {
   const navigation = useNavigation();
   const isFocused = useIsFocused();
 
+  const colorModeState = useSettingsStore((s) => s.colorModeState);
+  const isDark = colorModeState === "dark";
+  const bg = isDark ? "#1c1e21" : "#f5f5f4";
+  const bgCard = isDark ? "#27272a" : "#f5f5f4";
+  const cardBgWhite = isDark ? "#27272a" : "white";
+  const text = isDark ? "#e4e4e7" : "#52525b";
+  const subText = isDark ? "#a1a1aa" : "#6b7280";
+  const titleText = isDark ? "#e4e4e7" : "#374151";
+  const headerText = isDark ? "#27272a" : "white";
+  const isEnableTotalHistoryCard = useSettingsStore((s) => !!s.isEnableTotalHistoryCard);
+  const isEnableTitheCard = useSettingsStore((s) => !!s.isEnableTitheCard);
+
   const [finances, setFinances] = useState([]);
   const [goals, setGoals] = useState([]);
   const [loading, setLoading] = useState(true);
+  const tabBarHeight = (() => { try { const { useBottomTabBarHeight } = require("@react-navigation/bottom-tabs"); return useBottomTabBarHeight(); } catch { return 80; } })();
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -200,33 +188,12 @@ export default function Dashboard() {
   const lineData = useMemo(() => getLast6MonthsLineData(finances), [finances]);
   const urgentGoals = useMemo(() => getUrgentGoals(goals), [goals]);
 
-  const Card = ({ title, value, icon, colors, testID }) => (
-    <LinearGradient
-      colors={colors}
-      start={{ x: 0, y: 0 }}
-      end={{ x: 1, y: 1 }}
-      className="rounded-2xl p-4 min-w-[160px] flex-1 mx-1 shadow-lg"
-      style={{ borderRadius: 16, padding: 16, minWidth: 160, flex: 1, marginHorizontal: 4, minHeight: 110, justifyContent: "space-between" }}
-      testID={testID}
-    >
-      <View className="flex-row justify-between items-center">
-        <Text className="text-white text-base font-semibold" style={{ color: "white", fontSize: 14, fontWeight: "600" }}>
-          {title}
-        </Text>
-        <Feather name={icon} size={28} color="white" />
-      </View>
-      <Text className="text-white text-xl font-bold mt-2" style={{ color: "white", fontSize: hero.Saldo < 10000 ? 18 : 16, fontWeight: "700", marginTop: 8 }} numberOfLines={1}>
-        {formatCurrency(value)}
-      </Text>
-    </LinearGradient>
-  );
-
   const hasFinances = finances.length > 0;
   const chartWidth = width * 0.92;
 
   return (
-    <View className="flex-1 bg-warmGray-50 dark:bg-gray-900" style={{ flex: 1, backgroundColor: "#f5f5f4" }}>
-      <ScrollView className="flex-1 w-full" style={{ flex: 1 }}>
+    <View style={{ flex: 1, backgroundColor: bg }}>
+      <ScrollView style={{ flex: 1 }} contentContainerStyle={{ paddingBottom: tabBarHeight + 24 }} showsVerticalScrollIndicator={false}>
         <Header
           title="Início"
           isRightIconComponent={
@@ -235,37 +202,74 @@ export default function Dashboard() {
               style={{ padding: 8, borderRadius: 999 }}
               testID="header-settings"
             >
-              <Feather name="settings" size={20} color="white" />
+              <Feather name="settings" size={20} color={headerText} />
             </TouchableOpacity>
           }
         />
 
-        {/* Hero gradient cards */}
-        <AnimatedView entering={FadeInUp?.duration?.(400)} className="px-2 -mt-12" style={{ paddingHorizontal: 8, marginTop: -48 }}>
-          <ScrollView
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={{ paddingHorizontal: 4, gap: 0 }}
-            style={{ flexDirection: "row" }}
-            testID="hero-scroll"
-          >
-            <Card title="Saldo" value={hero.Saldo} icon={hero.Saldo >= 0 ? "arrow-up-circle" : "arrow-down-circle"} colors={["#9c44dc", "#581C87"]} testID="card-saldo" />
-            <Card title="Entradas" value={hero.Incomings} icon="arrow-up-circle" colors={["#12a454", "#0d7a3f"]} testID="card-entradas" />
-            <Card title="Saídas" value={hero.Expenses} icon="arrow-down-circle" colors={["#e83e5a", "#b91c1c"]} testID="card-saidas" />
-            <Card title="Dízimo" value={hero.Tithe} icon="heart" colors={["#581C87", "#9c44dc"]} testID="card-dizimo" />
-          </ScrollView>
-          <Text className="text-xs text-gray-500 mt-2 px-2" style={{ fontSize: 12, color: "#6b7280", marginTop: 8, paddingHorizontal: 8 }}>
-            * Totais do período geral
-          </Text>
-        </AnimatedView>
+        {/* Hero cards - estilo replicado de Finanças, com darkmode - mesma regra de visualização de Finanças */}
+        <ScrollView
+          horizontal
+          style={{ width: "100%", marginTop: -50, height: 150 }}
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={{ height: 130, paddingHorizontal: 8 }}
+          testID="hero-scroll"
+        >
+          {isEnableTotalHistoryCard && (
+            <View style={{ marginHorizontal: 4, backgroundColor: bgCard, minWidth: 180, height: 110, borderRadius: 4, padding: 16, elevation: 2, shadowColor: "#000", shadowOpacity: 0.1 }} testID="card-saldo">
+              <View style={{ flexDirection: "row", justifyContent: "space-between" }}>
+                <Text style={{ color: text, fontSize: 18 }}>Saldo</Text>
+                <Feather name={hero.Saldo >= 0 ? "arrow-up-circle" : "arrow-down-circle"} size={48} color={GREEN_500} />
+              </View>
+              <Text style={{ color: text, fontSize: Math.abs(hero.Saldo) < 10000 ? 26 : 20, maxWidth: 170 }} numberOfLines={1}>
+                {formatCurrency(hero.Saldo)}
+              </Text>
+            </View>
+          )}
+
+          <View style={{ marginHorizontal: 4, backgroundColor: bgCard, minWidth: 180, height: 110, borderRadius: 4, padding: 16, elevation: 2, shadowColor: "#000", shadowOpacity: 0.1 }} testID="card-entradas">
+            <View style={{ flexDirection: "row", justifyContent: "space-between" }}>
+              <Text style={{ color: text, fontSize: 18 }}>Entradas</Text>
+              <Feather name="arrow-up-circle" size={48} color={GREEN_500} />
+            </View>
+            <Text style={{ color: text, fontSize: hero.Incomings < 10000 ? 26 : 20, maxWidth: 170 }} numberOfLines={1}>
+              {formatCurrency(hero.Incomings)}
+            </Text>
+          </View>
+
+          <View style={{ marginHorizontal: 4, backgroundColor: bgCard, minWidth: 180, height: 110, borderRadius: 4, padding: 16, elevation: 2, shadowColor: "#000", shadowOpacity: 0.1 }} testID="card-saidas">
+            <View style={{ flexDirection: "row", justifyContent: "space-between" }}>
+              <Text style={{ color: text, fontSize: 18 }}>Saídas</Text>
+              <Feather name="arrow-down-circle" size={48} color={RED_500} />
+            </View>
+            <Text style={{ color: text, fontSize: hero.Expenses < 10000 ? 26 : 20, maxWidth: 170 }} numberOfLines={1}>
+              {formatCurrency(hero.Expenses)}
+            </Text>
+          </View>
+
+          {isEnableTitheCard && (
+            <View style={{ marginHorizontal: 4, backgroundColor: PURPLE_900, minWidth: 180, height: 110, borderRadius: 4, padding: 16, elevation: 2, shadowColor: "#000", shadowOpacity: 0.1 }} testID="card-dizimo">
+              <View style={{ flexDirection: "row", justifyContent: "space-between" }}>
+                <Text style={{ color: "white", fontSize: 18 }}>Dízimo</Text>
+                <Feather name="heart" size={48} color="white" />
+              </View>
+              <Text style={{ color: "white", fontSize: hero.Tithe < 10000 ? 26 : 20, maxWidth: 170 }} numberOfLines={1}>
+                {formatCurrency(hero.Tithe)}
+              </Text>
+            </View>
+          )}
+        </ScrollView>
+        <Text style={{ fontSize: 12, color: subText, marginTop: 8, paddingHorizontal: 16, marginBottom: 4 }}>
+          * Totais do período geral
+        </Text>
 
         {/* Pizza gastos por categoria */}
-        <View className="mx-4 mt-4 bg-white dark:bg-gray-800 rounded-2xl p-4 shadow" style={{ marginHorizontal: 16, marginTop: 16, backgroundColor: "white", borderRadius: 16, padding: 16, shadowColor: "#000", shadowOpacity: 0.05, elevation: 2 }}>
-          <Text className="text-lg font-bold text-gray-700 dark:text-gray-200" style={{ fontSize: 18, fontWeight: "700", color: "#374151" }} testID="pizza-title">
+        <View style={{ marginHorizontal: 16, marginTop: 16, backgroundColor: cardBgWhite, borderRadius: 16, padding: 16, shadowColor: "#000", shadowOpacity: 0.05, elevation: 2 }}>
+          <Text style={{ fontSize: 18, fontWeight: "700", color: titleText }} testID="pizza-title">
             Gastos por categoria
           </Text>
           {!hasFinances || pieData.length === 0 ? (
-            <Text className="text-sm text-gray-500 mt-2 text-center" style={{ fontSize: 14, color: "#6b7280", marginTop: 8, textAlign: "center" }} testID="pizza-empty">
+            <Text style={{ fontSize: 14, color: subText, marginTop: 8, textAlign: "center" }} testID="pizza-empty">
               Sem gastos para exibir
             </Text>
           ) : (
@@ -289,12 +293,12 @@ export default function Dashboard() {
         </View>
 
         {/* Linha 6 meses */}
-        <View className="mx-4 mt-4 bg-white dark:bg-gray-800 rounded-2xl p-4 shadow" style={{ marginHorizontal: 16, marginTop: 16, backgroundColor: "white", borderRadius: 16, padding: 16, shadowColor: "#000", shadowOpacity: 0.05, elevation: 2 }}>
-          <Text className="text-lg font-bold text-gray-700 dark:text-gray-200" style={{ fontSize: 18, fontWeight: "700", color: "#374151" }} testID="line-title">
+        <View style={{ marginHorizontal: 16, marginTop: 16, backgroundColor: cardBgWhite, borderRadius: 16, padding: 16, shadowColor: "#000", shadowOpacity: 0.05, elevation: 2 }}>
+          <Text style={{ fontSize: 18, fontWeight: "700", color: titleText }} testID="line-title">
             Evolução 6 meses
           </Text>
           {!hasFinances ? (
-            <Text className="text-sm text-gray-500 mt-2 text-center" style={{ fontSize: 14, color: "#6b7280", marginTop: 8, textAlign: "center" }} testID="line-empty">
+            <Text style={{ fontSize: 14, color: subText, marginTop: 8, textAlign: "center" }} testID="line-empty">
               Adicione transações para ver a evolução
             </Text>
           ) : (
@@ -313,13 +317,13 @@ export default function Dashboard() {
                   width={chartWidth - 32}
                   height={220}
                   chartConfig={{
-                    backgroundColor: "#ffffff",
-                    backgroundGradientFrom: "#ffffff",
-                    backgroundGradientTo: "#ffffff",
+                    backgroundColor: cardBgWhite,
+                    backgroundGradientFrom: cardBgWhite,
+                    backgroundGradientTo: cardBgWhite,
                     decimalPlaces: 0,
-                    color: (opacity = 1) => `rgba(88,28,135,${opacity})`,
-                    labelColor: (opacity = 1) => `rgba(107,114,128,${opacity})`,
-                    propsForDots: { r: "4", strokeWidth: "2", stroke: "#581C87" },
+                    color: (opacity = 1) => isDark ? `rgba(228,228,231,${opacity})` : `rgba(88,28,135,${opacity})`,
+                    labelColor: (opacity = 1) => isDark ? `rgba(161,161,170,${opacity})` : `rgba(107,114,128,${opacity})`,
+                    propsForDots: { r: "4", strokeWidth: "2", stroke: PURPLE_900 },
                   }}
                   bezier
                   style={{ borderRadius: 16 }}
@@ -332,17 +336,14 @@ export default function Dashboard() {
         </View>
 
         {/* Metas urgentes */}
-        <View className="mx-4 mt-4 mb-6 bg-white dark:bg-gray-800 rounded-2xl p-4 shadow" style={{ marginHorizontal: 16, marginTop: 16, marginBottom: 24, backgroundColor: "white", borderRadius: 16, padding: 16, shadowColor: "#000", shadowOpacity: 0.05, elevation: 2 }}>
-          <View className="flex-row justify-between items-center">
-            <Text className="text-lg font-bold text-gray-700" style={{ fontSize: 18, fontWeight: "700", color: "#374151" }} testID="goals-title">
+        <View style={{ marginHorizontal: 16, marginTop: 16, marginBottom: 24, backgroundColor: cardBgWhite, borderRadius: 16, padding: 16, shadowColor: "#000", shadowOpacity: 0.05, elevation: 2 }}>
+          <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
+            <Text style={{ fontSize: 18, fontWeight: "700", color: titleText }} testID="goals-title">
               Metas urgentes
             </Text>
-            <TouchableOpacity onPress={() => navigation.navigate("Relatórios")} testID="goals-see-all">
-              <Text style={{ color: "#9c44dc", fontSize: 14 }}>Ver todas</Text>
-            </TouchableOpacity>
           </View>
           {urgentGoals.length === 0 ? (
-            <Text className="text-sm text-gray-500 mt-2" style={{ fontSize: 14, color: "#6b7280", marginTop: 8 }} testID="goals-empty">
+            <Text style={{ fontSize: 14, color: subText, marginTop: 8 }} testID="goals-empty">
               Nenhuma meta com prazo nos próximos 30 dias
             </Text>
           ) : (
@@ -351,23 +352,23 @@ export default function Dashboard() {
                 const progress = calcGoalProgress(goal);
                 const days = differenceInCalendarDays(new Date(goal.date), Date.now());
                 return (
-                  <View key={goal.id} className="bg-gray-50 dark:bg-gray-700 rounded-xl p-3" style={{ backgroundColor: "#f9fafb", borderRadius: 12, padding: 12 }} testID={`goal-${goal.id}`}>
-                    <View className="flex-row justify-between items-center">
-                      <Text className="font-semibold text-gray-700 flex-1" style={{ fontWeight: "600", color: "#374151", flex: 1 }} numberOfLines={1}>
+                  <View key={goal.id} style={{ backgroundColor: isDark ? "#3f3f46" : "#f9fafb", borderRadius: 12, padding: 12 }} testID={`goal-${goal.id}`}>
+                    <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
+                      <Text style={{ fontWeight: "600", color: titleText, flex: 1 }} numberOfLines={1}>
                         {goal.description}
                       </Text>
-                      <Text className="text-xs font-bold text-purple-600 ml-2" style={{ fontSize: 12, fontWeight: "700", color: "#9c44dc", marginLeft: 8 }}>
+                      <Text style={{ fontSize: 12, fontWeight: "700", color: PURPLE_600, marginLeft: 8 }}>
                         Restam {days} dias
                       </Text>
                     </View>
-                    <View className="flex-row justify-between mt-1">
-                      <Text style={{ fontSize: 12, color: "#6b7280" }}>
+                    <View style={{ flexDirection: "row", justifyContent: "space-between", marginTop: 4 }}>
+                      <Text style={{ fontSize: 12, color: subText }}>
                         {formatCurrency(goal.currentAmount)} / {formatCurrency(goal.amount)}
                       </Text>
-                      <Text style={{ fontSize: 12, fontWeight: "600", color: "#581C87" }}>{Math.round(progress * 100)}%</Text>
+                      <Text style={{ fontSize: 12, fontWeight: "600", color: isDark ? "#e4e4e7" : PURPLE_900 }}>{Math.round(progress * 100)}%</Text>
                     </View>
-                    <View style={{ height: 8, backgroundColor: "#e5e7eb", borderRadius: 999, marginTop: 8, overflow: "hidden" }}>
-                      <View style={{ width: `${progress * 100}%`, height: 8, backgroundColor: progress >= 1 ? "#c4b5fd" : "#9c44dc", borderRadius: 999 }} />
+                    <View style={{ height: 8, backgroundColor: isDark ? "#52525b" : "#e5e7eb", borderRadius: 999, marginTop: 8, overflow: "hidden" }}>
+                      <View style={{ width: `${progress * 100}%`, height: 8, backgroundColor: progress >= 1 ? "#c4b5fd" : PURPLE_600, borderRadius: 999 }} />
                     </View>
                   </View>
                 );
@@ -377,7 +378,7 @@ export default function Dashboard() {
         </View>
 
         {loading && (
-          <Text testID="loading" style={{ textAlign: "center", color: "#6b7280", marginBottom: 16 }}>
+          <Text testID="loading" style={{ textAlign: "center", color: subText, marginBottom: 16 }}>
             Carregando...
           </Text>
         )}

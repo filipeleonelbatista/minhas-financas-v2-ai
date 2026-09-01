@@ -17,7 +17,7 @@ import {
   Ionicons,
   MaterialCommunityIcons,
 } from "@expo/vector-icons";
-import { DateTimePickerAndroid } from "@react-native-community/datetimepicker";
+import { openThemedDatePicker } from "../utils/datePicker";
 import { Picker } from "@react-native-picker/picker";
 import { useIsFocused, useNavigation } from "@react-navigation/native";
 import dayjs from "dayjs";
@@ -31,6 +31,9 @@ import { useSettingsStore } from "../stores/settings";
 import { useFinanceStore } from "../stores/finance";
 import { useShallow } from "zustand/react/shallow";
 import AIComponent from "../components/AIComponent";
+import { Sheet, useSheetRef } from "../components/nativewindui/Sheet";
+import { BottomSheetScrollView } from "@gorhom/bottom-sheet";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 dayjs.extend(isSameOrAfter);
 dayjs.extend(isSameOrBefore);
@@ -121,6 +124,7 @@ export default function Finances() {
 
   const isKeyboardOpen = useIsKeyboardOpen();
   const { height } = useWindowDimensions();
+  const tabBarHeight = (() => { try { const { useBottomTabBarHeight } = require("@react-navigation/bottom-tabs"); return useBottomTabBarHeight(); } catch { return 80; } })();
 
   const formatCurrency = (value) => {
     return value.toLocaleString("pt-BR", {
@@ -132,7 +136,8 @@ export default function Finances() {
     });
   };
 
-  const [openFilter, setOpenFilter] = useState(false);
+  const insets = useSafeAreaInsets();
+  const filterSheetRef = useSheetRef();
 
   const categoryItemLib = {
     Outros: <Feather name="dollar-sign" size={28} color={"#e83e5a"} />,
@@ -163,7 +168,7 @@ export default function Finances() {
 
   return (
     <View style={{ flex: 1, backgroundColor: bg }}>
-      <ScrollView style={{ flex: 1, width: "100%", height: "100%" }}>
+      <ScrollView style={{ flex: 1, width: "100%", height: "100%" }} contentContainerStyle={{ paddingBottom: tabBarHeight + 24 }} showsVerticalScrollIndicator={false}>
         <Header
           title="Finança"
           isRightIconComponent={
@@ -242,7 +247,7 @@ export default function Finances() {
           <View style={{ flexDirection: "row", justifyContent: "space-between", marginTop: 8 }}>
             <Text style={{ fontWeight: "700", fontSize: 20, color: text }}>Extrato</Text>
             <TouchableOpacity
-              onPress={() => setOpenFilter(!openFilter)}
+              onPress={() => filterSheetRef.current?.present()}
               style={{
                 alignItems: "center",
                 justifyContent: "center",
@@ -259,132 +264,6 @@ export default function Finances() {
               </Text>
             </TouchableOpacity>
           </View>
-          {openFilter && (
-            <View style={{ marginTop: 8, gap: 8 }}>
-              <View style={{ gap: 8 }}>
-                <Text style={{ color: text, fontSize: 16, fontWeight: "700" }}>Filtrar por período</Text>
-                <View style={{ width: "100%", flexDirection: "row", gap: 8 }}>
-                  <View style={{ flex: 1, flexDirection: "row", alignItems: "center", borderWidth: 1, borderColor: "#d4d4d8", borderRadius: 4 }}>
-                    <TextInput
-                      style={{ flex: 1, padding: 8, color: text }}
-                      placeholder="Data inicio"
-                      value={startDate}
-                      editable={false}
-                    />
-                    <TouchableOpacity
-                      style={{ width: "25%", backgroundColor: PURPLE_600, height: "100%", alignItems: "center", justifyContent: "center", padding: 4 }}
-                      onPress={() => DateTimePickerAndroid.open({ value: new Date(Date.now()), onChange: onChangeStartDate, mode: "date", is24Hour: false })}
-                    >
-                      <Feather name="calendar" size={24} color="#FFF" />
-                    </TouchableOpacity>
-                  </View>
-                  <View style={{ flex: 1, flexDirection: "row", alignItems: "center", borderWidth: 1, borderColor: "#d4d4d8", borderRadius: 4 }}>
-                    <TextInput
-                      style={{ flex: 1, padding: 8, color: text }}
-                      placeholder="Data Fim"
-                      value={endDate}
-                      editable={false}
-                    />
-                    <TouchableOpacity
-                      style={{ width: "25%", backgroundColor: PURPLE_600, height: "100%", alignItems: "center", justifyContent: "center", padding: 4 }}
-                      onPress={() => DateTimePickerAndroid.open({ value: new Date(Date.now()), onChange: onChangeEndDate, mode: "date", is24Hour: false })}
-                    >
-                      <Feather name="calendar" size={24} color="#FFF" />
-                    </TouchableOpacity>
-                  </View>
-                </View>
-              </View>
-
-              <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
-                <Text style={{ color: text, fontSize: 16, fontWeight: "700" }}>Entradas/Saídas</Text>
-                <Picker
-                  selectedValue={selectedtypeofpayment}
-                  onValueChange={(itemValue) => setselectedtypeofpayment(itemValue)}
-                  mode="dropdown"
-                  dropdownIconColor={PURPLE_600}
-                  enabled
-                  style={{ width: "50%", borderRadius: 4, color: text }}
-                >
-                  <Picker.Item label="Todas" value="0" />
-                  <Picker.Item label="Entradas" value="1" />
-                  <Picker.Item label="Saídas" value="2" />
-                </Picker>
-              </View>
-              {!simpleFinancesItem && (
-                <>
-                  <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
-                    <Text style={{ color: text, fontSize: 16, fontWeight: "700" }}>Categoria de gastos</Text>
-                    <Picker
-                      selectedValue={selectedPaymentCategory}
-                      onValueChange={(itemValue) => setSelectedPaymentCategory(itemValue)}
-                      mode="dropdown"
-                      dropdownIconColor={PURPLE_600}
-                      enabled
-                      style={{ width: "50%", borderRadius: 4, color: text }}
-                    >
-                      {categoriesList.map((cat, index) => (
-                        <Picker.Item key={index} label={cat} value={cat} />
-                      ))}
-                    </Picker>
-                  </View>
-
-                  <View style={{ gap: 8 }}>
-                    <Text style={{ color: text, fontSize: 16, fontWeight: "700" }}>Status de pagamento</Text>
-                    <FlatList
-                      showsHorizontalScrollIndicator={false}
-                      horizontal
-                      ItemSeparatorComponent={() => <View style={{ width: 8, height: "100%" }} />}
-                      data={pamentStatusLabel}
-                      renderItem={({ item }) => (
-                        <TouchableOpacity
-                          style={{
-                            alignItems: "center",
-                            justifyContent: "center",
-                            paddingHorizontal: 8,
-                            paddingVertical: 4,
-                            borderWidth: 1,
-                            borderRadius: 16,
-                            backgroundColor: "transparent",
-                            borderColor: item === selectedPaymentStatus ? PURPLE_600 : text,
-                          }}
-                          onPress={() => setSelectedPaymentStatus(item)}
-                        >
-                          <Text style={{ color: item === selectedPaymentStatus ? PURPLE_600 : text }}>{item}</Text>
-                        </TouchableOpacity>
-                      )}
-                    />
-                  </View>
-                </>
-              )}
-
-              <View>
-                <Text style={{ color: text, fontSize: 16, fontWeight: "700" }}>Favoritos</Text>
-                <FlatList
-                  showsHorizontalScrollIndicator={false}
-                  horizontal
-                  ItemSeparatorComponent={() => <View style={{ width: 8, height: "100%" }} />}
-                  data={favoritedFilterLabel}
-                  renderItem={({ item }) => (
-                    <TouchableOpacity
-                      style={{
-                        alignItems: "center",
-                        justifyContent: "center",
-                        paddingHorizontal: 8,
-                        paddingVertical: 4,
-                        borderWidth: 1,
-                        borderRadius: 16,
-                        backgroundColor: "transparent",
-                        borderColor: item === selectedFavoritedFilter ? PURPLE_600 : text,
-                      }}
-                      onPress={() => setSelectedFavoritedFilter(item)}
-                    >
-                      <Text style={{ color: item === selectedFavoritedFilter ? PURPLE_600 : text }}>{item}</Text>
-                    </TouchableOpacity>
-                  )}
-                />
-              </View>
-            </View>
-          )}
         </View>
 
         {filteredList.length > 0 && (
@@ -424,7 +303,7 @@ export default function Finances() {
                 })}
               >
                 <View style={{ flexDirection: "row", alignItems: "center", width: "100%", gap: 8, padding: 8 }}>
-                  <View style={{ position: "absolute", top: 8, right: 8, flexDirection: "row", gap: 8, alignItems: "center" }}>
+                  <View style={{ position: "absolute", top: 8, right: 8, flexDirection: "row", gap: 8, alignItems: "center", zIndex: 1 }}>
                     {!simpleFinancesItem && item.isEnabled === 1 && (
                       <View
                         style={{
@@ -443,11 +322,18 @@ export default function Finances() {
                         </Text>
                       </View>
                     )}
-                    <FontAwesome
-                      name={item.isFavorited === 1 ? "star" : "star-o"}
-                      size={18}
-                      color={item.isFavorited === 1 ? YELLOW_400 : text}
-                    />
+                    <Pressable
+                      onPress={() => handleFavorite(item)}
+                      hitSlop={12}
+                      style={{ padding: 6, borderRadius: 999 }}
+                      android_ripple={{ color: isDark ? "#3f3f46" : "#e4e4e7", borderless: true }}
+                    >
+                      <FontAwesome
+                        name={item.isFavorited === 1 ? "star" : "star-o"}
+                        size={18}
+                        color={item.isFavorited === 1 ? YELLOW_400 : text}
+                      />
+                    </Pressable>
                   </View>
                   <View style={{ width: "100%", flexDirection: "row", alignItems: "center", gap: 16 }}>
                     {item.isEnabled === 1 ? (
@@ -520,6 +406,76 @@ export default function Finances() {
           <View style={{ height: 64, width: "100%" }} />
         </View>
       </Modal>
+
+      <Sheet ref={filterSheetRef} snapPoints={["85%"]} enableDynamicSizing={false} backgroundStyle={{ backgroundColor: bg }} handleIndicatorStyle={{ backgroundColor: isDark ? "#3f3f46" : "#e4e4e7" }}>
+        <BottomSheetScrollView contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: insets.bottom + 24, gap: 16 }} style={{ flex: 1, backgroundColor: bg }}>
+          <View style={{ alignItems: "center", paddingTop: 8, paddingBottom: 4 }}>
+            <Text style={{ fontSize: 18, fontWeight: "700", color: text }}>Filtros</Text>
+            <Text style={{ fontSize: 12, color: text, marginTop: 4 }}>Refine seu extrato</Text>
+          </View>
+
+          <View style={{ gap: 8 }}>
+            <Text style={{ color: text, fontSize: 16, fontWeight: "700" }}>Filtrar por período</Text>
+            <View style={{ width: "100%", flexDirection: "row", gap: 8 }}>
+              <Pressable onPress={() => openThemedDatePicker({ value: new Date(), onChange: onChangeStartDate, isDark })} style={{ flex: 1, flexDirection: "row", alignItems: "center", borderWidth: 1, borderColor: "#d4d4d8", borderRadius: 4, height: 48, overflow: "hidden", backgroundColor: isDark ? "#27272a" : "white" }}>
+                <TextInput style={{ flex: 1, padding: 8, color: text }} placeholder="Data inicio" value={startDate} editable={false} pointerEvents="none" placeholderTextColor="#a1a1aa" />
+                <View style={{ width: "25%", backgroundColor: PURPLE_600, height: "100%", alignItems: "center", justifyContent: "center", padding: 4 }}>
+                  <Feather name="calendar" size={24} color="#FFF" />
+                </View>
+              </Pressable>
+              <Pressable onPress={() => openThemedDatePicker({ value: new Date(), onChange: onChangeEndDate, isDark })} style={{ flex: 1, flexDirection: "row", alignItems: "center", borderWidth: 1, borderColor: "#d4d4d8", borderRadius: 4, height: 48, overflow: "hidden", backgroundColor: isDark ? "#27272a" : "white" }}>
+                <TextInput style={{ flex: 1, padding: 8, color: text }} placeholder="Data Fim" value={endDate} editable={false} pointerEvents="none" placeholderTextColor="#a1a1aa" />
+                <View style={{ width: "25%", backgroundColor: PURPLE_600, height: "100%", alignItems: "center", justifyContent: "center", padding: 4 }}>
+                  <Feather name="calendar" size={24} color="#FFF" />
+                </View>
+              </Pressable>
+            </View>
+          </View>
+
+          <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
+            <Text style={{ color: text, fontSize: 16, fontWeight: "700" }}>Entradas/Saídas</Text>
+            <Picker selectedValue={selectedtypeofpayment} onValueChange={(itemValue) => setselectedtypeofpayment(itemValue)} mode="dropdown" dropdownIconColor={PURPLE_600} enabled style={{ width: "50%", borderRadius: 4, color: text }}>
+              <Picker.Item label="Todas" value="0" />
+              <Picker.Item label="Entradas" value="1" />
+              <Picker.Item label="Saídas" value="2" />
+            </Picker>
+          </View>
+
+          {!simpleFinancesItem && (
+            <>
+              <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
+                <Text style={{ color: text, fontSize: 16, fontWeight: "700" }}>Categoria de gastos</Text>
+                <Picker selectedValue={selectedPaymentCategory} onValueChange={(itemValue) => setSelectedPaymentCategory(itemValue)} mode="dropdown" dropdownIconColor={PURPLE_600} enabled style={{ width: "50%", borderRadius: 4, color: text }}>
+                  {categoriesList.map((cat, index) => (
+                    <Picker.Item key={index} label={cat} value={cat} />
+                  ))}
+                </Picker>
+              </View>
+              <View style={{ gap: 8 }}>
+                <Text style={{ color: text, fontSize: 16, fontWeight: "700" }}>Status de pagamento</Text>
+                <FlatList showsHorizontalScrollIndicator={false} horizontal ItemSeparatorComponent={() => <View style={{ width: 8, height: "100%" }} />} data={pamentStatusLabel} renderItem={({ item }) => (
+                  <TouchableOpacity style={{ alignItems: "center", justifyContent: "center", paddingHorizontal: 8, paddingVertical: 4, borderWidth: 1, borderRadius: 16, backgroundColor: "transparent", borderColor: item === selectedPaymentStatus ? PURPLE_600 : text }} onPress={() => setSelectedPaymentStatus(item)}>
+                    <Text style={{ color: item === selectedPaymentStatus ? PURPLE_600 : text }}>{item}</Text>
+                  </TouchableOpacity>
+                )} />
+              </View>
+            </>
+          )}
+
+          <View>
+            <Text style={{ color: text, fontSize: 16, fontWeight: "700" }}>Favoritos</Text>
+            <FlatList showsHorizontalScrollIndicator={false} horizontal ItemSeparatorComponent={() => <View style={{ width: 8, height: "100%" }} />} data={favoritedFilterLabel} renderItem={({ item }) => (
+              <TouchableOpacity style={{ alignItems: "center", justifyContent: "center", paddingHorizontal: 8, paddingVertical: 4, borderWidth: 1, borderRadius: 16, backgroundColor: "transparent", borderColor: item === selectedFavoritedFilter ? PURPLE_600 : text }} onPress={() => setSelectedFavoritedFilter(item)}>
+                <Text style={{ color: item === selectedFavoritedFilter ? PURPLE_600 : text }}>{item}</Text>
+              </TouchableOpacity>
+            )} />
+          </View>
+
+          <TouchableOpacity onPress={() => filterSheetRef.current?.dismiss()} style={{ backgroundColor: PURPLE_600, borderRadius: 12, padding: 14, alignItems: "center", marginTop: 8 }}>
+            <Text style={{ color: "white", fontWeight: "700" }}>Aplicar filtros</Text>
+          </TouchableOpacity>
+        </BottomSheetScrollView>
+      </Sheet>
     </View>
   );
 }

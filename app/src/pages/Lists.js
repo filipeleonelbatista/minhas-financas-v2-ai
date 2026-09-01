@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
-import { View, Text, ScrollView, Pressable, TouchableOpacity, Modal, useWindowDimensions } from "react-native";
+import { View, Text, ScrollView, Pressable, TouchableOpacity, Modal, useWindowDimensions, KeyboardAvoidingView, Platform } from "react-native";
+import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 import { Feather } from "@expo/vector-icons";
 import { useIsFocused, useNavigation } from "@react-navigation/native";
 import dayjs from "dayjs";
@@ -36,6 +37,7 @@ export default function Lists() {
   }, [isFocused]);
 
   const isKeyboardOpen = useIsKeyboardOpen();
+  const insets = useSafeAreaInsets();
   const [isOpen, setIsOpen] = useState(false);
   const onOpen = () => setIsOpen(true);
   const onClose = () => setIsOpen(false);
@@ -112,11 +114,17 @@ export default function Lists() {
       {isAiEnabled && <View style={{ width: "100%", height: 64 }} />}
       <AIComponent />
 
-      <Modal visible={isOpen} animationType="slide" onRequestClose={onClose} transparent={false}>
-        <View style={{ flex: 1, height: height * (isKeyboardOpen ? 0.9 : 1.09), paddingTop: 24, backgroundColor: bg }}>
-          <Pressable onPress={onClose} style={{ alignSelf: "flex-end", padding: 16 }}>
-            <Feather name="x" size={24} color={text} />
-          </Pressable>
+            <Modal visible={isOpen} animationType="slide" onRequestClose={onClose} transparent={false} statusBarTranslucent>
+        <SafeAreaView style={{ flex: 1, backgroundColor: bg }} edges={["top","bottom"]}>
+          <View style={{ alignItems: "center", paddingTop: 12, paddingBottom: 8 }}>
+            <View style={{ width: 36, height: 4, borderRadius: 2, backgroundColor: "#e4e4e7" }} />
+          </View>
+          <View style={{ flexDirection: "row", justifyContent: "flex-end", paddingHorizontal: 16, paddingBottom: 8 }}>
+            <Pressable onPress={onClose} style={{ padding: 12, borderRadius: 999, backgroundColor: "#f5f5f4" }}>
+              <Feather name="x" size={20} color={text} />
+            </Pressable>
+          </View>
+          <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : "height"} keyboardVerticalOffset={insets.top + 12} style={{ flex: 1 }}>
           {selectedSheetOpen === "editar" ? (
             <EditShoppingCartItem onClose={onClose} selectedTransaction={{}} />
           ) : selectedSheetOpen === "estimativa" ? (
@@ -124,8 +132,9 @@ export default function Lists() {
           ) : (
             <ErrorSheet />
           )}
-          <View style={{ height: 64, width: "100%" }} />
-        </View>
+            <View style={{ height: 24, width: "100%" }} />
+          </KeyboardAvoidingView>
+        </SafeAreaView>
       </Modal>
     </View>
   );

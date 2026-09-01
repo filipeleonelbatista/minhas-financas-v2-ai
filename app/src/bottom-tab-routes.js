@@ -1,13 +1,12 @@
 import React from "react";
-import { Text, View } from "react-native";
+import { Platform } from "react-native";
 import { Feather, MaterialCommunityIcons } from "@expo/vector-icons";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 
 import Dashboard from "./pages/Dashboard";
 import Finances from "./pages/Finances";
-import Market from "./pages/Market";
-import Reports from "./pages/Reports";
 import Runs from "./pages/Runs";
 import ActionSheet from "./pages/ActionSheet";
 import AddButton from "./components/AddButtton";
@@ -22,13 +21,17 @@ const PURPLE_600 = "#9c44dc";
 
 export default function BottomTabRoutes() {
   const colorModeState = useSettingsStore((s) => s.colorModeState);
-  const isShowLabelOnNavigation = useSettingsStore((s) => !!s.isShowLabelOnNavigation);
 
   const isDark = colorModeState === "dark";
   const bg = isDark ? "#1c1e21" : "#f5f5f4";
   const text = isDark ? "#e4e4e7" : "#52525b";
 
   const isKeyboardOpen = useIsKeyboardOpen();
+  const insets = useSafeAreaInsets();
+  // Altura fixa sem títulos
+  const baseHeight = 50;
+  const bottomInset = Math.max(insets.bottom, Platform.OS === "android" ? 8 : 0);
+  const tabBarHeight = baseHeight + bottomInset;
 
   return (
     <Tab.Navigator
@@ -36,11 +39,32 @@ export default function BottomTabRoutes() {
       screenOptions={{
         tabBarHideOnKeyboard: true,
         headerShown: false,
-        tabBarShowLabel: isShowLabelOnNavigation,
+        tabBarShowLabel: false,
+        tabBarActiveTintColor: PURPLE_600,
+        tabBarInactiveTintColor: text,
+        tabBarItemStyle: {
+          justifyContent: "center",
+          alignItems: "center",
+          paddingVertical: 4,
+        },
+        tabBarIconStyle: {
+          marginBottom: 2,
+        },
         tabBarStyle: {
           backgroundColor: bg,
-          height: isShowLabelOnNavigation ? 60 : 50,
-          position: "relative",
+          height: tabBarHeight,
+          paddingTop: 6,
+          paddingBottom: bottomInset,
+          borderTopWidth: 1,
+          borderTopColor: isDark ? "#27272a" : "#e4e4e7",
+          position: "absolute",
+          bottom: 0,
+          left: 0,
+          right: 0,
+          elevation: 8,
+          shadowColor: "#000",
+          shadowOpacity: 0.08,
+          shadowRadius: 4,
         },
       }}
     >
@@ -48,9 +72,6 @@ export default function BottomTabRoutes() {
         name="Início"
         component={Dashboard}
         options={{
-          tabBarLabel: ({ focused }) => (
-            <Text style={{ color: focused ? PURPLE_600 : text }}>Início</Text>
-          ),
           tabBarIcon: ({ focused }) => (
             <Feather
               name="home"
@@ -64,33 +85,10 @@ export default function BottomTabRoutes() {
         name="Finanças"
         component={Finances}
         options={{
-          tabBarLabel: ({ focused }) => (
-            <Text style={{ color: focused ? PURPLE_600 : text }}>
-              Finanças
-            </Text>
-          ),
           tabBarIcon: ({ focused }) => (
             <Feather
               name="dollar-sign"
               size={24}
-              color={focused ? PURPLE_600 : text}
-            />
-          ),
-        }}
-      />
-      <Tab.Screen
-        name="Combustível"
-        component={Runs}
-        options={{
-          tabBarLabel: ({ focused }) => (
-            <Text style={{ color: focused ? PURPLE_600 : text }}>
-              Combustível
-            </Text>
-          ),
-          tabBarIcon: ({ focused }) => (
-            <MaterialCommunityIcons
-              name={"fuel"}
-              size={26}
               color={focused ? PURPLE_600 : text}
             />
           ),
@@ -104,35 +102,25 @@ export default function BottomTabRoutes() {
         }}
       />
       <Tab.Screen
-        name="Mercado"
-        component={MarketStackRoutes}
+        name="Combustível"
+        component={Runs}
         options={{
-          tabBarLabel: ({ focused }) => (
-            <Text style={{ color: focused ? PURPLE_600 : text }}>
-              Mercado
-            </Text>
-          ),
           tabBarIcon: ({ focused }) => (
-            <Feather
-              name="shopping-cart"
-              size={24}
+            <MaterialCommunityIcons
+              name={"fuel"}
+              size={26}
               color={focused ? PURPLE_600 : text}
             />
           ),
         }}
       />
       <Tab.Screen
-        name="Relatórios"
-        component={Reports}
+        name="Mercado"
+        component={MarketStackRoutes}
         options={{
-          tabBarLabel: ({ focused }) => (
-            <Text style={{ color: focused ? PURPLE_600 : text }}>
-              Relatórios
-            </Text>
-          ),
           tabBarIcon: ({ focused }) => (
             <Feather
-              name="pie-chart"
+              name="shopping-cart"
               size={24}
               color={focused ? PURPLE_600 : text}
             />

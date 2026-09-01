@@ -100,18 +100,18 @@ export default function ViewFuelReport({ selectedValue }) {
 
       <View style={{ gap: 8, marginBottom: 8 }}>
         <Text style={{ color: text }}>Data de vencimento</Text>
-        <View style={{ flexDirection: "row", alignItems: "center", backgroundColor: isDark ? "#27272a" : "white", borderWidth: 1, borderColor: isDark ? "#3f3f46" : "#e4e4e7", borderRadius: 12, overflow: "hidden" }}>
+        <View style={{ flexDirection: "row", alignItems: "stretch", height: 48, backgroundColor: isDark ? "#27272a" : "white", borderWidth: 1, borderColor: isDark ? "#3f3f46" : "#e4e4e7", borderRadius: 12, overflow: "hidden" }}>
           <TextInput
             placeholder="DD/MM/AAAA"
             placeholderTextColor="#a1a1aa"
             value={new Date(selectedValue.date).toLocaleDateString("pt-BR")}
             editable={false}
-            style={{ flex: 1, padding: 12, color: text }}
+            style={{ flex: 1, paddingHorizontal: 12, textAlignVertical: "center", color: text }}
           />
           <View
-            style={{ backgroundColor: PURPLE_600, padding: 12, height: "100%", justifyContent: "center", alignItems: "center", width: "25%" }}
+            style={{ backgroundColor: PURPLE_600, width: 56, justifyContent: "center", alignItems: "center" }}
           >
-            <Feather name="calendar" size={24} color="#FFF" />
+            <Feather name="calendar" size={20} color="#FFF" />
           </View>
         </View>
       </View>

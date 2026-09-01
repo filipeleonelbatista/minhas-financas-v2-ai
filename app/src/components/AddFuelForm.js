@@ -1,7 +1,7 @@
 import React, { useMemo } from "react";
 
 import { Feather } from "@expo/vector-icons";
-import { DateTimePickerAndroid } from "@react-native-community/datetimepicker";
+import { openThemedDatePicker } from "../utils/datePicker";
 import { Picker } from "@react-native-picker/picker";
 import { useFormik } from "formik";
 import { View, Text, TextInput, ScrollView, Pressable, TouchableOpacity } from "react-native";
@@ -118,7 +118,7 @@ export default function AddFuelForm({ onClose }) {
   };
 
   return (
-    <ScrollView style={{ width: "100%", paddingHorizontal: 16 }} contentContainerStyle={{ paddingBottom: 32 }}>
+    <ScrollView style={{ flex: 1, width: "100%", paddingHorizontal: 16 }} contentContainerStyle={{ paddingBottom: 48, flexGrow: 1 }} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled" keyboardDismissMode="interactive">
       <Text style={{ fontWeight: "700", fontSize: 24, color: text }}>Adicionar abastecimento</Text>
       <Text style={{ color: text, marginBottom: 16 }}>
         Adicione informações sobre o abastecimento.
@@ -221,28 +221,19 @@ export default function AddFuelForm({ onClose }) {
 
       <View className="flex-col gap-2" style={{ gap: 8, marginBottom: 8 }}>
         <Text style={{ color: text }}>Data de vencimento</Text>
-        <View className="flex-row items-center bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden" style={{ flexDirection: "row", alignItems: "center", backgroundColor: isDark ? "#27272a" : "white", borderWidth: 1, borderColor: isDark ? "#3f3f46" : "#e4e4e7", borderRadius: 12, overflow: "hidden" }}>
+        <Pressable onPress={() => openThemedDatePicker({ value: new Date(), onChange, isDark })} className="flex-row items-center bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden" style={{ flexDirection: "row", alignItems: "stretch", height: 48, backgroundColor: isDark ? "#27272a" : "white", borderWidth: 1, borderColor: isDark ? "#3f3f46" : "#e4e4e7", borderRadius: 12, overflow: "hidden" }}>
           <TextInput
             placeholder="DD/MM/AAAA"
             placeholderTextColor="#a1a1aa"
             value={formik.values.date}
             editable={false}
-            style={{ flex: 1, padding: 12, color: text }}
+            pointerEvents="none"
+            style={{ flex: 1, paddingHorizontal: 12, textAlignVertical: "center", color: text }}
           />
-          <TouchableOpacity
-            onPress={() => {
-              DateTimePickerAndroid.open({
-                value: new Date(Date.now()),
-                onChange,
-                mode: "date",
-                is24Hour: false,
-              });
-            }}
-            style={{ backgroundColor: PURPLE_600, padding: 12, height: "100%", justifyContent: "center", alignItems: "center", width: "25%" }}
-          >
-            <Feather name="calendar" size={24} color="#FFF" />
-          </TouchableOpacity>
-        </View>
+          <View style={{ backgroundColor: PURPLE_600, justifyContent: "center", alignItems: "center", width: 56, borderTopRightRadius: 12, borderBottomRightRadius: 12 }}>
+            <Feather name="calendar" size={20} color="#FFF" />
+          </View>
+        </Pressable>
         {formik.errors.date && (
           <Text style={{ color: "#dc2626" }}>{formik.errors.date}</Text>
         )}

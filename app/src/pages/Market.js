@@ -17,6 +17,9 @@ import { useMarketStore } from "../stores/market";
 import { useListsStore } from "../stores/lists";
 import { useSettingsStore } from "../stores/settings";
 import { usePagesStore } from "../stores/pages";
+import { Sheet, useSheetRef } from "../components/nativewindui/Sheet";
+import { BottomSheetScrollView } from "@gorhom/bottom-sheet";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 dayjs.extend(isSameOrAfter);
 dayjs.extend(isSameOrBefore);
@@ -37,12 +40,15 @@ export default function Market() {
   }, [isFocused]);
 
   const isKeyboardOpen = useIsKeyboardOpen();
+  const tabBarHeight = (() => { try { const { useBottomTabBarHeight } = require("@react-navigation/bottom-tabs"); return useBottomTabBarHeight(); } catch { return 80; } })();
   const [isOpen, setIsOpen] = useState(false);
   const onOpen = () => setIsOpen(true);
   const onClose = () => setIsOpen(false);
 
   const navigation = useNavigation();
   const { height } = useWindowDimensions();
+  const insets = useSafeAreaInsets();
+  const filterSheetRef = useSheetRef();
 
   const isAiEnabled = useSettingsStore((s) => !!s.isAiEnabled);
   const marketSimplifiedItems = useSettingsStore((s) => !!s.marketSimplifiedItems);
@@ -128,7 +134,7 @@ export default function Market() {
         <MaterialCommunityIcons name="format-list-bulleted" size={20} color="white" />
       </TouchableOpacity>
 
-      <ScrollView style={{ flex: 1, width: "100%", height: "100%" }}>
+      <ScrollView style={{ flex: 1, width: "100%", height: "100%" }} contentContainerStyle={{ paddingBottom: tabBarHeight + 24 }} showsVerticalScrollIndicator={false}>
         <Header
           isShort
           title="Compra"
@@ -142,22 +148,14 @@ export default function Market() {
         <View style={{ padding: 16, gap: 16 }}>
           <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginTop: -16 }}>
             <Text style={{ fontWeight: "700", fontSize: 20, color: text }}>Seu estoque</Text>
-            <Picker
-              selectedValue={selectedCategory}
-              onValueChange={(itemValue) => setSelectedCategory(itemValue)}
-              mode="dropdown"
-              dropdownIconColor="#9c44dc"
-              enabled
-              style={{ width: "50%", borderRadius: 4, color: text }}
+            <TouchableOpacity
+              onPress={() => filterSheetRef.current?.present()}
+              style={{ alignItems: "center", justifyContent: "center", paddingHorizontal: 28, paddingVertical: 6, borderWidth: 1, borderRadius: 20, backgroundColor: "transparent", borderColor: "#9c44dc" }}
             >
-              <Picker.Item label="Todos os itens" value="Todos os itens" />
-              <Picker.Item label="Carnes" value="Carnes" />
-              <Picker.Item label="Fruteira" value="Fruteira" />
-              <Picker.Item label="Higiêne" value="Higiêne" />
-              <Picker.Item label="Limpeza" value="Limpeza" />
-              <Picker.Item label="Mercearia" value="Mercearia" />
-              <Picker.Item label="Outros" value="Outros" />
-            </Picker>
+              <Text style={{ fontSize: 16, color: "#9c44dc" }}>
+                <Feather name="filter" size={18} color="#9c44dc" /> Filtros
+              </Text>
+            </TouchableOpacity>
           </View>
         </View>
 
@@ -263,6 +261,34 @@ export default function Market() {
           <View style={{ height: 64, width: "100%" }} />
         </View>
       </Modal>
+
+      <Sheet ref={filterSheetRef} snapPoints={["50%"]} enableDynamicSizing={false} backgroundStyle={{ backgroundColor: bg }} handleIndicatorStyle={{ backgroundColor: isDark ? "#3f3f46" : "#e4e4e7" }}>
+        <BottomSheetScrollView contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: insets.bottom + 24, gap: 16 }} style={{ flex: 1, backgroundColor: bg }}>
+          <View style={{ alignItems: "center", paddingTop: 8 }}>
+            <Text style={{ fontSize: 18, fontWeight: "700", color: text }}>Filtros do estoque</Text>
+            <Text style={{ fontSize: 12, color: text, marginTop: 4 }}>Filtre por categoria</Text>
+          </View>
+
+          <View style={{ gap: 8 }}>
+            <Text style={{ color: text, fontSize: 16, fontWeight: "700" }}>Categoria</Text>
+            <View style={{ borderWidth: 1, borderColor: isDark ? "#3f3f46" : "#e4e4e7", borderRadius: 12, backgroundColor: isDark ? "#27272a" : "white", overflow: "hidden" }}>
+              <Picker selectedValue={selectedCategory} onValueChange={(itemValue) => setSelectedCategory(itemValue)} mode="dropdown" dropdownIconColor="#9c44dc" enabled style={{ width: "100%", color: text }}>
+                <Picker.Item label="Todos os itens" value="Todos os itens" />
+                <Picker.Item label="Carnes" value="Carnes" />
+                <Picker.Item label="Fruteira" value="Fruteira" />
+                <Picker.Item label="Higiêne" value="Higiêne" />
+                <Picker.Item label="Limpeza" value="Limpeza" />
+                <Picker.Item label="Mercearia" value="Mercearia" />
+                <Picker.Item label="Outros" value="Outros" />
+              </Picker>
+            </View>
+          </View>
+
+          <TouchableOpacity onPress={() => filterSheetRef.current?.dismiss()} style={{ backgroundColor: "#9c44dc", borderRadius: 12, padding: 14, alignItems: "center", marginTop: 8 }}>
+            <Text style={{ color: "white", fontWeight: "700" }}>Aplicar filtros</Text>
+          </TouchableOpacity>
+        </BottomSheetScrollView>
+      </Sheet>
     </View>
   );
 }

@@ -390,7 +390,7 @@ export default function Dashboard() {
               Adicione transações para ver a evolução
             </Text>
           ) : (
-            <View style={{ alignItems: "center", marginTop: 8, position: "relative" }} testID="line-chart">
+            <View style={{ alignItems: "center", marginTop: 8, position: "relative", overflow: "visible" }} testID="line-chart">
               {LineChartComp ? (
                 <>
                   <LineChartComp
@@ -405,26 +405,51 @@ export default function Dashboard() {
                     }}
                     width={chartWidth - 32}
                     height={220}
+                    yAxisLabel=""
+                    yAxisSuffix=""
+                    yLabelsOffset={8}
+                    formatYLabel={(yLabel) => {
+                      const num = Number(String(yLabel).replace(",", "."));
+                      if (Number.isNaN(num)) return String(yLabel);
+                      // currency brasileiro com R$ e 2 casas - garante exibição no eixo Y
+                      return num.toLocaleString("pt-BR", {
+                        style: "currency",
+                        currency: "BRL",
+                        minimumFractionDigits: 2,
+                        maximumFractionDigits: 2,
+                        useGrouping: true,
+                      });
+                    }}
+                    formatXLabel={(xLabel) => String(xLabel)}
                     chartConfig={{
                       backgroundColor: cardBgWhite,
                       backgroundGradientFrom: cardBgWhite,
                       backgroundGradientTo: cardBgWhite,
-                      decimalPlaces: 0,
+                      decimalPlaces: 2,
                       color: (opacity = 1) => isDark ? `rgba(228,228,231,${opacity})` : `rgba(88,28,135,${opacity})`,
                       labelColor: (opacity = 1) => isDark ? `rgba(161,161,170,${opacity})` : `rgba(107,114,128,${opacity})`,
                       propsForDots: { r: "5", strokeWidth: "2", stroke: PURPLE_900 },
+                      propsForBackgroundLines: { strokeDasharray: "" },
+                      propsForHorizontalLabels: { fontSize: 9 },
+                      propsForVerticalLabels: { fontSize: 11 },
                     }}
                     bezier
-                    style={{ borderRadius: 16 }}
+                    style={{ borderRadius: 16, paddingRight: 72 }}
+                    withDots
+                    withInnerLines
+                    withOuterLines
+                    withVerticalLines={false}
                     onDataPointClick={({ index }) => setSelectedLineIndex((prev) => (prev === index ? null : index))}
+                    decorator={() => null}
                   />
                   {selectedLineIndex !== null && lineData.labels[selectedLineIndex] !== undefined ? (
                     <View
                       testID="line-tooltip"
                       style={{
                         position: "absolute",
-                        top: 8,
-                        alignSelf: "center",
+                        top: 28,
+                        left: 8,
+                        right: 8,
                         backgroundColor: isDark ? "#27272a" : "white",
                         borderRadius: 12,
                         paddingHorizontal: 14,
@@ -432,12 +457,14 @@ export default function Dashboard() {
                         shadowColor: "#000",
                         shadowOpacity: 0.15,
                         shadowRadius: 8,
-                        elevation: 6,
+                        elevation: 8,
                         borderWidth: 1,
                         borderColor: isDark ? "#3f3f46" : "#e5e7eb",
                         minWidth: 180,
+                        maxWidth: 260,
+                        alignSelf: "center",
                         alignItems: "flex-start",
-                        zIndex: 10,
+                        zIndex: 20,
                       }}
                     >
                       <Text style={{ fontSize: 13, fontWeight: "700", color: titleText, marginBottom: 6, textTransform: "capitalize" }}>

@@ -206,6 +206,7 @@ export default function Dashboard() {
 
   const hasFinances = finances.length > 0;
   const chartWidth = width * 0.92;
+  const chartInnerWidth = Math.min(chartWidth - 32, width - 64);
   const pieSize = Math.min(160, Math.round(chartWidth * 0.48));
 
   return (
@@ -390,7 +391,7 @@ export default function Dashboard() {
               Adicione transações para ver a evolução
             </Text>
           ) : (
-            <View style={{ alignItems: "center", marginTop: 8, position: "relative", overflow: "visible" }} testID="line-chart">
+            <View style={{ width: "100%", alignItems: "center", marginTop: 8 }} testID="line-chart">
               {LineChartComp ? (
                 <>
                   <LineChartComp
@@ -403,7 +404,7 @@ export default function Dashboard() {
                       ],
                       legend: ["Entradas", "Saídas", "Saldo"],
                     }}
-                    width={chartWidth - 32}
+                    width={chartInnerWidth}
                     height={220}
                     yAxisLabel=""
                     yAxisSuffix=""
@@ -411,7 +412,6 @@ export default function Dashboard() {
                     formatYLabel={(yLabel) => {
                       const num = Number(String(yLabel).replace(",", "."));
                       if (Number.isNaN(num)) return String(yLabel);
-                      // currency brasileiro com R$ e 2 casas - garante exibição no eixo Y
                       return num.toLocaleString("pt-BR", {
                         style: "currency",
                         currency: "BRL",
@@ -434,37 +434,34 @@ export default function Dashboard() {
                       propsForVerticalLabels: { fontSize: 11 },
                     }}
                     bezier
-                    style={{ borderRadius: 16, paddingRight: 72 }}
+                    style={{ borderRadius: 16 }}
                     withDots
                     withInnerLines
                     withOuterLines
                     withVerticalLines={false}
+                    withVerticalLabels={false}
                     onDataPointClick={({ index }) => setSelectedLineIndex((prev) => (prev === index ? null : index))}
                     decorator={() => null}
                   />
+                  {/* Tooltip dentro do pai, em fluxo normal - não absoluto, para ficar contido no card */}
                   {selectedLineIndex !== null && lineData.labels[selectedLineIndex] !== undefined ? (
                     <View
                       testID="line-tooltip"
                       style={{
-                        position: "absolute",
-                        top: 28,
-                        left: 8,
-                        right: 8,
+                        marginTop: 12,
+                        width: chartInnerWidth,
                         backgroundColor: isDark ? "#27272a" : "white",
                         borderRadius: 12,
                         paddingHorizontal: 14,
                         paddingVertical: 10,
                         shadowColor: "#000",
-                        shadowOpacity: 0.15,
-                        shadowRadius: 8,
-                        elevation: 8,
+                        shadowOpacity: 0.08,
+                        shadowRadius: 6,
+                        elevation: 2,
                         borderWidth: 1,
                         borderColor: isDark ? "#3f3f46" : "#e5e7eb",
-                        minWidth: 180,
-                        maxWidth: 260,
-                        alignSelf: "center",
                         alignItems: "flex-start",
-                        zIndex: 20,
+                        alignSelf: "center",
                       }}
                     >
                       <Text style={{ fontSize: 13, fontWeight: "700", color: titleText, marginBottom: 6, textTransform: "capitalize" }}>
@@ -495,6 +492,30 @@ export default function Dashboard() {
                       </TouchableOpacity>
                     </View>
                   ) : null}
+                  {/* Fallback tátil: labels abaixo do gráfico também disparam o tooltip, garantindo clique mesmo se SVG falhar */}
+                  <View style={{ flexDirection: "row", justifyContent: "space-between", width: chartInnerWidth, marginTop: 6 }} testID="line-x-pressables">
+                    {lineData.labels.map((label, idx) => {
+                      const isSelected = selectedLineIndex === idx;
+                      return (
+                        <TouchableOpacity
+                          key={`x-${label}-${idx}`}
+                          onPress={() => setSelectedLineIndex((prev) => (prev === idx ? null : idx))}
+                          testID={`line-point-${idx}`}
+                          accessibilityLabel={`Ponto ${label}`}
+                          style={{
+                            paddingHorizontal: 6,
+                            paddingVertical: 4,
+                            borderRadius: 6,
+                            backgroundColor: isSelected ? (isDark ? "#3f3f46" : "#f3e8ff") : "transparent",
+                            borderWidth: isSelected ? 1 : 0,
+                            borderColor: isSelected ? PURPLE_900 : "transparent",
+                          }}
+                        >
+                          <Text style={{ fontSize: 10, color: isSelected ? PURPLE_900 : subText }}>{label}</Text>
+                        </TouchableOpacity>
+                      );
+                    })}
+                  </View>
                 </>
               ) : (
                 <Text testID="line-fallback">{lineData.labels.join(" | ")}</Text>

@@ -3,6 +3,7 @@ import { Dimensions, ScrollView, Text, View, TouchableOpacity } from "react-nati
 import { useIsFocused, useNavigation } from "@react-navigation/native";
 import { Feather } from "@expo/vector-icons";
 import dayjs from "dayjs";
+import "dayjs/locale/pt-br";
 import { differenceInCalendarDays } from "date-fns";
 import Header from "../components/Header";
 import InteractivePieChart from "../components/InteractivePieChart";
@@ -109,7 +110,7 @@ export function getLast6MonthsLineData(list = []) {
     const d = now.subtract(i, "month");
     months.push(d);
   }
-  const labels = months.map((m) => m.format("MM/YY"));
+  const labels = months.map((m) => m.locale("pt-br").format("MMM YY").toLowerCase());
   const incomings = months.map((m) => {
     const start = m.startOf("month").valueOf();
     const end = m.endOf("month").valueOf();
@@ -165,6 +166,7 @@ export default function Dashboard() {
   const [goals, setGoals] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedPieIndex, setSelectedPieIndex] = useState(null);
+  const [selectedLineIndex, setSelectedLineIndex] = useState(null);
   const tabBarHeight = (() => { try { const { useBottomTabBarHeight } = require("@react-navigation/bottom-tabs"); return useBottomTabBarHeight(); } catch { return 80; } })();
 
   const load = useCallback(async () => {
@@ -195,6 +197,12 @@ export default function Dashboard() {
       setSelectedPieIndex(null);
     }
   }, [pieData.length, selectedPieIndex]);
+
+  useEffect(() => {
+    if (selectedLineIndex !== null && selectedLineIndex >= lineData.labels.length) {
+      setSelectedLineIndex(null);
+    }
+  }, [lineData.labels.length, selectedLineIndex]);
 
   const hasFinances = finances.length > 0;
   const chartWidth = width * 0.92;
@@ -382,32 +390,85 @@ export default function Dashboard() {
               Adicione transações para ver a evolução
             </Text>
           ) : (
-            <View style={{ alignItems: "center", marginTop: 8 }} testID="line-chart">
+            <View style={{ alignItems: "center", marginTop: 8, position: "relative" }} testID="line-chart">
               {LineChartComp ? (
-                <LineChartComp
-                  data={{
-                    labels: lineData.labels,
-                    datasets: [
-                      { data: lineData.incomings, color: () => "#12a454", strokeWidth: 2 },
-                      { data: lineData.expenses, color: () => "#e83e5a", strokeWidth: 2 },
-                      { data: lineData.net, color: () => "#581C87", strokeWidth: 2 },
-                    ],
-                    legend: ["Entradas", "Saídas", "Saldo"],
-                  }}
-                  width={chartWidth - 32}
-                  height={220}
-                  chartConfig={{
-                    backgroundColor: cardBgWhite,
-                    backgroundGradientFrom: cardBgWhite,
-                    backgroundGradientTo: cardBgWhite,
-                    decimalPlaces: 0,
-                    color: (opacity = 1) => isDark ? `rgba(228,228,231,${opacity})` : `rgba(88,28,135,${opacity})`,
-                    labelColor: (opacity = 1) => isDark ? `rgba(161,161,170,${opacity})` : `rgba(107,114,128,${opacity})`,
-                    propsForDots: { r: "4", strokeWidth: "2", stroke: PURPLE_900 },
-                  }}
-                  bezier
-                  style={{ borderRadius: 16 }}
-                />
+                <>
+                  <LineChartComp
+                    data={{
+                      labels: lineData.labels,
+                      datasets: [
+                        { data: lineData.incomings, color: () => "#12a454", strokeWidth: 2 },
+                        { data: lineData.expenses, color: () => "#e83e5a", strokeWidth: 2 },
+                        { data: lineData.net, color: () => "#581C87", strokeWidth: 2 },
+                      ],
+                      legend: ["Entradas", "Saídas", "Saldo"],
+                    }}
+                    width={chartWidth - 32}
+                    height={220}
+                    chartConfig={{
+                      backgroundColor: cardBgWhite,
+                      backgroundGradientFrom: cardBgWhite,
+                      backgroundGradientTo: cardBgWhite,
+                      decimalPlaces: 0,
+                      color: (opacity = 1) => isDark ? `rgba(228,228,231,${opacity})` : `rgba(88,28,135,${opacity})`,
+                      labelColor: (opacity = 1) => isDark ? `rgba(161,161,170,${opacity})` : `rgba(107,114,128,${opacity})`,
+                      propsForDots: { r: "5", strokeWidth: "2", stroke: PURPLE_900 },
+                    }}
+                    bezier
+                    style={{ borderRadius: 16 }}
+                    onDataPointClick={({ index }) => setSelectedLineIndex((prev) => (prev === index ? null : index))}
+                  />
+                  {selectedLineIndex !== null && lineData.labels[selectedLineIndex] !== undefined ? (
+                    <View
+                      testID="line-tooltip"
+                      style={{
+                        position: "absolute",
+                        top: 8,
+                        alignSelf: "center",
+                        backgroundColor: isDark ? "#27272a" : "white",
+                        borderRadius: 12,
+                        paddingHorizontal: 14,
+                        paddingVertical: 10,
+                        shadowColor: "#000",
+                        shadowOpacity: 0.15,
+                        shadowRadius: 8,
+                        elevation: 6,
+                        borderWidth: 1,
+                        borderColor: isDark ? "#3f3f46" : "#e5e7eb",
+                        minWidth: 180,
+                        alignItems: "flex-start",
+                        zIndex: 10,
+                      }}
+                    >
+                      <Text style={{ fontSize: 13, fontWeight: "700", color: titleText, marginBottom: 6, textTransform: "capitalize" }}>
+                        {lineData.labels[selectedLineIndex]}
+                      </Text>
+                      <View style={{ flexDirection: "row", alignItems: "center", gap: 8, marginTop: 2 }}>
+                        <View style={{ width: 10, height: 10, borderRadius: 5, backgroundColor: "#12a454" }} />
+                        <Text style={{ fontSize: 12, color: subText }}>Entradas: </Text>
+                        <Text style={{ fontSize: 12, fontWeight: "700", color: titleText }}>{formatCurrency(lineData.incomings[selectedLineIndex])}</Text>
+                      </View>
+                      <View style={{ flexDirection: "row", alignItems: "center", gap: 8, marginTop: 4 }}>
+                        <View style={{ width: 10, height: 10, borderRadius: 5, backgroundColor: "#e83e5a" }} />
+                        <Text style={{ fontSize: 12, color: subText }}>Saídas: </Text>
+                        <Text style={{ fontSize: 12, fontWeight: "700", color: titleText }}>{formatCurrency(lineData.expenses[selectedLineIndex])}</Text>
+                      </View>
+                      <View style={{ flexDirection: "row", alignItems: "center", gap: 8, marginTop: 4 }}>
+                        <View style={{ width: 10, height: 10, borderRadius: 5, backgroundColor: "#581C87" }} />
+                        <Text style={{ fontSize: 12, color: subText }}>Saldo: </Text>
+                        <Text style={{ fontSize: 12, fontWeight: "700", color: titleText }}>{formatCurrency(lineData.net[selectedLineIndex])}</Text>
+                      </View>
+                      <TouchableOpacity
+                        onPress={() => setSelectedLineIndex(null)}
+                        hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                        style={{ marginTop: 8, alignSelf: "center" }}
+                        testID="line-tooltip-close"
+                      >
+                        <Text style={{ fontSize: 11, color: subText }}>Fechar</Text>
+                      </TouchableOpacity>
+                    </View>
+                  ) : null}
+                </>
               ) : (
                 <Text testID="line-fallback">{lineData.labels.join(" | ")}</Text>
               )}

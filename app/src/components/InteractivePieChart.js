@@ -64,8 +64,8 @@ export default function InteractivePieChart({
     );
   });
 
-  // center offset igual ao PieChart original
-  const gX = width / 2 / 2 + Number(paddingLeft ? paddingLeft : 0);
+  // centro: se paddingLeft=0 (legenda externa) centraliza, senão mantém offset legado para legenda interna
+  const gX = paddingLeft ? width / 2 / 2 + Number(paddingLeft) : width / 2;
   const gY = height / 2;
 
   return (

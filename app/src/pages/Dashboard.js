@@ -198,6 +198,7 @@ export default function Dashboard() {
 
   const hasFinances = finances.length > 0;
   const chartWidth = width * 0.92;
+  const pieSize = Math.min(160, Math.round(chartWidth * 0.48));
 
   return (
     <View style={{ flex: 1, backgroundColor: bg }}>
@@ -281,61 +282,58 @@ export default function Dashboard() {
               Sem gastos para exibir
             </Text>
           ) : (
-            <View style={{ marginTop: 8 }} testID="pizza-chart">
-              {/* Chart with selectable slices - hasLegend false, tooltip overlay */}
-              <View style={{ alignItems: "center", justifyContent: "center" }}>
-                <View style={{ width: chartWidth - 32, height: 180, alignItems: "center", justifyContent: "center" }}>
-                  <InteractivePieChart
-                    data={pieData}
-                    width={chartWidth - 32}
-                    height={180}
-                    accessor="population"
-                    backgroundColor="transparent"
-                    paddingLeft="15"
-                    selectedIndex={selectedPieIndex}
-                    onSelect={(idx) => setSelectedPieIndex((prev) => (prev === idx ? null : idx))}
-                    chartConfig={{ color: (opacity = 1) => `rgba(0,0,0,${opacity})` }}
-                    testID="interactive-pie"
-                  />
-
-                  {selectedPieIndex !== null && pieData[selectedPieIndex] ? (
-                    <View
-                      testID="pizza-tooltip"
-                      style={{
-                        position: "absolute",
-                        backgroundColor: isDark ? "#27272a" : "white",
-                        borderRadius: 12,
-                        paddingHorizontal: 14,
-                        paddingVertical: 10,
-                        shadowColor: "#000",
-                        shadowOpacity: 0.15,
-                        shadowRadius: 8,
-                        elevation: 6,
-                        borderWidth: 1,
-                        borderColor: pieData[selectedPieIndex].color,
-                        alignItems: "center",
-                        minWidth: 140,
-                      }}
-                    >
-                      <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
-                        <View style={{ width: 12, height: 12, borderRadius: 6, backgroundColor: pieData[selectedPieIndex].color }} />
-                        <Text style={{ fontSize: 13, fontWeight: "700", color: titleText }}>{pieData[selectedPieIndex].name}</Text>
-                      </View>
-                      <Text style={{ fontSize: 14, fontWeight: "700", color: titleText, marginTop: 4 }}>{formatCurrency(pieData[selectedPieIndex].population)}</Text>
-                      <TouchableOpacity
-                        onPress={() => setSelectedPieIndex(null)}
-                        hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-                        style={{ marginTop: 4 }}
-                        testID="pizza-tooltip-close"
-                      >
-                        <Text style={{ fontSize: 11, color: subText }}>Fechar</Text>
-                      </TouchableOpacity>
+            <View style={{ flexDirection: "row", alignItems: "center", marginTop: 8, gap: 12 }} testID="pizza-chart">
+              {/* Disco clicável - cada fatia selecionável com realce */}
+              <View style={{ width: pieSize, height: pieSize, alignItems: "center", justifyContent: "center" }}>
+                <InteractivePieChart
+                  data={pieData}
+                  width={pieSize}
+                  height={pieSize}
+                  accessor="population"
+                  backgroundColor="transparent"
+                  paddingLeft={0}
+                  selectedIndex={selectedPieIndex}
+                  onSelect={(idx) => setSelectedPieIndex((prev) => (prev === idx ? null : idx))}
+                  chartConfig={{ color: (opacity = 1) => `rgba(0,0,0,${opacity})` }}
+                  testID="interactive-pie"
+                />
+                {selectedPieIndex !== null && pieData[selectedPieIndex] ? (
+                  <View
+                    testID="pizza-tooltip"
+                    style={{
+                      position: "absolute",
+                      backgroundColor: isDark ? "#27272a" : "white",
+                      borderRadius: 12,
+                      paddingHorizontal: 14,
+                      paddingVertical: 10,
+                      shadowColor: "#000",
+                      shadowOpacity: 0.15,
+                      shadowRadius: 8,
+                      elevation: 6,
+                      borderWidth: 1,
+                      borderColor: pieData[selectedPieIndex].color,
+                      alignItems: "center",
+                      minWidth: 140,
+                    }}
+                  >
+                    <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
+                      <View style={{ width: 12, height: 12, borderRadius: 6, backgroundColor: pieData[selectedPieIndex].color }} />
+                      <Text style={{ fontSize: 13, fontWeight: "700", color: titleText }}>{pieData[selectedPieIndex].name}</Text>
                     </View>
-                  ) : null}
-                </View>
+                    <Text style={{ fontSize: 14, fontWeight: "700", color: titleText, marginTop: 4 }}>{formatCurrency(pieData[selectedPieIndex].population)}</Text>
+                    <TouchableOpacity
+                      onPress={() => setSelectedPieIndex(null)}
+                      hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                      style={{ marginTop: 4 }}
+                      testID="pizza-tooltip-close"
+                    >
+                      <Text style={{ fontSize: 11, color: subText }}>Fechar</Text>
+                    </TouchableOpacity>
+                  </View>
+                ) : null}
               </View>
-              {/* Legenda custom - apenas categoria, sem valor; ao pressionar destaca e mostra tooltip */}
-              <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8, marginTop: 12, justifyContent: "center" }} testID="pizza-legend">
+              {/* Legenda ao lado do gráfico (ordem by valor, apenas categoria) - clique também realça disco */}
+              <View style={{ flex: 1, gap: 6, justifyContent: "center" }} testID="pizza-legend">
                 {pieData.map((item, idx) => {
                   const isSelected = selectedPieIndex === idx;
                   const isDimmed = selectedPieIndex !== null && !isSelected;
@@ -351,6 +349,7 @@ export default function Dashboard() {
                         paddingHorizontal: 10,
                         paddingVertical: 6,
                         borderRadius: 999,
+                        alignSelf: "flex-start",
                         backgroundColor: isSelected ? (isDark ? "#3f3f46" : "#f3e8ff") : isDark ? "#27272a" : "#f5f5f4",
                         borderWidth: isSelected ? 1.5 : 1,
                         borderColor: isSelected ? item.color : isDark ? "#3f3f46" : "#e5e7eb",
@@ -363,7 +362,6 @@ export default function Dashboard() {
                   );
                 })}
               </View>
-
             </View>
           )}
         </View>

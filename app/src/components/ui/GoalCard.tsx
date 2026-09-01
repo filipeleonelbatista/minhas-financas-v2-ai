@@ -2,6 +2,7 @@ import React from 'react';
 import { View, Text, TouchableOpacity, ViewStyle } from 'react-native';
 import { Feather } from '@expo/vector-icons';
 import { calcGoalProgress, getDaysRemaining, getCategoryIcon } from '../../repositories/goal';
+import { useSettingsStore } from '../../stores/settings';
 
 // CTA reacticx wrapper: try to load reacticx, fallback to purple button
 let CTAButton: any = null;
@@ -47,6 +48,11 @@ function formatCurrency(value: number) {
 }
 
 export default function GoalCard({ goal, onDeposit, onPress, testID, style }: GoalCardProps) {
+  const colorModeState = useSettingsStore((s) => s.colorModeState);
+  const isDark = colorModeState === "dark";
+  const bgCard = isDark ? "#27272a" : "#f5f5f4";
+  const text = isDark ? "#e4e4e7" : "#52525b";
+  const subText = isDark ? "#a1a1aa" : "#6b7280";
   const progress = calcGoalProgress(goal);
   const days = getDaysRemaining(goal);
   const isConcluded = progress >= 1;
@@ -68,70 +74,88 @@ export default function GoalCard({ goal, onDeposit, onPress, testID, style }: Go
   const CardContent = (
     <View
       testID={testID ?? `goal-card-${goal.id}`}
-      className="bg-white dark:bg-gray-800 rounded-2xl p-4 mb-3 border border-gray-100 dark:border-gray-700"
       style={[
-        { shadowColor: '#581C87', shadowOpacity: 0.06, shadowRadius: 8, elevation: 2 },
+        {
+          backgroundColor: bgCard,
+          borderRadius: 4,
+          padding: 12,
+          shadowColor: "#000",
+          shadowOpacity: 0.08,
+          elevation: 2,
+          borderWidth: 1,
+          borderColor: isDark ? "#3f3f46" : "#e7e5e4",
+        },
         style,
       ]}
     >
-      {/* Header: icon + category + prazo */}
-      <View className="flex-row items-center justify-between mb-2">
-        <View className="flex-row items-center">
-          <View className="w-9 h-9 rounded-full bg-purple-100 dark:bg-purple-900 items-center justify-center mr-2">
+      {/* Header: icon + category + prazo - estilo Finances */}
+      <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginBottom: 8 }}>
+        <View style={{ flexDirection: "row", alignItems: "center" }}>
+          <View style={{ width: 36, height: 36, borderRadius: 18, backgroundColor: isDark ? "#3f3f46" : "#f3e8ff", alignItems: "center", justifyContent: "center", marginRight: 8 }}>
             <Feather name={iconName} size={18} color="#581C87" />
           </View>
           <View>
-            <Text className="text-xs font-semibold text-purple-700 dark:text-purple-300 uppercase tracking-wider">
+            <Text style={{ fontSize: 12, fontWeight: "600", color: "#9c44dc", textTransform: "uppercase" }}>
               {category}
             </Text>
-            <Text className="text-[11px] text-gray-400" testID={`goal-prazo-${goal.id}`}>
+            <Text style={{ fontSize: 11, color: subText }} testID={`goal-prazo-${goal.id}`}>
               {prazoText}
             </Text>
           </View>
         </View>
         <View
-          className={`px-2 py-1 rounded-full ${isConcluded ? 'bg-green-100' : days < 0 ? 'bg-red-100' : days <= 7 ? 'bg-amber-100' : 'bg-gray-100'}`}
+          style={{
+            paddingHorizontal: 8,
+            paddingVertical: 4,
+            borderRadius: 999,
+            backgroundColor: isConcluded ? "#dcfce7" : days < 0 ? "#fee2e2" : days <= 7 ? "#fef3c7" : isDark ? "#3f3f46" : "#f3f4f6",
+            borderWidth: 1,
+            borderColor: isConcluded ? "#bbf7d0" : days < 0 ? "#fecaca" : days <= 7 ? "#fde68a" : isDark ? "#52525b" : "#e7e5e4",
+          }}
         >
           <Text
-            className={`text-[11px] font-bold ${isConcluded ? 'text-green-700' : days < 0 ? 'text-red-700' : days <= 7 ? 'text-amber-700' : 'text-gray-600'}`}
+            style={{
+              fontSize: 11,
+              fontWeight: "700",
+              color: isConcluded ? "#15803d" : days < 0 ? "#b91c1c" : days <= 7 ? "#b45309" : subText,
+            }}
           >
             {progressPercent}%
           </Text>
         </View>
       </View>
 
-      <Text className="text-[15px] font-semibold text-gray-800 dark:text-gray-100 mb-1" numberOfLines={2}>
+      <Text style={{ fontSize: 15, fontWeight: "600", color: text, marginBottom: 4 }} numberOfLines={2}>
         {goal.description}
       </Text>
 
-      <View className="flex-row justify-between mb-2">
-        <Text className="text-xs text-gray-500">
+      <View style={{ flexDirection: "row", justifyContent: "space-between", marginBottom: 8 }}>
+        <Text style={{ fontSize: 12, color: subText }}>
           {formatCurrency(goal.currentAmount)} de {formatCurrency(goal.amount)}
         </Text>
-        <Text className="text-xs text-gray-400">
+        <Text style={{ fontSize: 12, color: subText }}>
           {new Date(goal.date).toLocaleDateString('pt-BR')}
         </Text>
       </View>
 
       {/* Progress bar */}
-      <View className="mb-3" testID={`goal-progress-${goal.id}`} accessibilityLabel={`${progressPercent}%`}>
+      <View style={{ marginBottom: 12 }} testID={`goal-progress-${goal.id}`} accessibilityLabel={`${progressPercent}%`}>
         {ProgressBar ? (
           <ProgressBar
             progress={progress}
             width={null}
             height={8}
             color={isConcluded ? '#16A34A' : '#581C87'}
-            unfilledColor="#E5E7EB"
+            unfilledColor={isDark ? "#3f3f46" : "#E5E7EB"}
             borderWidth={0}
             borderRadius={8}
             style={{ width: '100%' }}
           />
         ) : (
-          <View className="h-2 w-full bg-gray-200 rounded-full overflow-hidden">
+          <View style={{ height: 8, width: "100%", backgroundColor: isDark ? "#3f3f46" : "#e5e7eb", borderRadius: 999, overflow: "hidden" }}>
             <View
               testID={`goal-progress-bar-${goal.id}`}
-              className={`${isConcluded ? 'bg-green-600' : 'bg-purple-600'} h-2 rounded-full`}
-              style={{ width: `${progressPercent}%` as any }}
+              style={{ height: 8, borderRadius: 999, backgroundColor: isConcluded ? '#16A34A' : '#581C87', width: `${progressPercent}%` }}
             />
           </View>
         )}

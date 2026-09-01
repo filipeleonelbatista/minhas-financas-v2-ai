@@ -394,107 +394,169 @@ export default function Dashboard() {
             <View style={{ width: "100%", alignItems: "center", marginTop: 8, position: "relative" }} testID="line-chart">
               {LineChartComp ? (
                 <>
-                  <LineChartComp
-                    data={{
-                      labels: lineData.labels,
-                      datasets: [
-                        { data: lineData.incomings, color: () => "#12a454", strokeWidth: 2 },
-                        { data: lineData.expenses, color: () => "#e83e5a", strokeWidth: 2 },
-                        { data: lineData.net, color: () => "#581C87", strokeWidth: 2 },
-                      ],
-                      legend: ["Entradas", "Saídas", "Saldo"],
-                    }}
-                    width={chartInnerWidth}
-                    height={220}
-                    yAxisLabel=""
-                    yAxisSuffix=""
-                    yLabelsOffset={8}
-                    formatYLabel={(yLabel) => {
-                      const num = Number(String(yLabel).replace(",", "."));
-                      if (Number.isNaN(num)) return String(yLabel);
-                      return num.toLocaleString("pt-BR", {
-                        style: "currency",
-                        currency: "BRL",
-                        minimumFractionDigits: 2,
-                        maximumFractionDigits: 2,
-                        useGrouping: true,
-                      });
-                    }}
-                    formatXLabel={(xLabel) => String(xLabel)}
-                    chartConfig={{
-                      backgroundColor: cardBgWhite,
-                      backgroundGradientFrom: cardBgWhite,
-                      backgroundGradientTo: cardBgWhite,
-                      decimalPlaces: 2,
-                      color: (opacity = 1) => isDark ? `rgba(228,228,231,${opacity})` : `rgba(88,28,135,${opacity})`,
-                      labelColor: (opacity = 1) => isDark ? `rgba(161,161,170,${opacity})` : `rgba(107,114,128,${opacity})`,
-                      propsForDots: { r: "5", strokeWidth: "2", stroke: PURPLE_900 },
-                      propsForHorizontalLabels: { fontSize: 9 },
-                      propsForVerticalLabels: { fontSize: 11 },
-                    }}
-                    bezier
-                    style={{ borderRadius: 16 }}
-                    withDots
-                    withInnerLines
-                    withOuterLines
+                  <View style={{ width: chartInnerWidth, height: 220, position: "relative" }}>
+                    <LineChartComp
+                      data={{
+                        labels: lineData.labels,
+                        datasets: [
+                          { data: lineData.incomings, color: () => "#12a454", strokeWidth: 2 },
+                          { data: lineData.expenses, color: () => "#e83e5a", strokeWidth: 2 },
+                          { data: lineData.net, color: () => "#581C87", strokeWidth: 2 },
+                        ],
+                        legend: ["Entradas", "Saídas", "Saldo"],
+                      }}
+                      width={chartInnerWidth}
+                      height={220}
+                      yAxisLabel=""
+                      yAxisSuffix=""
+                      yLabelsOffset={8}
+                      formatYLabel={(yLabel) => {
+                        const num = Number(String(yLabel).replace(",", "."));
+                        if (Number.isNaN(num)) return String(yLabel);
+                        return num.toLocaleString("pt-BR", {
+                          style: "currency",
+                          currency: "BRL",
+                          minimumFractionDigits: 2,
+                          maximumFractionDigits: 2,
+                          useGrouping: true,
+                        });
+                      }}
+                      formatXLabel={(xLabel) => String(xLabel)}
+                      chartConfig={{
+                        backgroundColor: cardBgWhite,
+                        backgroundGradientFrom: cardBgWhite,
+                        backgroundGradientTo: cardBgWhite,
+                        decimalPlaces: 2,
+                        color: (opacity = 1) => isDark ? `rgba(228,228,231,${opacity})` : `rgba(88,28,135,${opacity})`,
+                        labelColor: (opacity = 1) => isDark ? `rgba(161,161,170,${opacity})` : `rgba(107,114,128,${opacity})`,
+                        propsForDots: { r: "5", strokeWidth: "2", stroke: PURPLE_900 },
+                        propsForHorizontalLabels: { fontSize: 9 },
+                        propsForVerticalLabels: { fontSize: 11 },
+                      }}
+                      bezier
+                      style={{ borderRadius: 16 }}
+                      withDots
+                      withInnerLines
+                      withOuterLines
                     withVerticalLines
                     withHorizontalLabels
-                    withVerticalLabels
+                    withVerticalLabels={false}
                     onDataPointClick={({ index }) => setSelectedLineIndex((prev) => (prev === index ? null : index))}
-                    decorator={() => null}
-                  />
-                  {/* Tooltip sobre o intervalo, no topo do gráfico, ao clicar em um ponto - contido no pai */}
-                  {selectedLineIndex !== null && lineData.labels[selectedLineIndex] !== undefined ? (
+                      decorator={() => null}
+                    />
+                    {/* Overlay com tolerância para dedo: 6 áreas verticais cobrindo cada intervalo, aumentando hitSlop */}
                     <View
-                      testID="line-tooltip"
                       style={{
                         position: "absolute",
-                        top: 10,
-                        alignSelf: "center",
-                        backgroundColor: isDark ? "#27272a" : "white",
-                        borderRadius: 12,
-                        paddingHorizontal: 14,
-                        paddingVertical: 10,
-                        shadowColor: "#000",
-                        shadowOpacity: 0.15,
-                        shadowRadius: 8,
-                        elevation: 6,
-                        borderWidth: 1,
-                        borderColor: isDark ? "#3f3f46" : "#e5e7eb",
-                        minWidth: 180,
-                        maxWidth: chartInnerWidth - 16,
-                        alignItems: "flex-start",
-                        zIndex: 10,
+                        top: 0,
+                        left: 0,
+                        width: chartInnerWidth,
+                        height: 220,
+                        flexDirection: "row",
+                        zIndex: 5,
                       }}
+                      pointerEvents="box-none"
                     >
-                      <Text style={{ fontSize: 13, fontWeight: "700", color: titleText, marginBottom: 6, textTransform: "capitalize" }}>
-                        {lineData.labels[selectedLineIndex]}
-                      </Text>
-                      <View style={{ flexDirection: "row", alignItems: "center", gap: 8, marginTop: 2 }}>
-                        <View style={{ width: 10, height: 10, borderRadius: 5, backgroundColor: "#12a454" }} />
-                        <Text style={{ fontSize: 12, color: subText }}>Entradas: </Text>
-                        <Text style={{ fontSize: 12, fontWeight: "700", color: titleText }}>{formatCurrency(lineData.incomings[selectedLineIndex])}</Text>
-                      </View>
-                      <View style={{ flexDirection: "row", alignItems: "center", gap: 8, marginTop: 4 }}>
-                        <View style={{ width: 10, height: 10, borderRadius: 5, backgroundColor: "#e83e5a" }} />
-                        <Text style={{ fontSize: 12, color: subText }}>Saídas: </Text>
-                        <Text style={{ fontSize: 12, fontWeight: "700", color: titleText }}>{formatCurrency(lineData.expenses[selectedLineIndex])}</Text>
-                      </View>
-                      <View style={{ flexDirection: "row", alignItems: "center", gap: 8, marginTop: 4 }}>
-                        <View style={{ width: 10, height: 10, borderRadius: 5, backgroundColor: "#581C87" }} />
-                        <Text style={{ fontSize: 12, color: subText }}>Saldo: </Text>
-                        <Text style={{ fontSize: 12, fontWeight: "700", color: titleText }}>{formatCurrency(lineData.net[selectedLineIndex])}</Text>
-                      </View>
-                      <TouchableOpacity
-                        onPress={() => setSelectedLineIndex(null)}
-                        hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-                        style={{ marginTop: 8, alignSelf: "center" }}
-                        testID="line-tooltip-close"
-                      >
-                        <Text style={{ fontSize: 11, color: subText }}>Fechar</Text>
-                      </TouchableOpacity>
+                      {lineData.labels.map((_, idx) => (
+                        <TouchableOpacity
+                          key={`hit-${idx}`}
+                          onPress={() => setSelectedLineIndex((prev) => (prev === idx ? null : idx))}
+                          testID={`dot-hit-${idx}`}
+                          hitSlop={{ top: 20, bottom: 20, left: 12, right: 12 }}
+                          style={{ flex: 1, marginHorizontal: 1 }}
+                          accessibilityLabel={`Ponto ${lineData.labels[idx]}`}
+                        >
+                          <View style={{ flex: 1 }} />
+                        </TouchableOpacity>
+                      ))}
                     </View>
-                  ) : null}
+                    {/* Tooltip sobre o intervalo, no topo do gráfico, contido no pai */}
+                    {selectedLineIndex !== null && lineData.labels[selectedLineIndex] !== undefined ? (
+                      <View
+                        testID="line-tooltip"
+                        style={{
+                          position: "absolute",
+                          top: 10,
+                          alignSelf: "center",
+                          left: 8,
+                          right: 8,
+                          backgroundColor: isDark ? "#27272a" : "white",
+                          borderRadius: 12,
+                          paddingHorizontal: 14,
+                          paddingVertical: 10,
+                          shadowColor: "#000",
+                          shadowOpacity: 0.15,
+                          shadowRadius: 8,
+                          elevation: 6,
+                          borderWidth: 1,
+                          borderColor: isDark ? "#3f3f46" : "#e5e7eb",
+                          minWidth: 180,
+                          maxWidth: chartInnerWidth - 16,
+                          alignItems: "flex-start",
+                          zIndex: 10,
+                        }}
+                      >
+                        <Text style={{ fontSize: 13, fontWeight: "700", color: titleText, marginBottom: 6, textTransform: "capitalize" }}>
+                          {lineData.labels[selectedLineIndex]}
+                        </Text>
+                        <View style={{ flexDirection: "row", alignItems: "center", gap: 8, marginTop: 2 }}>
+                          <View style={{ width: 10, height: 10, borderRadius: 5, backgroundColor: "#12a454" }} />
+                          <Text style={{ fontSize: 12, color: subText }}>Entradas: </Text>
+                          <Text style={{ fontSize: 12, fontWeight: "700", color: titleText }}>{formatCurrency(lineData.incomings[selectedLineIndex])}</Text>
+                        </View>
+                        <View style={{ flexDirection: "row", alignItems: "center", gap: 8, marginTop: 4 }}>
+                          <View style={{ width: 10, height: 10, borderRadius: 5, backgroundColor: "#e83e5a" }} />
+                          <Text style={{ fontSize: 12, color: subText }}>Saídas: </Text>
+                          <Text style={{ fontSize: 12, fontWeight: "700", color: titleText }}>{formatCurrency(lineData.expenses[selectedLineIndex])}</Text>
+                        </View>
+                        <View style={{ flexDirection: "row", alignItems: "center", gap: 8, marginTop: 4 }}>
+                          <View style={{ width: 10, height: 10, borderRadius: 5, backgroundColor: "#581C87" }} />
+                          <Text style={{ fontSize: 12, color: subText }}>Saldo: </Text>
+                          <Text style={{ fontSize: 12, fontWeight: "700", color: titleText }}>{formatCurrency(lineData.net[selectedLineIndex])}</Text>
+                        </View>
+                        <TouchableOpacity
+                          onPress={() => setSelectedLineIndex(null)}
+                          hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                          style={{ marginTop: 8, alignSelf: "center" }}
+                          testID="line-tooltip-close"
+                        >
+                          <Text style={{ fontSize: 11, color: subText }}>Fechar</Text>
+                        </TouchableOpacity>
+                      </View>
+                    ) : null}
+                  </View>
+                  {/* Legendas dos meses abaixo, na posição correta do gráfico, clicáveis com realce */}
+                  <View style={{ width: chartInnerWidth, height: 30, marginTop: 2, position: "relative" }} testID="line-x-pressables">
+                    {lineData.labels.map((label, idx) => {
+                      const isSelected = selectedLineIndex === idx;
+                      // calcula X igual ao gráfico: paddingRight (64) + i*(width-paddingRight)/6
+                      const paddingRight = 64;
+                      const x = paddingRight + (idx * (chartInnerWidth - paddingRight)) / lineData.labels.length;
+                      return (
+                        <TouchableOpacity
+                          key={`x-${label}-${idx}`}
+                          onPress={() => setSelectedLineIndex((prev) => (prev === idx ? null : idx))}
+                          testID={`line-point-${idx}`}
+                          accessibilityLabel={`Ponto ${label}`}
+                          hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
+                          style={{
+                            position: "absolute",
+                            left: x - 28,
+                            width: 56,
+                            alignItems: "center",
+                            paddingVertical: 4,
+                            paddingHorizontal: 4,
+                            borderRadius: 6,
+                            backgroundColor: isSelected ? (isDark ? "#3f3f46" : "#f3e8ff") : "transparent",
+                            borderWidth: isSelected ? 1 : 0,
+                            borderColor: isSelected ? PURPLE_900 : "transparent",
+                          }}
+                        >
+                          <Text style={{ fontSize: 11, fontWeight: isSelected ? "700" : "500", color: isSelected ? PURPLE_900 : subText }}>{label}</Text>
+                        </TouchableOpacity>
+                      );
+                    })}
+                  </View>
                 </>
               ) : (
                 <Text testID="line-fallback">{lineData.labels.join(" | ")}</Text>

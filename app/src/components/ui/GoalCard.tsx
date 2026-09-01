@@ -7,7 +7,6 @@ import { useSettingsStore } from '../../stores/settings';
 // CTA reacticx wrapper: try to load reacticx, fallback to purple button
 let CTAButton: any = null;
 try {
-  // eslint-disable-next-line global-require
   const reacticx = require('reacticx');
   CTAButton = reacticx.CTAButton ?? reacticx.CTA ?? null;
 } catch {
@@ -16,7 +15,6 @@ try {
 
 let ProgressBar: any = null;
 try {
-  // eslint-disable-next-line global-require
   ProgressBar = require('react-native-progress').Bar;
 } catch {
   ProgressBar = null;
@@ -71,6 +69,32 @@ export default function GoalCard({ goal, onDeposit, onPress, testID, style }: Go
 
   const progressPercent = Math.round(progress * 100);
 
+  // Cores que respeitam darkmode - versões mais escuras e menos vivas no escuro
+  const badgeConfig = (() => {
+    if (isConcluded) {
+      return isDark
+        ? { bg: "#14532d", border: "#166534", text: "#86efac" }
+        : { bg: "#dcfce7", border: "#bbf7d0", text: "#15803d" };
+    }
+    if (days < 0) {
+      return isDark
+        ? { bg: "#7f1d1d", border: "#991b1b", text: "#fecaca" }
+        : { bg: "#fee2e2", border: "#fecaca", text: "#b91c1c" };
+    }
+    if (days <= 7) {
+      return isDark
+        ? { bg: "#78350f", border: "#92400e", text: "#fde68a" }
+        : { bg: "#fef3c7", border: "#fde68a", text: "#b45309" };
+    }
+    return isDark
+      ? { bg: "#3f3f46", border: "#52525b", text: "#a1a1aa" }
+      : { bg: "#f3f4f6", border: "#e7e5e4", text: "#52525b" };
+  })();
+
+  const iconBg = isDark ? "#3f3f46" : "#f3e8ff";
+  const iconColor = isDark ? "#c4b5fd" : "#581C87";
+  const categoryColor = isDark ? "#c4b5fd" : "#9c44dc";
+
   const CardContent = (
     <View
       testID={testID ?? `goal-card-${goal.id}`}
@@ -80,7 +104,7 @@ export default function GoalCard({ goal, onDeposit, onPress, testID, style }: Go
           borderRadius: 4,
           padding: 12,
           shadowColor: "#000",
-          shadowOpacity: 0.08,
+          shadowOpacity: isDark ? 0.15 : 0.08,
           elevation: 2,
           borderWidth: 1,
           borderColor: isDark ? "#3f3f46" : "#e7e5e4",
@@ -88,14 +112,13 @@ export default function GoalCard({ goal, onDeposit, onPress, testID, style }: Go
         style,
       ]}
     >
-      {/* Header: icon + category + prazo - estilo Finances */}
       <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginBottom: 8 }}>
         <View style={{ flexDirection: "row", alignItems: "center" }}>
-          <View style={{ width: 36, height: 36, borderRadius: 18, backgroundColor: isDark ? "#3f3f46" : "#f3e8ff", alignItems: "center", justifyContent: "center", marginRight: 8 }}>
-            <Feather name={iconName} size={18} color="#581C87" />
+          <View style={{ width: 36, height: 36, borderRadius: 18, backgroundColor: iconBg, alignItems: "center", justifyContent: "center", marginRight: 8, borderWidth: isDark ? 1 : 0, borderColor: isDark ? "#52525b" : "transparent" }}>
+            <Feather name={iconName} size={18} color={iconColor} />
           </View>
           <View>
-            <Text style={{ fontSize: 12, fontWeight: "600", color: "#9c44dc", textTransform: "uppercase" }}>
+            <Text style={{ fontSize: 12, fontWeight: "600", color: categoryColor, textTransform: "uppercase" }}>
               {category}
             </Text>
             <Text style={{ fontSize: 11, color: subText }} testID={`goal-prazo-${goal.id}`}>
@@ -108,16 +131,16 @@ export default function GoalCard({ goal, onDeposit, onPress, testID, style }: Go
             paddingHorizontal: 8,
             paddingVertical: 4,
             borderRadius: 999,
-            backgroundColor: isConcluded ? "#dcfce7" : days < 0 ? "#fee2e2" : days <= 7 ? "#fef3c7" : isDark ? "#3f3f46" : "#f3f4f6",
+            backgroundColor: badgeConfig.bg,
             borderWidth: 1,
-            borderColor: isConcluded ? "#bbf7d0" : days < 0 ? "#fecaca" : days <= 7 ? "#fde68a" : isDark ? "#52525b" : "#e7e5e4",
+            borderColor: badgeConfig.border,
           }}
         >
           <Text
             style={{
               fontSize: 11,
               fontWeight: "700",
-              color: isConcluded ? "#15803d" : days < 0 ? "#b91c1c" : days <= 7 ? "#b45309" : subText,
+              color: badgeConfig.text,
             }}
           >
             {progressPercent}%
@@ -138,14 +161,13 @@ export default function GoalCard({ goal, onDeposit, onPress, testID, style }: Go
         </Text>
       </View>
 
-      {/* Progress bar */}
       <View style={{ marginBottom: 12 }} testID={`goal-progress-${goal.id}`} accessibilityLabel={`${progressPercent}%`}>
         {ProgressBar ? (
           <ProgressBar
             progress={progress}
             width={null}
             height={8}
-            color={isConcluded ? '#16A34A' : '#581C87'}
+            color={isDark ? (isConcluded ? '#15803d' : '#7c3aed') : (isConcluded ? '#16A34A' : '#581C87')}
             unfilledColor={isDark ? "#3f3f46" : "#E5E7EB"}
             borderWidth={0}
             borderRadius={8}
@@ -155,13 +177,12 @@ export default function GoalCard({ goal, onDeposit, onPress, testID, style }: Go
           <View style={{ height: 8, width: "100%", backgroundColor: isDark ? "#3f3f46" : "#e5e7eb", borderRadius: 999, overflow: "hidden" }}>
             <View
               testID={`goal-progress-bar-${goal.id}`}
-              style={{ height: 8, borderRadius: 999, backgroundColor: isConcluded ? '#16A34A' : '#581C87', width: `${progressPercent}%` }}
+              style={{ height: 8, borderRadius: 999, backgroundColor: isDark ? (isConcluded ? '#15803d' : '#7c3aed') : (isConcluded ? '#16A34A' : '#581C87'), width: `${progressPercent}%` }}
             />
           </View>
         )}
       </View>
 
-      {/* CTA Depositar - reacticx glow variant fallback */}
       {onDeposit && !isConcluded && (
         CTAButton ? (
           <CTAButton
@@ -169,24 +190,25 @@ export default function GoalCard({ goal, onDeposit, onPress, testID, style }: Go
             variant="glow"
             onPress={() => onDeposit(goal)}
             style={{ borderRadius: 12 }}
+            theme={isDark ? { background: "#7c3aed", backgroundSubtle: "#4c1d95", foreground: "#ffffff", highlight: "#ddd6fe", highlightSubtle: "#8b5cf6" } : undefined}
           >
-            <Text className="text-white font-bold text-sm text-center">Depositar</Text>
+            <Text style={{ color: "white", fontWeight: "700", fontSize: 14, textAlign: "center" }}>Depositar</Text>
           </CTAButton>
         ) : (
           <TouchableOpacity
             testID={`goal-cta-${goal.id}`}
             onPress={() => onDeposit(goal)}
-            className="bg-purple-600 active:bg-purple-900 rounded-xl py-2.5 items-center"
+            style={{ backgroundColor: isDark ? "#7c3aed" : "#9c44dc", borderRadius: 12, paddingVertical: 10, alignItems: "center", borderWidth: isDark ? 1 : 0, borderColor: isDark ? "#6d28d9" : "transparent" }}
             accessibilityRole="button"
             accessibilityLabel="Depositar"
           >
-            <Text className="text-white font-bold text-sm">Depositar</Text>
+            <Text style={{ color: "white", fontWeight: "700", fontSize: 14 }}>Depositar</Text>
           </TouchableOpacity>
         )
       )}
       {isConcluded && (
-        <View testID={`goal-concluded-${goal.id}`} className="bg-green-50 border border-green-200 rounded-xl py-2 items-center">
-          <Text className="text-green-700 font-semibold text-sm">Meta concluída 🎉</Text>
+        <View testID={`goal-concluded-${goal.id}`} style={{ backgroundColor: isDark ? "#14532d" : "#f0fdf4", borderWidth: 1, borderColor: isDark ? "#166534" : "#bbf7d0", borderRadius: 12, paddingVertical: 8, alignItems: "center" }}>
+          <Text style={{ color: isDark ? "#86efac" : "#15803d", fontWeight: "600", fontSize: 14 }}>Meta concluída 🎉</Text>
         </View>
       )}
     </View>

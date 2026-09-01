@@ -313,11 +313,11 @@ export default function Goals() {
     <View style={{ flex: 1, backgroundColor: bg }}>
       <ScrollView style={{ flex: 1, width: "100%", height: "100%" }} contentContainerStyle={{ paddingBottom: tabBarHeight + 24 }} showsVerticalScrollIndicator={false}>
         <Header
-          title="Metas"
+          title="Meta"
           isLeftIconComponent={
             canGoBack ? (
               <TouchableOpacity onPress={() => navigation.goBack()} testID="goals-back" style={{ width: 40, height: 40, alignItems: "center", justifyContent: "center", borderRadius: 999 }}>
-                <Feather name="arrow-left" size={22} color="white" />
+                <Feather name="arrow-left" size={22} color={headerText} />
               </TouchableOpacity>
             ) : false
           }
@@ -336,49 +336,49 @@ export default function Goals() {
           contentContainerStyle={{ height: 130, paddingHorizontal: 8 }}
           testID="hero-goals"
         >
-          <View style={{ marginHorizontal: 4, backgroundColor: bgCard, minWidth: 180, height: 110, borderRadius: 4, padding: 16, elevation: 2, shadowColor: "#000", shadowOpacity: 0.1 }} testID="card-total-metas">
+          <View style={{ marginHorizontal: 4, backgroundColor: isDark ? "#27272a" : bgCard, minWidth: 180, height: 110, borderRadius: 4, padding: 16, elevation: 2, shadowColor: "#000", shadowOpacity: isDark ? 0.2 : 0.1, borderWidth: isDark ? 1 : 0, borderColor: isDark ? "#3f3f46" : "transparent" }} testID="card-total-metas">
             <View style={{ flexDirection: "row", justifyContent: "space-between" }}>
               <Text style={{ color: text, fontSize: 16 }}>Total metas</Text>
-              <Feather name="target" size={36} color={PURPLE_600} />
+              <Feather name="target" size={36} color={isDark ? "#a78bfa" : PURPLE_600} />
             </View>
             <Text style={{ color: text, fontSize: 26, fontWeight: "700" }}>{totalGoals}</Text>
-            <Text style={{ color: text, fontSize: 12 }}>{activeCount} ativas • {concludedCount} concluídas</Text>
+            <Text style={{ color: subText, fontSize: 12 }}>{activeCount} ativas • {concludedCount} concluídas</Text>
           </View>
 
-          <View style={{ marginHorizontal: 4, backgroundColor: bgCard, minWidth: 180, height: 110, borderRadius: 4, padding: 16, elevation: 2, shadowColor: "#000", shadowOpacity: 0.1 }} testID="card-valor-total">
+          <View style={{ marginHorizontal: 4, backgroundColor: isDark ? "#27272a" : bgCard, minWidth: 180, height: 110, borderRadius: 4, padding: 16, elevation: 2, shadowColor: "#000", shadowOpacity: isDark ? 0.2 : 0.1, borderWidth: isDark ? 1 : 0, borderColor: isDark ? "#3f3f46" : "transparent" }} testID="card-valor-total">
             <View style={{ flexDirection: "row", justifyContent: "space-between" }}>
               <Text style={{ color: text, fontSize: 16 }}>Valor total</Text>
-              <Feather name="dollar-sign" size={36} color={GREEN_500} />
+              <Feather name="dollar-sign" size={36} color={isDark ? "#86efac" : GREEN_500} />
             </View>
             <Text style={{ color: text, fontSize: totalAmount < 10000 ? 22 : 18, fontWeight: "700" }} numberOfLines={1}>
               {formatCurrency(totalAmount)}
             </Text>
-            <Text style={{ color: text, fontSize: 12 }} numberOfLines={1}>Soma de todas as metas</Text>
+            <Text style={{ color: subText, fontSize: 12 }} numberOfLines={1}>Soma de todas as metas</Text>
           </View>
 
-          <View style={{ marginHorizontal: 4, backgroundColor: bgCard, minWidth: 180, height: 110, borderRadius: 4, padding: 16, elevation: 2, shadowColor: "#000", shadowOpacity: 0.1 }} testID="card-valor-guardado">
+          <View style={{ marginHorizontal: 4, backgroundColor: isDark ? "#27272a" : bgCard, minWidth: 180, height: 110, borderRadius: 4, padding: 16, elevation: 2, shadowColor: "#000", shadowOpacity: isDark ? 0.2 : 0.1, borderWidth: isDark ? 1 : 0, borderColor: isDark ? "#3f3f46" : "transparent" }} testID="card-valor-guardado">
             <View style={{ flexDirection: "row", justifyContent: "space-between" }}>
               <Text style={{ color: text, fontSize: 16 }}>Guardado</Text>
-              <Feather name="trending-up" size={36} color={PURPLE_600} />
+              <Feather name="trending-up" size={36} color={isDark ? "#a78bfa" : PURPLE_600} />
             </View>
             <Text style={{ color: text, fontSize: totalCurrent < 10000 ? 22 : 18, fontWeight: "700" }} numberOfLines={1}>
               {formatCurrency(totalCurrent)}
             </Text>
-            <Text style={{ color: text, fontSize: 12 }}>{totalAmount ? Math.round((totalCurrent/totalAmount)*100) : 0}% do total</Text>
+            <Text style={{ color: subText, fontSize: 12 }}>{totalAmount ? Math.round((totalCurrent/totalAmount)*100) : 0}% do total</Text>
           </View>
 
-          <View style={{ marginHorizontal: 4, backgroundColor: PURPLE_900, minWidth: 180, height: 110, borderRadius: 4, padding: 16, elevation: 2 }} testID="card-concluidas">
+          <View style={{ marginHorizontal: 4, backgroundColor: isDark ? "#3f3f46" : PURPLE_900, minWidth: 180, height: 110, borderRadius: 4, padding: 16, elevation: 2, borderWidth: isDark ? 1 : 0, borderColor: isDark ? "#52525b" : "transparent" }} testID="card-concluidas">
             <View style={{ flexDirection: "row", justifyContent: "space-between" }}>
-              <Text style={{ color: "white", fontSize: 16 }}>Concluídas</Text>
-              <Feather name="check-circle" size={36} color="white" />
+              <Text style={{ color: isDark ? "#e4e4e7" : "white", fontSize: 16 }}>Concluídas</Text>
+              <Feather name="check-circle" size={36} color={isDark ? "#c4b5fd" : "white"} />
             </View>
-            <Text style={{ color: "white", fontSize: 26, fontWeight: "700" }}>{concludedCount}</Text>
-            <Text style={{ color: "white", fontSize: 12 }}>{totalGoals ? Math.round((concludedCount/totalGoals)*100) : 0}% das metas</Text>
+            <Text style={{ color: isDark ? "#e4e4e7" : "white", fontSize: 26, fontWeight: "700" }}>{concludedCount}</Text>
+            <Text style={{ color: isDark ? "#a1a1aa" : "white", fontSize: 12 }}>{totalGoals ? Math.round((concludedCount/totalGoals)*100) : 0}% das metas</Text>
           </View>
         </ScrollView>
 
         <View style={{ paddingHorizontal: 16, marginTop: -36 }}>
-          <Text style={{ fontSize: 14, color: text }}>* Totais de todas as metas cadastradas</Text>
+          <Text style={{ fontSize: 14, color: isDark ? "#a1a1aa" : text }}>* Totais de todas as metas cadastradas</Text>
           <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginTop: 8 }}>
             <Text style={{ fontWeight: "700", fontSize: 20, color: text }}>Minhas metas</Text>
             <TouchableOpacity
@@ -391,12 +391,12 @@ export default function Goals() {
                 paddingVertical: 6,
                 borderWidth: 1,
                 borderRadius: 20,
-                backgroundColor: "transparent",
-                borderColor: PURPLE_600,
+                backgroundColor: isDark ? "#27272a" : "transparent",
+                borderColor: isDark ? "#6d28d9" : PURPLE_600,
               }}
             >
-              <Text style={{ fontSize: 16, color: PURPLE_600 }}>
-                <Feather name="filter" size={18} color={PURPLE_600} /> Filtros
+              <Text style={{ fontSize: 16, color: isDark ? "#c4b5fd" : PURPLE_600 }}>
+                <Feather name="filter" size={18} color={isDark ? "#c4b5fd" : PURPLE_600} /> Filtros
               </Text>
             </TouchableOpacity>
           </View>
@@ -408,16 +408,16 @@ export default function Goals() {
             placeholder="Pesquise metas..."
             onChangeText={(t) => setSearch(t)}
             value={search}
-            style={{ marginHorizontal: 16, marginTop: 12, borderWidth: 1, borderColor: "#d4d4d8", borderRadius: 4, padding: 10, color: text, backgroundColor: isDark ? "#27272a" : "white" }}
-            placeholderTextColor="#a1a1aa"
+            style={{ marginHorizontal: 16, marginTop: 12, borderWidth: 1, borderColor: isDark ? "#3f3f46" : "#d4d4d8", borderRadius: 4, padding: 10, color: text, backgroundColor: isDark ? "#27272a" : "white" }}
+            placeholderTextColor={isDark ? "#71717a" : "#a1a1aa"}
           />
         )}
 
         <View style={{ paddingHorizontal: 16, marginTop: 12, marginBottom: 24 }}>
           {filtered.length === 0 ? (
-            <View testID="empty-goals" className="items-center py-12" style={{ alignItems: "center", paddingVertical: 32 }}>
-              <View style={{ width: 72, height: 72, borderRadius: 36, backgroundColor: isDark ? "#3f3f46" : "#f3e8ff", alignItems: "center", justifyContent: "center", marginBottom: 12 }}>
-                <Feather name="target" size={36} color={PURPLE_600} />
+            <View testID="empty-goals" style={{ alignItems: "center", paddingVertical: 32 }}>
+              <View style={{ width: 72, height: 72, borderRadius: 36, backgroundColor: isDark ? "#27272a" : "#f3e8ff", alignItems: "center", justifyContent: "center", marginBottom: 12, borderWidth: isDark ? 1 : 0, borderColor: isDark ? "#3f3f46" : "transparent" }}>
+                <Feather name="target" size={36} color={isDark ? "#a78bfa" : PURPLE_600} />
               </View>
               <Text style={{ color: text, fontWeight: "700", fontSize: 16, marginBottom: 4 }}>Nenhuma meta encontrada</Text>
               <Text style={{ color: subText, fontSize: 12, textAlign: "center", paddingHorizontal: 24, marginBottom: 16 }}>
@@ -427,7 +427,7 @@ export default function Goals() {
                 <TouchableOpacity
                   testID="empty-create-goal"
                   onPress={openAdd}
-                  style={{ backgroundColor: PURPLE_600, paddingHorizontal: 20, paddingVertical: 10, borderRadius: 12, flexDirection: "row", alignItems: "center", gap: 6 }}
+                  style={{ backgroundColor: isDark ? "#7c3aed" : PURPLE_600, paddingHorizontal: 20, paddingVertical: 10, borderRadius: 12, flexDirection: "row", alignItems: "center", gap: 6, borderWidth: isDark ? 1 : 0, borderColor: isDark ? "#6d28d9" : "transparent" }}
                 >
                   <Feather name="plus" size={16} color="white" />
                   <Text style={{ color: "white", fontWeight: "700" }}>Criar meta</Text>

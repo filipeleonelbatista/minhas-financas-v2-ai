@@ -28,7 +28,7 @@ export default function Header({
       <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", paddingHorizontal: 16 }}>
         {isLeftIconComponent ? isLeftIconComponent : <View style={{ width: 40 }} />}
         <Text style={{ color: bg, fontWeight: "700", fontSize: 28 }}>
-          {title}
+          {typeof title === "string" && title.endsWith("$") ? title.slice(0, -1) : title}
           <Text style={{ color: PURPLE_900 }}>$</Text>
         </Text>
         {isRightIconComponent ? isRightIconComponent : <View style={{ width: 40 }} />}

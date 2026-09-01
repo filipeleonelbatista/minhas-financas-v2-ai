@@ -195,7 +195,7 @@ export default function Dashboard() {
     <View style={{ flex: 1, backgroundColor: bg }}>
       <ScrollView style={{ flex: 1 }} contentContainerStyle={{ paddingBottom: tabBarHeight + 24 }} showsVerticalScrollIndicator={false}>
         <Header
-          title="Início"
+          title="Minhas Financa"
           isRightIconComponent={
             <TouchableOpacity
               onPress={() => navigation.navigate("Configuracoes")}

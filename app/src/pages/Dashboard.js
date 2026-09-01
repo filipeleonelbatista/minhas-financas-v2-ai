@@ -429,7 +429,6 @@ export default function Dashboard() {
                       color: (opacity = 1) => isDark ? `rgba(228,228,231,${opacity})` : `rgba(88,28,135,${opacity})`,
                       labelColor: (opacity = 1) => isDark ? `rgba(161,161,170,${opacity})` : `rgba(107,114,128,${opacity})`,
                       propsForDots: { r: "5", strokeWidth: "2", stroke: PURPLE_900 },
-                      propsForBackgroundLines: { strokeDasharray: "" },
                       propsForHorizontalLabels: { fontSize: 9 },
                       propsForVerticalLabels: { fontSize: 11 },
                     }}
@@ -438,7 +437,8 @@ export default function Dashboard() {
                     withDots
                     withInnerLines
                     withOuterLines
-                    withVerticalLines={false}
+                    withVerticalLines
+                    withHorizontalLabels
                     withVerticalLabels={false}
                     onDataPointClick={({ index }) => setSelectedLineIndex((prev) => (prev === index ? null : index))}
                     decorator={() => null}

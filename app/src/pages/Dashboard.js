@@ -189,6 +189,7 @@ export default function Dashboard() {
 
   const hero = useMemo(() => calcHeroValues(finances), [finances]);
   const pieData = useMemo(() => getExpensesByCategory(finances), [finances]);
+  const pieTotal = useMemo(() => pieData.reduce((acc, cur) => acc + (Number(cur.population) || 0), 0), [pieData]);
   const lineData = useMemo(() => getLast6MonthsLineData(finances), [finances]);
   const urgentGoals = useMemo(() => getUrgentGoals(goals), [goals]);
 
@@ -352,12 +353,13 @@ export default function Dashboard() {
                 {pieData.map((item, idx) => {
                   const isSelected = selectedPieIndex === idx;
                   const isDimmed = selectedPieIndex !== null && !isSelected;
+                  const percent = pieTotal ? Math.round((Number(item.population) / pieTotal) * 100) : 0;
                   return (
                     <TouchableOpacity
                       key={`${item.name}-${idx}`}
                       onPress={() => setSelectedPieIndex((prev) => (prev === idx ? null : idx))}
                       testID={`legend-${item.name}`}
-                      accessibilityLabel={item.name}
+                      accessibilityLabel={`${item.name} ${percent}%`}
                       style={{
                         flexDirection: "row",
                         alignItems: "center",
@@ -372,7 +374,7 @@ export default function Dashboard() {
                       }}
                     >
                       <View style={{ width: 12, height: 12, borderRadius: 6, backgroundColor: item.color, marginRight: 6 }} />
-                      <Text style={{ fontSize: 12, fontWeight: isSelected ? "700" : "500", color: isSelected ? item.color : subText }}>{item.name}</Text>
+                      <Text style={{ fontSize: 12, fontWeight: isSelected ? "700" : "500", color: isSelected ? item.color : subText }}>{`${item.name} ${percent}%`}</Text>
                     </TouchableOpacity>
                   );
                 })}

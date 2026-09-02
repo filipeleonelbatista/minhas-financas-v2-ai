@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { View, Text, ScrollView, Pressable, TextInput, TouchableOpacity, Modal, useWindowDimensions } from "react-native";
+import { View, Text, ScrollView, Pressable, TextInput, TouchableOpacity, Modal, FlatList, useWindowDimensions } from "react-native";
 import { Feather, FontAwesome, MaterialCommunityIcons } from "@expo/vector-icons";
 import { Picker } from "@react-native-picker/picker";
 import { useIsFocused, useNavigation } from "@react-navigation/native";
@@ -12,6 +12,9 @@ import EmptyMessage from "../components/EmptyMessage";
 import ErrorSheet from "../components/ErrorSheet";
 import EstimativeForm from "../components/EstimativeForm";
 import Header from "../components/Header";
+import StockCard from "../components/ui/StockCard";
+import SwipeableRow from "../components/SwipeableRow";
+import ThemedAlert from "../components/ui/ThemedAlert";
 import { useIsKeyboardOpen } from "../hooks/useIsKeyboardOpen";
 import { useMarketStore } from "../stores/market";
 import { useListsStore } from "../stores/lists";
@@ -20,6 +23,19 @@ import { usePagesStore } from "../stores/pages";
 import { Sheet, useSheetRef } from "../components/nativewindui/Sheet";
 import { BottomSheetScrollView } from "@gorhom/bottom-sheet";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+
+let RadiantButton = null;
+try {
+  RadiantButton = require("../components/ui").RadiantButton ?? require("../components/ui/index").RadiantButton ?? null;
+} catch {
+  try { RadiantButton = require("reacticx").RadiantButton ?? null; } catch {}
+}
+let ChromaRing = null;
+try {
+  ChromaRing = require("../components/ui/ChromaRing").ChromaRing ?? require("reacticx").ChromaRing ?? null;
+} catch {}
+
+const PURPLE_600 = "#9c44dc";
 
 dayjs.extend(isSameOrAfter);
 dayjs.extend(isSameOrBefore);
@@ -69,10 +85,36 @@ export default function Market() {
 
   const [selectedTransaction, setSelectedTransaction] = useState(null);
   const [selectedSheetOpen, setSelectedSheetOpen] = useState(null);
+  const [isEditMode, setIsEditMode] = useState(false);
+  const [confirmDeleteMarket, setConfirmDeleteMarket] = useState(null);
+  const removeStock = useMarketStore((s) => s.remove);
 
   const updateStock = async (item, isAdd, isSub) => {
     const currentQuantity = isAdd ? Number(item.quantity) + 1 : isSub ? Number(item.quantity) - 1 : item.quantity;
     await updateStore(item.id, { quantity: Number(currentQuantity) });
+  };
+
+  const handleViewStock = (item) => {
+    setSelectedTransaction(item);
+    setIsEditMode(false);
+    setSelectedSheetOpen("editar");
+    onOpen();
+  };
+  const handleEditStock = (item) => {
+    setSelectedTransaction(item);
+    setIsEditMode(true);
+    setSelectedSheetOpen("editar");
+    onOpen();
+  };
+  const handleDeleteStock = (item) => setConfirmDeleteMarket(item);
+  const handleConfirmDeleteStock = async () => {
+    if (!confirmDeleteMarket) return;
+    await removeStock(confirmDeleteMarket.id);
+    setConfirmDeleteMarket(null);
+  };
+  const onCloseStockModal = () => {
+    onClose();
+    setIsEditMode(false);
   };
 
   const handleAddItensOnBuyList = (goListsPage) => {
@@ -121,19 +163,6 @@ export default function Market() {
 
   return (
     <View style={{ flex: 1, backgroundColor: bg }} className="flex-1 bg-gray-50 dark:bg-gray-900">
-      <TouchableOpacity
-        style={{ position: "absolute", bottom: isAiEnabled ? 132 : 20, left: 16, backgroundColor: "#9c44dc", width: 40, height: 40, zIndex: 100, alignItems: "center", justifyContent: "center", borderRadius: 999 }}
-        onPress={() => handleAddItensOnBuyList(() => navigation.navigate("Lists"))}
-      >
-        <MaterialCommunityIcons name="file-plus-outline" size={20} color="white" />
-      </TouchableOpacity>
-      <TouchableOpacity
-        style={{ position: "absolute", bottom: isAiEnabled ? 82 : 8, left: 16, backgroundColor: "#9c44dc", width: 40, height: 40, zIndex: 100, alignItems: "center", justifyContent: "center", borderRadius: 999 }}
-        onPress={() => navigation.navigate("Lists")}
-      >
-        <MaterialCommunityIcons name="format-list-bulleted" size={20} color="white" />
-      </TouchableOpacity>
-
       <ScrollView style={{ flex: 1, width: "100%", height: "100%" }} contentContainerStyle={{ paddingBottom: tabBarHeight + 24 }} showsVerticalScrollIndicator={false}>
         <Header
           isShort
@@ -173,94 +202,124 @@ export default function Market() {
         {filteredList.length === 0 ? (
           <EmptyMessage />
         ) : (
-          <View style={{ gap: 8, paddingHorizontal: 16, marginTop: 8, marginBottom: 24 }}>
-            <Text style={{ color: text, marginBottom: 16 }}>Toque no item para visualizar e depois editar ou excluir.</Text>
-            {filteredList.map((item) => (
-              <Pressable
-                onPress={() => {
-                  setSelectedTransaction(item);
-                  setSelectedSheetOpen("editar");
-                  onOpen();
-                }}
-                key={item.id}
-                style={({ pressed }) => ({ backgroundColor: pressed ? bgCardPressed : bgCard, shadowColor: "#000", shadowOpacity: 0.1, elevation: 2, borderRadius: 4, paddingHorizontal: 16, paddingVertical: 8 })}
-              >
-                <View style={{ flexDirection: "row", alignItems: "center" }}>
-                  <View style={{ position: "absolute", top: 3, right: 3, flexDirection: "row", gap: 8 }}>
-                    {!marketSimplifiedItems && (
-                      <View style={{ alignItems: "center", justifyContent: "center", paddingVertical: 2, paddingHorizontal: 8, borderWidth: 1, borderColor: item.quantityDesired <= item.quantity ? "#16a34a" : "#dc2626", borderRadius: 999, backgroundColor: "transparent" }}>
-                        <Text style={{ fontSize: 12, color: item.quantityDesired <= item.quantity ? "#16a34a" : "#dc2626" }}>{item.quantityDesired <= item.quantity ? "Em estoque" : "Em falta"}</Text>
-                      </View>
-                    )}
-                  </View>
-                  <View style={{ flexDirection: "row", alignItems: "center", flex: 1, gap: 16 }}>
-                    <Feather name="shopping-bag" size={28} color={text} />
-                    <View style={{ alignItems: "flex-start", width: "70%" }}>
-                      <Text style={{ color: text, fontSize: 20 }}>{item.description}</Text>
-                      <Text style={{ color: text, fontWeight: "700", lineHeight: 14 }}>{item.category}</Text>
-                      <View style={{ flexDirection: "row", alignItems: "center" }}>
-                        <Text style={{ color: text }}>
-                          <FontAwesome name="money" size={14} color={text} />{" "}
-                          {item.amount.toLocaleString("pt-BR", { style: "currency", currency: "BRL", minimumFractionDigits: 2, maximumFractionDigits: 2, useGrouping: true })}{" "}
-                          {marketSimplifiedItems && <FontAwesome name="times" size={14} color={text} />}
-                          {marketSimplifiedItems && " " + item.quantity}
-                        </Text>
-                      </View>
-                      {!marketSimplifiedItems && (
-                        <View style={{ flexDirection: "row", alignItems: "center", gap: 16, marginVertical: 8 }}>
-                          <TouchableOpacity
-                            style={{ width: 32, height: 32, borderRadius: 999, borderWidth: 1, borderColor: "#dc2626", alignItems: "center", justifyContent: "center" }}
-                            onPress={() => item.quantity > 0 && updateStock(item, false, true)}
-                          >
-                            <Feather name="minus" size={20} color="#dc2626" />
-                          </TouchableOpacity>
-                          <Text style={{ color: text, fontSize: 20 }}>{item.quantity}</Text>
-                          <TouchableOpacity
-                            style={{ width: 32, height: 32, borderRadius: 999, borderWidth: 1, borderColor: "#16a34a", alignItems: "center", justifyContent: "center" }}
-                            onPress={() => updateStock(item, true, false)}
-                          >
-                            <Feather name="plus" size={20} color="#16a34a" />
-                          </TouchableOpacity>
-                        </View>
-                      )}
-                    </View>
-                  </View>
-                  <View style={{ alignItems: "flex-end", width: "35%" }}>
-                    <Text style={{ width: "100%", textAlign: "right", color: text, fontSize: 18 }} numberOfLines={1}>
-                      {(item.amount * item.quantity).toLocaleString("pt-BR", { style: "currency", currency: "BRL", minimumFractionDigits: 2, maximumFractionDigits: 2, useGrouping: true })}
-                    </Text>
-                  </View>
+          <View style={{ paddingHorizontal: 16, marginTop: 8, marginBottom: 24 }}>
+            <Text style={{ color: text, marginBottom: 8, fontSize: 12 }}>
+              Deslize para a direita para excluir • Deslize para a esquerda para editar • Segure para visualizar
+            </Text>
+            <FlatList
+              data={filteredList}
+              keyExtractor={(item) => item.id}
+              scrollEnabled={false}
+              ItemSeparatorComponent={() => <View style={{ height: 8 }} />}
+              renderItem={({ item }) => (
+                <SwipeableRow
+                  item={item}
+                  onEdit={handleEditStock}
+                  onDelete={handleDeleteStock}
+                  editTestID={`stock-swipe-edit-${item.id}`}
+                  deleteTestID={`stock-swipe-delete-${item.id}`}
+                  rowTestID={`swipe-stock-row-${item.id}`}
+                >
+                  <StockCard
+                    item={item}
+                    onPress={() => {}}
+                    onLongPress={handleViewStock}
+                    onUpdateStock={updateStock}
+                    marketSimplifiedItems={marketSimplifiedItems}
+                    testID={`stock-card-${item.id}`}
+                  />
+                </SwipeableRow>
+              )}
+              testID="market-flatlist"
+              ListFooterComponent={
+                <View style={{ flexDirection: "row", justifyContent: "space-between", marginTop: 12, gap: 8 }}>
+                  <Text style={{ color: text, fontSize: 18, fontWeight: "700" }}>Total</Text>
+                  <Text style={{ color: text, fontSize: 18, fontWeight: "700", flex: 1, textAlign: "right" }} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.6} ellipsizeMode="tail">
+                    {listTotal.toLocaleString("pt-BR", { style: "currency", currency: "BRL", minimumFractionDigits: 2, maximumFractionDigits: 2, useGrouping: true })}
+                  </Text>
                 </View>
-              </Pressable>
-            ))}
-            <View style={{ flexDirection: "row", justifyContent: "space-between" }}>
-              <Text style={{ color: text, fontSize: 18, fontWeight: "700" }}>Total</Text>
-              <Text style={{ color: text, fontSize: 18, fontWeight: "700" }}>
-                {listTotal.toLocaleString("pt-BR", { style: "currency", currency: "BRL", minimumFractionDigits: 2, maximumFractionDigits: 2, useGrouping: true })}
-              </Text>
-            </View>
+              }
+            />
           </View>
         )}
       </ScrollView>
 
+      {(() => {
+        const fabSize = 64;
+        const fabBottom = tabBarHeight + 16;
+        const fabBottomSecond = fabBottom + fabSize + 12;
+        const icon1 = <MaterialCommunityIcons name="file-plus-outline" size={28} color="white" />;
+        const icon2 = <MaterialCommunityIcons name="format-list-bulleted" size={28} color="white" />;
+        const onPress1 = () => handleAddItensOnBuyList(() => navigation.navigate("Lists"));
+        const onPress2 = () => navigation.navigate("Lists");
+        const Fab1 = (() => {
+          const FabContent = <View style={{ width: fabSize, height: fabSize, alignItems: 'center', justifyContent: 'center' }}>{icon1}</View>;
+          if (RadiantButton) return (
+            <View style={{ position: "absolute", bottom: fabBottomSecond, right: 16, zIndex: 10 }} testID="market-add-list-button-wrapper">
+              <RadiantButton testID="market-add-list-button" onPress={onPress1} borderRadius={fabSize/2} borderWidth={2} duration={2800} showDots={false} showShimmer={true} showGlow={true} glowBlur={18} glowWidth={0.7} breathingEnabled={true} paddingHorizontal={0} paddingVertical={0} style={{ width: fabSize, height: fabSize, borderRadius: fabSize/2 }} theme={{ background: "#9333ea", backgroundSubtle: "#581C87", foreground: "#ffffff", highlight: "#f3e8ff", highlightSubtle: "#a78bfa" }}>
+                <View style={{ width: fabSize, height: fabSize, alignItems: 'center', justifyContent: 'center' }}>{icon1}</View>
+              </RadiantButton>
+            </View>
+          );
+          if (ChromaRing) return (
+            <Pressable testID="market-add-list-button" onPress={onPress1} style={{ position: "absolute", bottom: fabBottomSecond, right: 16, zIndex: 10 }}>
+              <ChromaRing width={fabSize} height={fabSize} borderWidth={2} speed={1.0} base="#581C87" glow={PURPLE_600} background={PURPLE_600} style={{ width: fabSize, height: fabSize, borderRadius: fabSize/2 }}>{FabContent}</ChromaRing>
+            </Pressable>
+          );
+          return <TouchableOpacity testID="market-add-list-button" onPress={onPress1} style={{ position: "absolute", bottom: fabBottomSecond, right: 16, width: 56, height: 56, backgroundColor: PURPLE_600, borderRadius: 28, alignItems: "center", justifyContent: "center", elevation: 6, zIndex: 10 }}>{icon1}</TouchableOpacity>;
+        })();
+        const Fab2 = (() => {
+          const FabContent = <View style={{ width: fabSize, height: fabSize, alignItems: 'center', justifyContent: 'center' }}>{icon2}</View>;
+          if (RadiantButton) return (
+            <View style={{ position: "absolute", bottom: fabBottom, right: 16, zIndex: 10 }} testID="market-lists-button-wrapper">
+              <RadiantButton testID="market-lists-button" onPress={onPress2} borderRadius={fabSize/2} borderWidth={2} duration={2800} showDots={false} showShimmer={true} showGlow={true} glowBlur={18} glowWidth={0.7} breathingEnabled={true} paddingHorizontal={0} paddingVertical={0} style={{ width: fabSize, height: fabSize, borderRadius: fabSize/2 }} theme={{ background: "#9333ea", backgroundSubtle: "#581C87", foreground: "#ffffff", highlight: "#f3e8ff", highlightSubtle: "#a78bfa" }}>
+                <View style={{ width: fabSize, height: fabSize, alignItems: 'center', justifyContent: 'center' }}>{icon2}</View>
+              </RadiantButton>
+            </View>
+          );
+          if (ChromaRing) return (
+            <Pressable testID="market-lists-button" onPress={onPress2} style={{ position: "absolute", bottom: fabBottom, right: 16, zIndex: 10 }}>
+              <ChromaRing width={fabSize} height={fabSize} borderWidth={2} speed={1.0} base="#581C87" glow={PURPLE_600} background={PURPLE_600} style={{ width: fabSize, height: fabSize, borderRadius: fabSize/2 }}>{FabContent}</ChromaRing>
+            </Pressable>
+          );
+          return <TouchableOpacity testID="market-lists-button" onPress={onPress2} style={{ position: "absolute", bottom: fabBottom, right: 16, width: 56, height: 56, backgroundColor: PURPLE_600, borderRadius: 28, alignItems: "center", justifyContent: "center", elevation: 6, zIndex: 10 }}>{icon2}</TouchableOpacity>;
+        })();
+        return <>{Fab1}{Fab2}</>;
+      })()}
+
       {isAiEnabled && <View style={{ width: "100%", height: 64 }} />}
       <AIComponent />
 
-      <Modal visible={isOpen} animationType="slide" onRequestClose={onClose} transparent={false}>
+      <Modal visible={isOpen} animationType="slide" onRequestClose={onCloseStockModal} transparent={false}>
         <View style={{ flex: 1, height: height * (isKeyboardOpen ? 0.9 : 1.09), paddingTop: 24, backgroundColor: bg }}>
-          <Pressable onPress={onClose} style={{ alignSelf: "flex-end", padding: 16 }}>
+          <Pressable onPress={onCloseStockModal} style={{ alignSelf: "flex-end", padding: 16 }}>
             <Feather name="x" size={24} color={text} />
           </Pressable>
           {selectedSheetOpen === "editar" ? (
-            <EditShoppingCartItem onClose={onClose} selectedTransaction={selectedTransaction} />
+            <EditShoppingCartItem onClose={onCloseStockModal} selectedTransaction={selectedTransaction} initialEditable={isEditMode} />
           ) : selectedSheetOpen === "estimativa" ? (
-            <EstimativeForm onClose={onClose} />
+            <EstimativeForm onClose={onCloseStockModal} />
           ) : (
             <ErrorSheet />
           )}
           <View style={{ height: 64, width: "100%" }} />
         </View>
       </Modal>
+
+      <ThemedAlert
+        visible={!!confirmDeleteMarket}
+        title="Excluir produto"
+        message={confirmDeleteMarket ? `Deseja excluir "${confirmDeleteMarket.description}"?` : undefined}
+        variant="danger"
+        confirmText="Excluir"
+        cancelText="Cancelar"
+        onConfirm={handleConfirmDeleteStock}
+        onCancel={() => setConfirmDeleteMarket(null)}
+        onClose={() => setConfirmDeleteMarket(null)}
+        testID="market-delete-alert"
+        confirmTestID="confirm-delete-market"
+        cancelTestID="cancel-delete-market"
+      />
 
       <Sheet ref={filterSheetRef} snapPoints={["50%"]} enableDynamicSizing={false} backgroundStyle={{ backgroundColor: bg }} handleIndicatorStyle={{ backgroundColor: isDark ? "#3f3f46" : "#e4e4e7" }}>
         <BottomSheetScrollView contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: insets.bottom + 24, gap: 16 }} style={{ flex: 1, backgroundColor: bg }}>

@@ -1,8 +1,9 @@
-import React, { useMemo, useState } from "react";
-import { View, Text, TextInput, ScrollView, Pressable, TouchableOpacity, ToastAndroid, Alert } from "react-native";
+import React, { useEffect, useMemo, useState } from "react";
+import { View, Text, TextInput, ScrollView, Pressable, TouchableOpacity, ToastAndroid } from "react-native";
 import { Feather } from "@expo/vector-icons";
 import { openThemedDatePicker } from "../utils/datePicker";
 import { Picker } from "@react-native-picker/picker";
+import ThemedAlert from "./ui/ThemedAlert";
 import { useFormik } from "formik";
 import * as Yup from "yup";
 import { useListsStore } from "../stores/lists";
@@ -12,7 +13,7 @@ const PURPLE_600 = "#9c44dc";
 const GREEN_500 = "#22c55e";
 const RED_500 = "#ef4444";
 
-export default function EditItemListItem({ onClose, selectedTransaction }) {
+export default function EditItemListItem({ onClose, selectedTransaction, initialEditable = false }) {
   const colorModeState = useSettingsStore((s) => s.colorModeState);
   const isDark = colorModeState === "dark";
   const text = isDark ? "#e4e4e7" : "#52525b";
@@ -25,7 +26,9 @@ export default function EditItemListItem({ onClose, selectedTransaction }) {
     return value;
   }
 
-  const [isEditable, setIsEditable] = useState(false);
+  const [isEditable, setIsEditable] = useState(initialEditable);
+  const [confirmDelete, setConfirmDelete] = useState(false);
+  useEffect(() => { setIsEditable(initialEditable); }, [initialEditable, selectedTransaction?.id]);
   const selectedList = useListsStore((s) => s.selectedList);
   const marketSimplifiedItems = useSettingsStore((s) => !!s.marketSimplifiedItems);
 
@@ -102,27 +105,7 @@ export default function EditItemListItem({ onClose, selectedTransaction }) {
     onClose();
   }
 
-  const handleDelete = () => {
-    Alert.alert(
-      "Deseja realmente deletar esse registro?",
-      "Esta ação é irreversível! Deseja continuar?",
-      [
-        { text: "Não", style: "cancel" },
-        {
-          text: "Sim",
-          onPress: async () => {
-            const { listRepo } = require("../repositories/list");
-            await listRepo.deleteItem(selectedTransaction.id);
-            const store = useListsStore.getState();
-            await store.handleSelect(selectedTransaction.list_id);
-            await store.load();
-            ToastAndroid.show("Item removido do carrinho", ToastAndroid.SHORT);
-            onClose();
-          },
-        },
-      ]
-    );
-  };
+  const handleDelete = () => setConfirmDelete(true);
 
   const onChange = (event, selectedDate) => {
     const currentDate = selectedDate;
@@ -164,149 +147,147 @@ export default function EditItemListItem({ onClose, selectedTransaction }) {
       </View>
       <Text style={{ color: text, marginBottom: 16 }}>Adicione itens para suas compras de mercado.</Text>
 
-      <View style={{ gap: 8 }}>
-        <View style={{ gap: 8, marginBottom: 8 }}>
-          <Text style={{ color: text }}>Descrição</Text>
-          <TextInput
-            editable={isEditable}
-            placeholder="Descrição"
-            placeholderTextColor="#a1a1aa"
-            onChangeText={(t) => formik.setFieldValue("description", t)}
-            value={formik.values.description}
-            style={{ color: text, backgroundColor: isDark ? "#27272a" : "white", borderWidth: 1, borderColor: isDark ? "#3f3f46" : "#e4e4e7", borderRadius: 12, padding: 12, opacity: isEditable ? 1 : 0.6 }}
-            className="bg-white dark:bg-gray-800 rounded-xl p-3 border border-gray-200 dark:border-gray-700"
-          />
-          {formik.errors.description && (
-            <Text style={{ color: "#dc2626" }}>{formik.errors.description}</Text>
-          )}
-        </View>
-        <View style={{ gap: 8, marginBottom: 8 }}>
-          <Text style={{ color: text }}>Categoria</Text>
-          <Picker
-            selectedValue={formik.values.category ?? "Mercearia"}
-            onValueChange={(itemValue) =>
-              formik.setFieldValue("category", itemValue)
-            }
-            mode="dropdown"
-            dropdownIconColor={PURPLE_600}
-            enabled={isEditable}
-            style={{
-              width: "100%",
-              borderRadius: 4,
-              color: text,
-            }}
-          >
-            <Picker.Item label="Carnes" value="Carnes" />
-            <Picker.Item label="Fruteira" value="Fruteira" />
-            <Picker.Item label="Higiêne" value="Higiêne" />
-            <Picker.Item label="Limpeza" value="Limpeza" />
-            <Picker.Item label="Mercearia" value="Mercearia" />
-            <Picker.Item label="Outros" value="Outros" />
-          </Picker>
-          {formik.errors.category && (
-            <Text style={{ color: "#dc2626" }}>{formik.errors.category}</Text>
-          )}
-        </View>
-        <View style={{ gap: 8, marginBottom: 8 }}>
-          <Text style={{ color: text }}>Valor</Text>
-          <TextInput
-            editable={isEditable}
-            keyboardType="decimal-pad"
-            placeholder="Valor"
-            placeholderTextColor="#a1a1aa"
-            onChangeText={(t) => formik.setFieldValue("amount", moeda(t))}
-            value={formik.values.amount}
-            style={{ color: text, backgroundColor: isDark ? "#27272a" : "white", borderWidth: 1, borderColor: isDark ? "#3f3f46" : "#e4e4e7", borderRadius: 12, padding: 12, opacity: isEditable ? 1 : 0.6 }}
-            className="bg-white dark:bg-gray-800 rounded-xl p-3 border border-gray-200 dark:border-gray-700"
-          />
-          {formik.errors.amount && (
-            <Text style={{ color: "#dc2626" }}>{formik.errors.amount}</Text>
-          )}
-        </View>
-        <View style={{ gap: 8, marginBottom: 8 }}>
-          <Text style={{ color: text }}>Quantidade</Text>
-          <TextInput
-            editable={isEditable}
-            keyboardType="decimal-pad"
-            placeholder="Quantidade"
-            placeholderTextColor="#a1a1aa"
-            onChangeText={(t) => formik.setFieldValue("quantity", t)}
-            value={formik.values.quantity}
-            style={{ color: text, backgroundColor: isDark ? "#27272a" : "white", borderWidth: 1, borderColor: isDark ? "#3f3f46" : "#e4e4e7", borderRadius: 12, padding: 12, opacity: isEditable ? 1 : 0.6 }}
-            className="bg-white dark:bg-gray-800 rounded-xl p-3 border border-gray-200 dark:border-gray-700"
-          />
-          {formik.errors.quantity && (
-            <Text style={{ color: "#dc2626" }}>{formik.errors.quantity}</Text>
-          )}
-        </View>
-        {!marketSimplifiedItems && (
-          <>
-            <View style={{ gap: 8, marginBottom: 8 }}>
-              <Text style={{ color: text }}>Quantidade desejada</Text>
-              <TextInput
-                editable={isEditable}
-                keyboardType="decimal-pad"
-                placeholder="Quantidade desejada"
-                placeholderTextColor="#a1a1aa"
-                onChangeText={(t) =>
-                  formik.setFieldValue("quantityDesired", t)
-                }
-                value={formik.values.quantityDesired}
-                style={{ color: text, backgroundColor: isDark ? "#27272a" : "white", borderWidth: 1, borderColor: isDark ? "#3f3f46" : "#e4e4e7", borderRadius: 12, padding: 12, opacity: isEditable ? 1 : 0.6 }}
-                className="bg-white dark:bg-gray-800 rounded-xl p-3 border border-gray-200 dark:border-gray-700"
-              />
-              {formik.errors.quantityDesired && (
-                <Text style={{ color: "#dc2626" }}>{formik.errors.quantityDesired}</Text>
-              )}
-            </View>
-
-            <View style={{ gap: 8, marginBottom: 8 }}>
-              <Text style={{ color: text }}>Local de compra</Text>
-              <TextInput
-                editable={isEditable}
-                placeholder="Local de compra"
-                placeholderTextColor="#a1a1aa"
-                onChangeText={(t) => formik.setFieldValue("location", t)}
-                value={formik.values.location}
-                style={{ color: text, backgroundColor: isDark ? "#27272a" : "white", borderWidth: 1, borderColor: isDark ? "#3f3f46" : "#e4e4e7", borderRadius: 12, padding: 12, opacity: isEditable ? 1 : 0.6 }}
-                className="bg-white dark:bg-gray-800 rounded-xl p-3 border border-gray-200 dark:border-gray-700"
-              />
-              {formik.errors.location && (
-                <Text style={{ color: "#dc2626" }}>{formik.errors.location}</Text>
-              )}
-            </View>
-
-            <View style={{ gap: 8, marginBottom: 8 }}>
-              <Text style={{ color: text }}>Data de compra</Text>
-              <Pressable onPress={() => isEditable && openThemedDatePicker({ value: new Date(), onChange, isDark })} style={{ flexDirection: "row", alignItems: "stretch", height: 48, backgroundColor: isDark ? "#27272a" : "white", borderWidth: 1, borderColor: isDark ? "#3f3f46" : "#e4e4e7", borderRadius: 12, overflow: "hidden", opacity: isEditable ? 1 : 0.6 }}>
-                <TextInput
-                  placeholder="DD/MM/AAAA"
-                  placeholderTextColor="#a1a1aa"
-                  value={formik.values.date}
-                  editable={false}
-                  pointerEvents="none"
-                  style={{ flex: 1, paddingHorizontal: 12, textAlignVertical: "center", color: text }}
-                />
-                <View style={{ backgroundColor: PURPLE_600, justifyContent: "center", alignItems: "center", width: 56, borderTopRightRadius: 12, borderBottomRightRadius: 12 }}>
-                  <Feather name="calendar" size={20} color="#FFF" />
-                </View>
-              </Pressable>
-              {formik.errors.date && (
-                <Text style={{ color: "#dc2626" }}>{formik.errors.date}</Text>
-              )}
-            </View>
-          </>
-        )}
-        {isEditable && (
-          <Pressable
-            onPress={formik.submitForm}
-            style={{ backgroundColor: PURPLE_600, marginTop: 8, marginBottom: 32, padding: 12, borderRadius: 12, alignItems: "center", justifyContent: "center" }}
-            className="bg-purple-600 rounded-xl p-3 mt-2 mb-8 items-center justify-center active:bg-purple-900"
-          >
-            <Text style={{ color: "white", fontWeight: "600" }}>Adicionar</Text>
-          </Pressable>
-        )}
+      <Text style={{ fontSize: 14, fontWeight: "600", color: text, marginBottom: 4 }}>Descrição</Text>
+      <TextInput
+        editable={isEditable}
+        placeholder="Descrição"
+        placeholderTextColor="#a1a1aa"
+        onChangeText={(t) => formik.setFieldValue("description", t)}
+        value={formik.values.description}
+        style={{ color: text, backgroundColor: isDark ? "#3f3f46" : "white", borderWidth: 1, borderColor: isDark ? "#3f3f46" : "#d4d4d8", borderRadius: 8, paddingHorizontal: 12, paddingVertical: 10, opacity: isEditable ? 1 : 0.6, marginBottom: 12 }}
+        className="bg-white dark:bg-gray-800 rounded-xl p-3 border border-gray-200 dark:border-gray-700"
+      />
+      {formik.errors.description && (
+        <Text style={{ color: "#dc2626", marginBottom: 8 }}>{formik.errors.description}</Text>
+      )}
+      <Text style={{ fontSize: 14, fontWeight: "600", color: text, marginBottom: 4 }}>Categoria</Text>
+      <View style={{ borderWidth: 1, borderColor: isDark ? "#3f3f46" : "#e4e4e7", borderRadius: 12, overflow: "hidden", backgroundColor: isDark ? "#27272a" : "white", opacity: isEditable ? 1 : 0.6, marginBottom: 12 }}>
+        <Picker
+          selectedValue={formik.values.category ?? "Mercearia"}
+          onValueChange={(itemValue) =>
+            formik.setFieldValue("category", itemValue)
+          }
+          mode="dropdown"
+          dropdownIconColor={PURPLE_600}
+          enabled={isEditable}
+          style={{
+            width: "100%",
+            color: text,
+            height: 48,
+          }}
+        >
+          <Picker.Item label="Carnes" value="Carnes" />
+          <Picker.Item label="Fruteira" value="Fruteira" />
+          <Picker.Item label="Higiêne" value="Higiêne" />
+          <Picker.Item label="Limpeza" value="Limpeza" />
+          <Picker.Item label="Mercearia" value="Mercearia" />
+          <Picker.Item label="Outros" value="Outros" />
+        </Picker>
       </View>
+      {formik.errors.category && (
+        <Text style={{ color: "#dc2626", marginBottom: 8 }}>{formik.errors.category}</Text>
+      )}
+      <Text style={{ fontSize: 14, fontWeight: "600", color: text, marginBottom: 4 }}>Valor</Text>
+      <TextInput
+        editable={isEditable}
+        keyboardType="decimal-pad"
+        placeholder="Valor"
+        placeholderTextColor="#a1a1aa"
+        onChangeText={(t) => formik.setFieldValue("amount", moeda(t))}
+        value={formik.values.amount}
+        style={{ color: text, backgroundColor: isDark ? "#3f3f46" : "white", borderWidth: 1, borderColor: isDark ? "#3f3f46" : "#d4d4d8", borderRadius: 8, paddingHorizontal: 12, paddingVertical: 10, opacity: isEditable ? 1 : 0.6, marginBottom: 12 }}
+        className="bg-white dark:bg-gray-800 rounded-xl p-3 border border-gray-200 dark:border-gray-700"
+      />
+      {formik.errors.amount && (
+        <Text style={{ color: "#dc2626", marginBottom: 8 }}>{formik.errors.amount}</Text>
+      )}
+      <Text style={{ fontSize: 14, fontWeight: "600", color: text, marginBottom: 4 }}>Quantidade</Text>
+      <TextInput
+        editable={isEditable}
+        keyboardType="decimal-pad"
+        placeholder="Quantidade"
+        placeholderTextColor="#a1a1aa"
+        onChangeText={(t) => formik.setFieldValue("quantity", t)}
+        value={formik.values.quantity}
+        style={{ color: text, backgroundColor: isDark ? "#3f3f46" : "white", borderWidth: 1, borderColor: isDark ? "#3f3f46" : "#d4d4d8", borderRadius: 8, paddingHorizontal: 12, paddingVertical: 10, opacity: isEditable ? 1 : 0.6, marginBottom: 12 }}
+        className="bg-white dark:bg-gray-800 rounded-xl p-3 border border-gray-200 dark:border-gray-700"
+      />
+      {formik.errors.quantity && (
+        <Text style={{ color: "#dc2626", marginBottom: 8 }}>{formik.errors.quantity}</Text>
+      )}
+      {!marketSimplifiedItems && (
+        <>
+          <Text style={{ fontSize: 14, fontWeight: "600", color: text, marginBottom: 4 }}>Quantidade desejada</Text>
+          <TextInput
+            editable={isEditable}
+            keyboardType="decimal-pad"
+            placeholder="Quantidade desejada"
+            placeholderTextColor="#a1a1aa"
+            onChangeText={(t) =>
+              formik.setFieldValue("quantityDesired", t)
+            }
+            value={formik.values.quantityDesired}
+            style={{ color: text, backgroundColor: isDark ? "#3f3f46" : "white", borderWidth: 1, borderColor: isDark ? "#3f3f46" : "#d4d4d8", borderRadius: 8, paddingHorizontal: 12, paddingVertical: 10, opacity: isEditable ? 1 : 0.6, marginBottom: 12 }}
+            className="bg-white dark:bg-gray-800 rounded-xl p-3 border border-gray-200 dark:border-gray-700"
+          />
+          {formik.errors.quantityDesired && (
+            <Text style={{ color: "#dc2626", marginBottom: 8 }}>{formik.errors.quantityDesired}</Text>
+          )}
+          <Text style={{ fontSize: 14, fontWeight: "600", color: text, marginBottom: 4 }}>Local de compra</Text>
+          <TextInput
+            editable={isEditable}
+            placeholder="Local de compra"
+            placeholderTextColor="#a1a1aa"
+            onChangeText={(t) => formik.setFieldValue("location", t)}
+            value={formik.values.location}
+            style={{ color: text, backgroundColor: isDark ? "#3f3f46" : "white", borderWidth: 1, borderColor: isDark ? "#3f3f46" : "#d4d4d8", borderRadius: 8, paddingHorizontal: 12, paddingVertical: 10, opacity: isEditable ? 1 : 0.6, marginBottom: 12 }}
+            className="bg-white dark:bg-gray-800 rounded-xl p-3 border border-gray-200 dark:border-gray-700"
+          />
+          {formik.errors.location && (
+            <Text style={{ color: "#dc2626", marginBottom: 8 }}>{formik.errors.location}</Text>
+          )}
+          <Text style={{ fontSize: 14, fontWeight: "600", color: text, marginBottom: 4 }}>Data de compra</Text>
+          <Pressable onPress={() => isEditable && openThemedDatePicker({ value: new Date(), onChange, isDark })} style={{ flexDirection: "row", alignItems: "stretch", height: 48, backgroundColor: isDark ? "#27272a" : "white", borderWidth: 1, borderColor: isDark ? "#3f3f46" : "#e4e4e7", borderRadius: 12, overflow: "hidden", opacity: isEditable ? 1 : 0.6, marginBottom: 12 }}>
+            <TextInput
+              placeholder="DD/MM/AAAA"
+              placeholderTextColor="#a1a1aa"
+              value={formik.values.date}
+              editable={false}
+              pointerEvents="none"
+              style={{ flex: 1, paddingHorizontal: 12, textAlignVertical: "center", color: text }}
+            />
+            <View style={{ backgroundColor: PURPLE_600, justifyContent: "center", alignItems: "center", width: 56, borderTopRightRadius: 12, borderBottomRightRadius: 12 }}>
+              <Feather name="calendar" size={20} color="#FFF" />
+            </View>
+          </Pressable>
+          {formik.errors.date && (
+            <Text style={{ color: "#dc2626", marginBottom: 8 }}>{formik.errors.date}</Text>
+          )}
+        </>
+      )}
+      {isEditable && (
+        <Pressable
+          onPress={formik.submitForm}
+          style={{ backgroundColor: PURPLE_600, marginTop: 20, marginBottom: 32, padding: 12, borderRadius: 12, alignItems: "center", justifyContent: "center" }}
+          className="bg-purple-600 rounded-xl p-3 mt-2 mb-8 items-center justify-center active:bg-purple-900"
+        >
+          <Text style={{ color: "white", fontWeight: "600" }}>Salvar</Text>
+        </Pressable>
+      )}
+      <ThemedAlert
+        visible={confirmDelete}
+        title="Excluir item"
+        message={`Deseja excluir "${selectedTransaction.description}"?`}
+        variant="danger"
+        confirmText="Excluir"
+        cancelText="Cancelar"
+        onConfirm={async () => { const { listRepo } = require("../repositories/list"); await listRepo.deleteItem(selectedTransaction.id); const store = useListsStore.getState(); await store.handleSelect(selectedTransaction.list_id); await store.load(); setConfirmDelete(false); onClose(); }}
+        onCancel={() => setConfirmDelete(false)}
+        onClose={() => setConfirmDelete(false)}
+        testID="listitem-edit-delete-alert"
+        confirmTestID="confirm-delete-listitem-edit"
+        cancelTestID="cancel-delete-listitem-edit"
+      />
       <View style={{ height: 64, width: "100%" }} />
     </ScrollView>
   );

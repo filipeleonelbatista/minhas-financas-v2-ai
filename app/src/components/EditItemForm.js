@@ -3,6 +3,7 @@ import React, { useEffect, useMemo, useState } from "react";
 import { Feather } from "@expo/vector-icons";
 import { openThemedDatePicker } from "../utils/datePicker";
 import { Picker } from "@react-native-picker/picker";
+import ThemedAlert from "./ui/ThemedAlert";
 import { useFormik } from "formik";
 import { View, Text, TextInput, ScrollView, Pressable, TouchableOpacity, Switch } from "react-native";
 import * as Yup from "yup";
@@ -39,6 +40,7 @@ export default function EditItemForm({ onClose, selectedTransaction, initialEdit
   const text = isDark ? "#e4e4e7" : "#52525b";
 
   const [isEditable, setIsEditable] = useState(initialEditable);
+  const [confirmDelete, setConfirmDelete] = useState(false);
 
   useEffect(() => {
     setIsEditable(initialEditable);
@@ -204,10 +206,7 @@ export default function EditItemForm({ onClose, selectedTransaction, initialEdit
           {isEditable ? "Editar" : "Visualizar"} transação
         </Text>
         <TouchableOpacity
-          onPress={async () => {
-            await deleteTransaction(selectedTransaction);
-            onClose();
-          }}
+          onPress={() => setConfirmDelete(true)}
           style={{ borderRadius: 4, borderWidth: 1, borderColor: RED_500, padding: 8, alignItems: "center", justifyContent: "center" }}
         >
           <Feather name="trash" size={24} color={RED_500} />
@@ -370,6 +369,21 @@ export default function EditItemForm({ onClose, selectedTransaction, initialEdit
           <Text style={{ color: "white", fontWeight: "600" }}>Salvar</Text>
         </Pressable>
       )}
+
+      <ThemedAlert
+        visible={confirmDelete}
+        title="Excluir lançamento"
+        message={`Deseja excluir "${selectedTransaction.description}"?`}
+        variant="danger"
+        confirmText="Excluir"
+        cancelText="Cancelar"
+        onConfirm={async () => { await deleteTransaction(selectedTransaction); setConfirmDelete(false); onClose(); }}
+        onCancel={() => setConfirmDelete(false)}
+        onClose={() => setConfirmDelete(false)}
+        testID="finance-edit-delete-alert"
+        confirmTestID="confirm-delete-finance-edit"
+        cancelTestID="cancel-delete-finance-edit"
+      />
 
       <View style={{ height: 64, width: "100%" }} />
     </ScrollView>

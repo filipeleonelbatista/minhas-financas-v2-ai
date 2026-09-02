@@ -1,5 +1,5 @@
 import React, { useMemo, useState, useEffect } from "react";
-import { View, Text, ScrollView, Pressable, TextInput, TouchableOpacity, Modal, useWindowDimensions } from "react-native";
+import { View, Text, ScrollView, Pressable, TextInput, TouchableOpacity, Modal, FlatList, useWindowDimensions } from "react-native";
 import { Feather, MaterialCommunityIcons, Ionicons } from "@expo/vector-icons";
 import { openThemedDatePicker } from "../utils/datePicker";
 import { useIsFocused, useNavigation } from "@react-navigation/native";
@@ -10,6 +10,10 @@ import AIComponent from "../components/AIComponent";
 import AutonomyForm from "../components/AutonomyForm";
 import EmptyMessage from "../components/EmptyMessage";
 import Header from "../components/Header";
+import RunCard from "../components/ui/RunCard";
+import SwipeableRunRow from "../components/SwipeableRunRow";
+import ThemedAlert from "../components/ui/ThemedAlert";
+import EditFuelForm from "../components/EditFuelForm";
 import { useIsKeyboardOpen } from "../hooks/useIsKeyboardOpen";
 import { useRunsStore } from "../stores/runs";
 import { useSettingsStore } from "../stores/settings";
@@ -19,6 +23,19 @@ import EditVeicleForm from "../components/EditVeicleForm";
 import { Sheet, useSheetRef } from "../components/nativewindui/Sheet";
 import { BottomSheetScrollView } from "@gorhom/bottom-sheet";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+
+let RadiantButton = null;
+try {
+  RadiantButton = require("../components/ui").RadiantButton ?? require("../components/ui/index").RadiantButton ?? null;
+} catch {
+  try { RadiantButton = require("reacticx").RadiantButton ?? null; } catch {}
+}
+let ChromaRing = null;
+try {
+  ChromaRing = require("../components/ui/ChromaRing").ChromaRing ?? require("reacticx").ChromaRing ?? null;
+} catch {}
+
+const PURPLE_600 = "#9c44dc";
 
 dayjs.extend(isSameOrAfter);
 dayjs.extend(isSameOrBefore);
@@ -45,6 +62,10 @@ export default function Runs() {
   const [isOpen, setIsOpen] = useState(false);
   const onOpen = () => setIsOpen(true);
   const onClose = () => setIsOpen(false);
+  const [selectedRun, setSelectedRun] = useState(null);
+  const [isRunModalOpen, setIsRunModalOpen] = useState(false);
+  const [isRunEditMode, setIsRunEditMode] = useState(false);
+  const [confirmDeleteRun, setConfirmDeleteRun] = useState(null);
   const navigation = useNavigation();
   const { height } = useWindowDimensions();
   const insets = useSafeAreaInsets();
@@ -56,18 +77,25 @@ export default function Runs() {
   const FuelList = useRunsStore((s) => s.runsList);
   const remove = useRunsStore((s) => s.remove);
 
-  const deleteTransaction = (dto) => {
-    const { Alert, ToastAndroid } = require("react-native");
-    Alert.alert("Deseja realmente deletar esse registro?", "Esta ação é irreversível! Deseja continuar?", [
-      { text: "Não", style: "cancel" },
-      {
-        text: "Sim",
-        onPress: async () => {
-          await remove(dto.id ?? dto);
-          ToastAndroid.show("Abastecimento Removido", ToastAndroid.SHORT);
-        },
-      },
-    ]);
+  const handleViewRun = (item) => {
+    setSelectedRun(item);
+    setIsRunEditMode(false);
+    setIsRunModalOpen(true);
+  };
+  const handleEditRun = (item) => {
+    setSelectedRun(item);
+    setIsRunEditMode(true);
+    setIsRunModalOpen(true);
+  };
+  const handleDeleteRun = (item) => setConfirmDeleteRun(item);
+  const handleConfirmDeleteRun = async () => {
+    if (!confirmDeleteRun) return;
+    await remove(confirmDeleteRun.id ?? confirmDeleteRun);
+    setConfirmDeleteRun(null);
+  };
+  const onCloseRunModal = () => {
+    setIsRunModalOpen(false);
+    setIsRunEditMode(false);
   };
 
   const filteredList = useMemo(() => {
@@ -112,13 +140,6 @@ export default function Runs() {
 
   return (
     <View style={{ flex: 1, backgroundColor: bg }} className="flex-1 bg-gray-50 dark:bg-gray-900">
-      <TouchableOpacity
-        style={{ position: "absolute", bottom: isAiEnabled ? 82 : 8, left: 16, backgroundColor: "#9c44dc", width: 40, height: 40, zIndex: 100, alignItems: "center", justifyContent: "center", borderRadius: 999 }}
-        onPress={() => { setSelectedSheetOpen("veicle"); onOpen(); }}
-      >
-        <Ionicons name="car-sport-outline" size={20} color="white" />
-      </TouchableOpacity>
-
       <ScrollView style={{ flex: 1, width: "100%", height: "100%" }} contentContainerStyle={{ paddingBottom: tabBarHeight + 24 }} showsVerticalScrollIndicator={false}>
         <Header
           title="Corrida"
@@ -130,31 +151,33 @@ export default function Runs() {
         />
 
         <ScrollView horizontal style={{ width: "100%", marginTop: -50, height: 150 }} showsHorizontalScrollIndicator={false} contentContainerStyle={{ height: 130, paddingHorizontal: 8 }}>
-          <View style={{ marginHorizontal: 4, backgroundColor: "#581c87", minWidth: 180, height: 110, borderRadius: 4, padding: 16, elevation: 2 }}>
+          <View style={{ marginHorizontal: 4, backgroundColor: "#581c87", minWidth: 180, height: 110, borderRadius: 4, padding: 16, elevation: 2, shadowColor: "#000", shadowOpacity: 0.1 }} testID="card-km-estimado">
             <View style={{ flexDirection: "row", justifyContent: "space-between" }}>
               <Text style={{ color: "white", fontSize: 18 }}>Km Estimado</Text>
               <Feather name="dollar-sign" size={48} color="white" />
             </View>
-            <Text style={{ color: "white", fontSize: currentEstimative < 10000 ? 26 : 20 }} numberOfLines={1}>{currentEstimative}</Text>
+            <Text style={{ color: "white", fontSize: Number(currentEstimative) < 10000 ? 26 : 20, maxWidth: 170 }} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.5} ellipsizeMode="tail">{currentEstimative} km</Text>
           </View>
 
-          <Pressable
+          <TouchableOpacity
             onPress={() => { setSelectedSheetOpen("autonomy"); onOpen(); }}
-            style={({ pressed }) => ({ marginHorizontal: 4, backgroundColor: pressed ? bgCardPressed : bgCard, minWidth: 180, height: 110, borderRadius: 4, padding: 16, elevation: 2, shadowColor: "#000", shadowOpacity: 0.1 })}
+            activeOpacity={0.8}
+            style={{ marginHorizontal: 4, backgroundColor: isDark ? "#27272a" : "white", minWidth: 180, height: 110, borderRadius: 4, padding: 16, elevation: 2, shadowColor: "#000", shadowOpacity: isDark ? 0.15 : 0.08, borderWidth: 1, borderColor: isDark ? "#3f3f46" : "#e7e5e4" }}
+            testID="card-autonomia"
           >
             <View style={{ flexDirection: "row", justifyContent: "space-between" }}>
               <Text style={{ color: text, fontSize: 18 }}>Autonomia</Text>
               <Feather name="arrow-up-circle" size={48} color="#22c55e" />
             </View>
-            <Text style={{ color: text, fontSize: (veicleAutonomy ?? 0) < 10000 ? 26 : 20, maxWidth: 170 }} numberOfLines={1}>{veicleAutonomy ?? 0}L</Text>
-          </Pressable>
+            <Text style={{ color: text, fontSize: (veicleAutonomy ?? 0) < 10000 ? 26 : 20, maxWidth: 170 }} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.5} ellipsizeMode="tail">{veicleAutonomy ?? 0} km/L</Text>
+          </TouchableOpacity>
 
-          <View style={{ marginHorizontal: 4, backgroundColor: bgCard, minWidth: 180, height: 110, borderRadius: 4, padding: 16, elevation: 2, shadowColor: "#000", shadowOpacity: 0.1 }}>
+          <View style={{ marginHorizontal: 4, backgroundColor: isDark ? "#27272a" : "white", minWidth: 180, height: 110, borderRadius: 4, padding: 16, elevation: 2, shadowColor: "#000", shadowOpacity: isDark ? 0.15 : 0.08, borderWidth: 1, borderColor: isDark ? "#3f3f46" : "#e7e5e4" }} testID="card-km-atual">
             <View style={{ flexDirection: "row", justifyContent: "space-between" }}>
               <Text style={{ color: text, fontSize: 18 }}>Km Atual</Text>
               <Feather name="arrow-up-circle" size={48} color="#22c55e" />
             </View>
-            <Text style={{ color: text, fontSize: (filteredList[0]?.currentDistance ?? 0) < 10000 ? 26 : 20, maxWidth: 170 }} numberOfLines={1}>{filteredList[0]?.currentDistance ?? 0}</Text>
+            <Text style={{ color: text, fontSize: (filteredList[0]?.currentDistance ?? 0) < 10000 ? 26 : 20, maxWidth: 170 }} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.5} ellipsizeMode="tail">{filteredList[0]?.currentDistance ?? 0} km</Text>
           </View>
         </ScrollView>
 
@@ -172,47 +195,93 @@ export default function Runs() {
               </Text>
             </TouchableOpacity>
           </View>
-          <View>
-            <Text style={{ color: text }}>Clique no item para excluir</Text>
-          </View>
           {filteredList.length === 0 ? (
             <EmptyMessage />
           ) : (
-            <>
-              {filteredList.map((item) => (
-                <Pressable
-                  key={item.id}
-                  style={({ pressed }) => ({ backgroundColor: pressed ? bgCardPressed : bgCard, shadowColor: "#000", shadowOpacity: 0.1, elevation: 2, borderRadius: 4, padding: 8 })}
-                  onPress={() => deleteTransaction(item)}
-                >
-                  <View style={{ flexDirection: "row", alignItems: "center", width: "100%", gap: 8 }}>
-                    <MaterialCommunityIcons name="fuel" size={28} color="#12a454" />
-                    <View style={{ alignItems: "flex-start", flex: 1 }}>
-                      <Text style={{ color: text, fontSize: 18 }}>{item.location}</Text>
-                      <Text style={{ color: text }}>Km no Abast.: {item.currentDistance}</Text>
-                      <Text style={{ color: text, fontSize: 16 }}>{new Date(item.date).toLocaleDateString("pt-BR")}</Text>
-                      <Text style={{ color: text }}>
-                        {item.unityAmount.toLocaleString("pt-BR", { style: "currency", currency: "BRL", minimumFractionDigits: 2, maximumFractionDigits: 2, useGrouping: true })} - {(item.amount / item.unityAmount).toFixed(2)} Litros
-                      </Text>
-                    </View>
-                    <View style={{ alignItems: "flex-end", width: "34%" }}>
-                      <Text style={{ color: text, fontSize: 18 }} numberOfLines={1}>
-                        {item.amount.toLocaleString("pt-BR", { style: "currency", currency: "BRL", minimumFractionDigits: 2, maximumFractionDigits: 2, useGrouping: true })}
-                      </Text>
-                    </View>
+            <View style={{ marginTop: 8, marginBottom: 24 }}>
+              <Text style={{ color: text, marginBottom: 8, fontSize: 12 }}>
+                Deslize para a direita para excluir • Deslize para a esquerda para editar • Segure para visualizar
+              </Text>
+              <FlatList
+                data={filteredList}
+                keyExtractor={(item) => item.id}
+                scrollEnabled={false}
+                ItemSeparatorComponent={() => <View style={{ height: 8 }} />}
+                renderItem={({ item }) => (
+                  <SwipeableRunRow item={item} onEdit={handleEditRun} onDelete={handleDeleteRun}>
+                    <RunCard item={item} onPress={() => {}} onLongPress={handleViewRun} testID={`run-card-${item.id}`} />
+                  </SwipeableRunRow>
+                )}
+                testID="runs-flatlist"
+                ListFooterComponent={
+                  <View style={{ flexDirection: "row", justifyContent: "space-between", marginTop: 12, gap: 8 }}>
+                    <Text style={{ color: text, fontSize: 18, fontWeight: "700" }}>Total</Text>
+                    <Text style={{ color: text, fontSize: 18, fontWeight: "700", flex: 1, textAlign: "right" }} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.6} ellipsizeMode="tail">
+                      {listTotal.toLocaleString("pt-BR", { style: "currency", currency: "BRL", minimumFractionDigits: 2, maximumFractionDigits: 2, useGrouping: true })}
+                    </Text>
                   </View>
-                </Pressable>
-              ))}
-              <View style={{ flexDirection: "row", justifyContent: "space-between", marginBottom: 24 }}>
-                <Text style={{ color: text, fontSize: 18, fontWeight: "700" }}>Total</Text>
-                <Text style={{ color: text, fontSize: 18, fontWeight: "700" }}>
-                  {listTotal.toLocaleString("pt-BR", { style: "currency", currency: "BRL", minimumFractionDigits: 2, maximumFractionDigits: 2, useGrouping: true })}
-                </Text>
-              </View>
-            </>
+                }
+              />
+            </View>
           )}
         </View>
       </ScrollView>
+
+      {(() => {
+        const fabSize = 64;
+        const fabBottom = tabBarHeight + 16;
+        const FabContent = (
+          <View style={{ width: fabSize, height: fabSize, alignItems: 'center', justifyContent: 'center' }}>
+            <Ionicons name="car-sport-outline" size={28} color="white" />
+          </View>
+        );
+        const onPressVehicle = () => { setSelectedSheetOpen("veicle"); onOpen(); };
+        if (RadiantButton) {
+          return (
+            <View style={{ position: "absolute", bottom: fabBottom, right: 16, zIndex: 10 }} testID="vehicle-info-button-wrapper">
+              <RadiantButton
+                testID="vehicle-info-button"
+                onPress={onPressVehicle}
+                borderRadius={fabSize / 2}
+                borderWidth={2}
+                duration={2800}
+                showDots={false}
+                showShimmer={true}
+                showGlow={true}
+                glowBlur={18}
+                glowWidth={0.7}
+                breathingEnabled={true}
+                paddingHorizontal={0}
+                paddingVertical={0}
+                style={{ width: fabSize, height: fabSize, borderRadius: fabSize / 2 }}
+                theme={{ background: "#9333ea", backgroundSubtle: "#581C87", foreground: "#ffffff", highlight: "#f3e8ff", highlightSubtle: "#a78bfa" }}
+              >
+                <View style={{ width: fabSize, height: fabSize, alignItems: 'center', justifyContent: 'center' }}>
+                  <Ionicons name="car-sport-outline" size={28} color="white" />
+                </View>
+              </RadiantButton>
+            </View>
+          );
+        }
+        if (ChromaRing) {
+          return (
+            <Pressable testID="vehicle-info-button" accessibilityLabel="Informações do veículo" onPress={onPressVehicle} style={{ position: "absolute", bottom: fabBottom, right: 16, zIndex: 10, marginTop: -24 }}>
+              <ChromaRing width={fabSize} height={fabSize} borderWidth={2} speed={1.0} base="#581C87" glow={PURPLE_600} background={PURPLE_600} style={{ width: fabSize, height: fabSize, borderRadius: fabSize / 2 }}>
+                {FabContent}
+              </ChromaRing>
+            </Pressable>
+          );
+        }
+        return (
+          <TouchableOpacity
+            testID="vehicle-info-button"
+            onPress={onPressVehicle}
+            style={{ position: "absolute", bottom: fabBottom, right: 16, width: 56, height: 56, backgroundColor: PURPLE_600, borderRadius: 28, alignItems: "center", justifyContent: "center", elevation: 6, shadowColor: "#000", shadowOpacity: 0.2, shadowRadius: 4, zIndex: 10 }}
+          >
+            <Ionicons name="car-sport-outline" size={28} color="#FFF" />
+          </TouchableOpacity>
+        );
+      })()}
 
       {isAiEnabled && <View style={{ width: "100%", height: 64 }} />}
       <AIComponent />
@@ -226,6 +295,31 @@ export default function Runs() {
           <View style={{ height: 64, width: "100%" }} />
         </View>
       </Modal>
+
+      <Modal visible={isRunModalOpen} animationType="slide" onRequestClose={onCloseRunModal} transparent={false}>
+        <View style={{ flex: 1, height: height * (isKeyboardOpen ? 0.9 : 1.09), paddingTop: 24, backgroundColor: bg }}>
+          <Pressable onPress={onCloseRunModal} style={{ alignSelf: "flex-end", padding: 16 }}>
+            <Feather name="x" size={24} color={text} />
+          </Pressable>
+          {selectedRun && <EditFuelForm onClose={onCloseRunModal} selectedRun={selectedRun} initialEditable={isRunEditMode} />}
+          <View style={{ height: 64, width: "100%" }} />
+        </View>
+      </Modal>
+
+      <ThemedAlert
+        visible={!!confirmDeleteRun}
+        title="Excluir abastecimento"
+        message={confirmDeleteRun ? `Deseja excluir abastecimento em "${confirmDeleteRun.location}"?` : undefined}
+        variant="danger"
+        confirmText="Excluir"
+        cancelText="Cancelar"
+        onConfirm={handleConfirmDeleteRun}
+        onCancel={() => setConfirmDeleteRun(null)}
+        onClose={() => setConfirmDeleteRun(null)}
+        testID="run-delete-alert"
+        confirmTestID="confirm-delete-run"
+        cancelTestID="cancel-delete-run"
+      />
 
       <Sheet ref={filterSheetRef} snapPoints={["55%"]} enableDynamicSizing={false} backgroundStyle={{ backgroundColor: bg }} handleIndicatorStyle={{ backgroundColor: isDark ? "#3f3f46" : "#e4e4e7" }}>
         <BottomSheetScrollView contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: insets.bottom + 24, gap: 16 }} style={{ flex: 1, backgroundColor: bg }}>

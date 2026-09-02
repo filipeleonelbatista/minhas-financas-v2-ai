@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { View, Text, ScrollView, Pressable, TouchableOpacity, Modal, useWindowDimensions, KeyboardAvoidingView, Platform } from "react-native";
+import { View, Text, ScrollView, Pressable, TouchableOpacity, Modal, FlatList, useWindowDimensions, KeyboardAvoidingView, Platform } from "react-native";
 import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 import { Feather } from "@expo/vector-icons";
 import { useIsFocused, useNavigation } from "@react-navigation/native";
@@ -12,10 +12,26 @@ import EmptyMessage from "../components/EmptyMessage";
 import ErrorSheet from "../components/ErrorSheet";
 import EstimativeForm from "../components/EstimativeForm";
 import Header from "../components/Header";
+import ListCard from "../components/ui/ListCard";
+import SwipeableRow from "../components/SwipeableRow";
+import ThemedAlert from "../components/ui/ThemedAlert";
 import { useIsKeyboardOpen } from "../hooks/useIsKeyboardOpen";
 import { useListsStore } from "../stores/lists";
 import { useSettingsStore } from "../stores/settings";
 import { usePagesStore } from "../stores/pages";
+
+let RadiantButton = null;
+try {
+  RadiantButton = require("../components/ui").RadiantButton ?? require("../components/ui/index").RadiantButton ?? null;
+} catch {
+  try { RadiantButton = require("reacticx").RadiantButton ?? null; } catch {}
+}
+let ChromaRing = null;
+try {
+  ChromaRing = require("../components/ui/ChromaRing").ChromaRing ?? require("reacticx").ChromaRing ?? null;
+} catch {}
+
+const PURPLE_600 = "#9c44dc";
 
 dayjs.extend(isSameOrAfter);
 dayjs.extend(isSameOrBefore);
@@ -38,6 +54,7 @@ export default function Lists() {
 
   const isKeyboardOpen = useIsKeyboardOpen();
   const insets = useSafeAreaInsets();
+  const tabBarHeight = (() => { try { const { useBottomTabBarHeight } = require("@react-navigation/bottom-tabs"); return useBottomTabBarHeight(); } catch { return 80; } })();
   const [isOpen, setIsOpen] = useState(false);
   const onOpen = () => setIsOpen(true);
   const onClose = () => setIsOpen(false);
@@ -46,9 +63,23 @@ export default function Lists() {
 
   const lists = useListsStore((s) => s.lists);
   const handleSelectList = useListsStore((s) => s.handleSelect);
+  const deleteList = useListsStore((s) => s.deleteList);
+  const [confirmDeleteList, setConfirmDeleteList] = useState(null);
   const handleExportList = async (id) => {
     const { ToastAndroid } = require("react-native");
     ToastAndroid.show("Exportação de lista disponível em breve", ToastAndroid.SHORT);
+  };
+  const handleDeleteListSwipe = (item) => setConfirmDeleteList(item);
+  const handleConfirmDeleteList = async () => {
+    if (!confirmDeleteList) return;
+    await deleteList(confirmDeleteList.id);
+    setConfirmDeleteList(null);
+  };
+  const handleEditListSwipe = (item) => {
+    // Abrir edição da lista - reaproveita modal existente
+    handleSelectList(item.id);
+    setSelectedSheetOpen("editar");
+    onOpen();
   };
 
   const [selectedSheetOpen, setSelectedSheetOpen] = useState(null);
@@ -70,46 +101,114 @@ export default function Lists() {
         }
       />
 
-      <ScrollView style={{ flex: 1, width: "100%", height: "100%" }}>
+      <ScrollView style={{ flex: 1, width: "100%", height: "100%" }} contentContainerStyle={{ paddingBottom: tabBarHeight + 24 }} showsVerticalScrollIndicator={false}>
         <View style={{ padding: 16, gap: 8 }}>
           <Text style={{ fontWeight: "700", fontSize: 20, color: text }}>Suas listas de compras</Text>
           <Text style={{ marginBottom: 16, fontSize: 14, color: text }}>Crie suas listas de compra e adicione ao estoque para seu controle. Pressione e segure para exportar uma lista.</Text>
 
-          <View>
-            {lists.length === 0 ? (
-              <EmptyMessage />
-            ) : (
-              lists.map((item, index) => (
-                <Pressable
-                  key={item.id ?? index}
-                  style={({ pressed }) => ({ width: "100%", backgroundColor: pressed ? bgCardPressed : bgCard, shadowColor: "#000", shadowOpacity: 0.1, elevation: 2, borderRadius: 4, padding: 8, marginVertical: 4 })}
-                  onPress={() => {
-                    handleSelectList(item.id);
-                    navigation.navigate("List");
-                  }}
-                  onLongPress={() => handleExportList(item.id)}
-                >
-                  <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
-                    <View style={{ marginHorizontal: 8 }}>
-                      <Feather name="shopping-cart" size={28} color={text} />
-                    </View>
-                    <View style={{ flex: 1 }}>
-                      <Text style={{ fontSize: 18, color: text }}>{item.description}</Text>
-                      <Text style={{ fontSize: 14, color: text }}>{item.location === "" ? "Sem mercado definido" : item.location}</Text>
-                      <Text style={{ fontSize: 14, color: text }}>{item.quantity} itens</Text>
-                    </View>
-                    <View style={{ alignItems: "flex-end", width: "34%" }}>
-                      <Text style={{ fontSize: 18, color: text }} numberOfLines={1}>
-                        {item.amount.toLocaleString("pt-BR", { style: "currency", currency: "BRL", minimumFractionDigits: 2, maximumFractionDigits: 2, useGrouping: true })}
-                      </Text>
-                    </View>
-                  </View>
-                </Pressable>
-              ))
-            )}
-          </View>
+          {lists.length === 0 ? (
+            <EmptyMessage />
+          ) : (
+            <View style={{ marginTop: 8 }}>
+              <Text style={{ color: text, marginBottom: 8, fontSize: 12 }}>
+                Deslize para a direita para excluir • Deslize para a esquerda para editar • Segure para exportar
+              </Text>
+              <FlatList
+                data={lists}
+                keyExtractor={(item) => item.id}
+                scrollEnabled={false}
+                ItemSeparatorComponent={() => <View style={{ height: 8 }} />}
+                renderItem={({ item }) => (
+                  <SwipeableRow
+                    item={item}
+                    onEdit={handleEditListSwipe}
+                    onDelete={handleDeleteListSwipe}
+                    editTestID={`list-swipe-edit-${item.id}`}
+                    deleteTestID={`list-swipe-delete-${item.id}`}
+                    rowTestID={`swipe-list-row-${item.id}`}
+                  >
+                    <ListCard
+                      item={item}
+                      onPress={() => {
+                        handleSelectList(item.id);
+                        navigation.navigate("List");
+                      }}
+                      onLongPress={() => handleExportList(item.id)}
+                      testID={`list-card-${item.id}`}
+                    />
+                  </SwipeableRow>
+                )}
+                testID="lists-flatlist"
+              />
+            </View>
+          )}
         </View>
       </ScrollView>
+
+      {(() => {
+        const fabSize = 64;
+        const fabBottom = tabBarHeight + 16;
+        const FabContent = (
+          <View style={{ width: fabSize, height: fabSize, alignItems: 'center', justifyContent: 'center' }}>
+            <Feather name="plus" size={28} color="white" />
+          </View>
+        );
+        const onPressFab = () => navigation.navigate("Stock");
+        if (RadiantButton) {
+          return (
+            <View style={{ position: "absolute", bottom: fabBottom, right: 16, zIndex: 10 }} testID="lists-fab-wrapper">
+              <RadiantButton
+                testID="lists-fab"
+                onPress={onPressFab}
+                borderRadius={fabSize / 2}
+                borderWidth={2}
+                duration={2800}
+                showDots={false}
+                showShimmer={true}
+                showGlow={true}
+                glowBlur={18}
+                glowWidth={0.7}
+                breathingEnabled={true}
+                paddingHorizontal={0}
+                paddingVertical={0}
+                style={{ width: fabSize, height: fabSize, borderRadius: fabSize / 2 }}
+                theme={{ background: "#9333ea", backgroundSubtle: "#581C87", foreground: "#ffffff", highlight: "#f3e8ff", highlightSubtle: "#a78bfa" }}
+              >
+                <View style={{ width: fabSize, height: fabSize, alignItems: 'center', justifyContent: 'center' }}>
+                  <Feather name="plus" size={28} color="white" />
+                </View>
+              </RadiantButton>
+            </View>
+          );
+        }
+        if (ChromaRing) {
+          return (
+            <Pressable testID="lists-fab" onPress={onPressFab} style={{ position: "absolute", bottom: fabBottom, right: 16, zIndex: 10 }}>
+              <ChromaRing width={fabSize} height={fabSize} borderWidth={2} speed={1.0} base="#581C87" glow={PURPLE_600} background={PURPLE_600} style={{ width: fabSize, height: fabSize, borderRadius: fabSize / 2 }}>{FabContent}</ChromaRing>
+            </Pressable>
+          );
+        }
+        return (
+          <TouchableOpacity testID="lists-fab" onPress={onPressFab} style={{ position: "absolute", bottom: fabBottom, right: 16, width: 56, height: 56, backgroundColor: PURPLE_600, borderRadius: 28, alignItems: "center", justifyContent: "center", elevation: 6, zIndex: 10 }}>
+            <Feather name="plus" size={28} color="#FFF" />
+          </TouchableOpacity>
+        );
+      })()}
+
+      <ThemedAlert
+        visible={!!confirmDeleteList}
+        title="Excluir lista"
+        message={confirmDeleteList ? `Deseja excluir "${confirmDeleteList.description}"?` : undefined}
+        variant="danger"
+        confirmText="Excluir"
+        cancelText="Cancelar"
+        onConfirm={handleConfirmDeleteList}
+        onCancel={() => setConfirmDeleteList(null)}
+        onClose={() => setConfirmDeleteList(null)}
+        testID="lists-delete-alert"
+        confirmTestID="confirm-delete-list"
+        cancelTestID="cancel-delete-list"
+      />
 
       {isAiEnabled && <View style={{ width: "100%", height: 64 }} />}
       <AIComponent />

@@ -14,6 +14,7 @@ import {
 import { Feather } from "@expo/vector-icons";
 import { useIsFocused, useNavigation, useRoute } from "@react-navigation/native";
 import { Picker } from "@react-native-picker/picker";
+import { openThemedDatePicker } from "../utils/datePicker";
 import { goalRepo, DEFAULT_GOAL_CATEGORIES, filterGoalsByStatus, calcGoalProgress, getDaysRemaining } from "../repositories/goal";
 import GoalCard from "../components/ui/GoalCard";
 import Header from "../components/Header";
@@ -234,6 +235,12 @@ export default function Goals() {
     setShowCustomCat(false);
     setCustomCategory("");
     setEditing(null);
+  };
+
+  const onChangeGoalDate = (event, selectedDate) => {
+    if (!selectedDate) return;
+    const d = selectedDate;
+    setDate(`${d.getDate() < 10 ? '0' + d.getDate() : d.getDate()}/${(d.getMonth() + 1) < 10 ? '0' + (d.getMonth() + 1) : d.getMonth() + 1}/${d.getFullYear()}`);
   };
 
   const openAdd = () => {
@@ -543,14 +550,24 @@ export default function Goals() {
                 style={{ borderWidth: 1, borderColor: "#d4d4d8", borderRadius: 8, paddingHorizontal: 12, paddingVertical: 10, marginBottom: 12, backgroundColor: isDark ? "#3f3f46" : "white", color: text }}
               />
               <Text style={{ fontSize: 14, fontWeight: "600", color: text, marginBottom: 4 }}>Prazo (DD/MM/AAAA)</Text>
-              <TextInput
-                testID="input-date"
-                placeholder="31/12/2026"
-                placeholderTextColor="#a1a1aa"
-                value={date}
-                onChangeText={setDate}
-                style={{ borderWidth: 1, borderColor: "#d4d4d8", borderRadius: 8, paddingHorizontal: 12, paddingVertical: 10, marginBottom: 12, backgroundColor: isDark ? "#3f3f46" : "white", color: text }}
-              />
+              <Pressable
+                onPress={() => openThemedDatePicker({ value: (() => { if (date && date.includes('/')) { const parts = date.split('/'); const p = new Date(`${parts[2]}-${parts[1]}-${parts[0]}`); if (!isNaN(p.getTime())) return p; } return new Date(); })(), onChange: onChangeGoalDate, isDark })}
+                style={{ flexDirection: "row", alignItems: "stretch", height: 48, backgroundColor: isDark ? "#27272a" : "white", borderWidth: 1, borderColor: isDark ? "#3f3f46" : "#e4e4e7", borderRadius: 12, overflow: "hidden", marginBottom: 12 }}
+              >
+                <TextInput
+                  testID="input-date"
+                  placeholder="DD/MM/AAAA"
+                  placeholderTextColor="#a1a1aa"
+                  value={date}
+                  onChangeText={setDate}
+                  editable={false}
+                  pointerEvents="none"
+                  style={{ flex: 1, paddingHorizontal: 12, textAlignVertical: "center", color: text }}
+                />
+                <View style={{ backgroundColor: PURPLE_600, justifyContent: "center", alignItems: "center", width: 56, borderTopRightRadius: 12, borderBottomRightRadius: 12 }}>
+                  <Feather name="calendar" size={20} color="#FFF" />
+                </View>
+              </Pressable>
               <CategoryPicker
                 selected={selectedCategory}
                 onSelect={setSelectedCategory}

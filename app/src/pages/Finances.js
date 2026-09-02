@@ -188,18 +188,18 @@ export default function Finances() {
           contentContainerStyle={{ height: 130, paddingHorizontal: 8 }}
         >
           {isEnableTotalHistoryCard && (
-            <View style={{ marginHorizontal: 4, backgroundColor: bgCard, minWidth: 180, height: 110, borderRadius: 4, padding: 16, elevation: 2, shadowColor: "#000", shadowOpacity: 0.1 }}>
+            <View style={{ marginHorizontal: 4, backgroundColor: bgCard, minWidth: 180, height: 110, borderRadius: 4, padding: 16, elevation: 2, shadowColor: "#000", shadowOpacity: 0.1 }} testID="card-saldo">
               <View style={{ flexDirection: "row", justifyContent: "space-between" }}>
-                <Text style={{ color: text, fontSize: 18 }}>Entradas</Text>
-                <Feather name={Saldo > 0 ? "arrow-up-circle" : "arrow-down-circle"} size={48} color={GREEN_500} />
+                <Text style={{ color: text, fontSize: 18 }}>Saldo</Text>
+                <Feather name={Saldo >= 0 ? "arrow-up-circle" : "arrow-down-circle"} size={48} color={GREEN_500} />
               </View>
-              <Text style={{ color: text, fontSize: Saldo < 10000 ? 26 : 20, maxWidth: 170 }} numberOfLines={1}>
+              <Text style={{ color: text, fontSize: Math.abs(Saldo) < 10000 ? 26 : 20, maxWidth: 170 }} numberOfLines={1}>
                 {formatCurrency(Saldo)}
               </Text>
             </View>
           )}
 
-          <View style={{ marginHorizontal: 4, backgroundColor: bgCard, minWidth: 180, height: 110, borderRadius: 4, padding: 16, elevation: 2 }}>
+          <View style={{ marginHorizontal: 4, backgroundColor: bgCard, minWidth: 180, height: 110, borderRadius: 4, padding: 16, elevation: 2 }} testID="card-entradas">
             <View style={{ flexDirection: "row", justifyContent: "space-between" }}>
               <Text style={{ color: text, fontSize: 18 }}>Entradas</Text>
               <Feather name="arrow-up-circle" size={48} color={GREEN_500} />
@@ -209,7 +209,7 @@ export default function Finances() {
             </Text>
           </View>
 
-          <View style={{ marginHorizontal: 4, backgroundColor: bgCard, minWidth: 180, height: 110, borderRadius: 4, padding: 16, elevation: 2 }}>
+          <View style={{ marginHorizontal: 4, backgroundColor: bgCard, minWidth: 180, height: 110, borderRadius: 4, padding: 16, elevation: 2 }} testID="card-saidas">
             <View style={{ flexDirection: "row", justifyContent: "space-between" }}>
               <Text style={{ color: text, fontSize: 18 }}>Saídas</Text>
               <Feather name="arrow-down-circle" size={48} color={RED_500} />
@@ -219,7 +219,7 @@ export default function Finances() {
             </Text>
           </View>
 
-          <View style={{ marginHorizontal: 4, backgroundColor: PURPLE_900, minWidth: 180, height: 110, borderRadius: 4, padding: 16, elevation: 2 }}>
+          <View style={{ marginHorizontal: 4, backgroundColor: PURPLE_900, minWidth: 180, height: 110, borderRadius: 4, padding: 16, elevation: 2 }} testID="card-total">
             <View style={{ flexDirection: "row", justifyContent: "space-between" }}>
               <Text style={{ color: "white", fontSize: 18 }}>Total</Text>
               <Feather name="dollar-sign" size={48} color="white" />
@@ -230,7 +230,7 @@ export default function Finances() {
           </View>
 
           {isEnableTitheCard && (
-            <View style={{ marginHorizontal: 4, backgroundColor: PURPLE_900, minWidth: 180, height: 110, borderRadius: 4, padding: 16, elevation: 2 }}>
+            <View style={{ marginHorizontal: 4, backgroundColor: PURPLE_900, minWidth: 180, height: 110, borderRadius: 4, padding: 16, elevation: 2 }} testID="card-dizimo">
               <View style={{ flexDirection: "row", justifyContent: "space-between" }}>
                 <Text style={{ color: "white", fontSize: 18 }}>Dízimo</Text>
                 <Feather name="dollar-sign" size={48} color="white" />

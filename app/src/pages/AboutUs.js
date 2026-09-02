@@ -76,6 +76,8 @@ export default function AboutUs() {
   const handleSetmarketSimplifiedItems = (v) => s.update('marketSimplifiedItems', v ? 1 : 0);
   const isAiEnabled = !!s.isAiEnabled;
   const handleSetIsAiEnabled = (v) => s.update('isAiEnabled', v ? 1 : 0);
+  const isTitheMenuEnabled = !!s.isTitheMenuEnabled;
+  const handleToggleTitheMenu = (v) => s.update('isTitheMenuEnabled', v ? 1 : 0);
   const selectedFolderToSave = s.selectedFolderToSave;
   const handleUpdateSelectedFolderToSave = (v) => s.update('selectedFolderToSave', v);
   const handleResetConfigs = async () => { if (s.reset) await s.reset(); };
@@ -89,15 +91,96 @@ export default function AboutUs() {
   const setTransactionsList = (list) => useFinanceStore.setState({ transactionsList: list });
   const runsState = useRunsStore();
   const setFuelList = (list) => useRunsStore.setState({ runsList: list });
-  const handleImportRuns = async () => { const { ToastAndroid } = require('react-native'); ToastAndroid.show("Importação disponível em breve", ToastAndroid.SHORT); };
-  const handleExportRuns = async () => { const { ToastAndroid } = require('react-native'); ToastAndroid.show("Exportação disponível em breve", ToastAndroid.SHORT); };
+  const loadRuns = runsState.load ?? (async () => { try { const all = await runRepo.getAll(); useRunsStore.setState({ runsList: all }); } catch {} });
+  const handleImportRuns = async () => {
+    const { ToastAndroid } = require('react-native');
+    try {
+      const ok = await checkPermissions();
+      if (!ok) return;
+      const res = await DocumentPicker.getDocumentAsync({ copyToCacheDirectory: false, type: "text/*" });
+      if (res.canceled || res.type === "cancel") return;
+      const uri = res.assets?.[0]?.uri ?? res.uri;
+      if (!uri) return;
+      const content = await FileSystem.readAsStringAsync(uri, { encoding: "utf8" });
+      const parsed = readString(content);
+      const rows = await handleCSVtoArrayFormat(parsed.data);
+      for (const item of rows) {
+        try {
+          const dto = { currentDistance: Number(item.currentDistance ?? item.current_distance ?? 0), unityAmount: Number(item.unityAmount ?? 0), amount: Number(item.amount ?? 0), type: String(item.type ?? "gasolina"), date: Number(item.date ?? Date.now()), location: String(item.location ?? "") };
+          if (!isFinite(dto.amount) || !dto.location) continue;
+          await runRepo.add(dto);
+        } catch {}
+      }
+      await loadRuns();
+      ToastAndroid.show("Abastecimentos importados!", ToastAndroid.SHORT);
+    } catch (e) { console.log(e); ToastAndroid.show("Falha ao importar abastecimentos", ToastAndroid.SHORT); }
+  };
+  const handleExportRuns = async () => {
+    const { ToastAndroid } = require('react-native');
+    try {
+      const all = await runRepo.getAll();
+      if (!all || all.length === 0) { ToastAndroid.show("Nenhum abastecimento para exportar", ToastAndroid.SHORT); return; }
+      const csv = jsonToCSV(all);
+      await exportSomeData(csv, "csv", "abastecimentos");
+    } catch (e) { console.log(e); ToastAndroid.show("Falha ao exportar", ToastAndroid.SHORT); }
+  };
   const marketState = useMarketStore();
-  const handleImportStock = async () => { const { ToastAndroid } = require('react-native'); ToastAndroid.show("Importação disponível em breve", ToastAndroid.SHORT); };
-  const handleExportStock = async () => { const { ToastAndroid } = require('react-native'); ToastAndroid.show("Exportação disponível em breve", ToastAndroid.SHORT); };
   const loadTransactions = marketState.load;
+  const handleImportStock = async () => {
+    const { ToastAndroid } = require('react-native');
+    try {
+      const ok = await checkPermissions();
+      if (!ok) return;
+      const res = await DocumentPicker.getDocumentAsync({ copyToCacheDirectory: false, type: "text/*" });
+      if (res.canceled || res.type === "cancel") return;
+      const uri = res.assets?.[0]?.uri ?? res.uri;
+      if (!uri) return;
+      const content = await FileSystem.readAsStringAsync(uri, { encoding: "utf8" });
+      const parsed = readString(content);
+      const rows = await handleCSVtoArrayFormat(parsed.data);
+      for (const item of rows) {
+        const dto = { description: String(item.description ?? ""), category: String(item.category ?? "Outros"), amount: Number(item.amount ?? 0), quantity: Number(item.quantity ?? 0), quantityDesired: Number(item.quantityDesired ?? item.desiredQuantity ?? 1) };
+        if (!dto.description) continue;
+        await marketRepo.add(dto);
+      }
+      await loadTransactions();
+      ToastAndroid.show("Estoque importado!", ToastAndroid.SHORT);
+    } catch (e) { console.log(e); ToastAndroid.show("Falha ao importar estoque", ToastAndroid.SHORT); }
+  };
+  const handleExportStock = async () => {
+    const { ToastAndroid } = require('react-native');
+    try {
+      const all = await marketRepo.getAll();
+      if (!all || all.length === 0) { ToastAndroid.show("Nenhum item no estoque", ToastAndroid.SHORT); return; }
+      const csv = jsonToCSV(all);
+      await exportSomeData(csv, "csv", "estoque");
+    } catch (e) { console.log(e); ToastAndroid.show("Falha ao exportar", ToastAndroid.SHORT); }
+  };
   const listsState = useListsStore();
   const loadTransactionsLists = listsState.load;
-  const handleImportList = async () => { const { ToastAndroid } = require('react-native'); ToastAndroid.show("Importação disponível em breve", ToastAndroid.SHORT); };
+  const handleImportList = async () => {
+    const { ToastAndroid } = require('react-native');
+    try {
+      const ok = await checkPermissions();
+      if (!ok) return;
+      const res = await DocumentPicker.getDocumentAsync({ copyToCacheDirectory: false, type: "text/*" });
+      if (res.canceled || res.type === "cancel") return;
+      const uri = res.assets?.[0]?.uri ?? res.uri;
+      if (!uri) return;
+      const content = await FileSystem.readAsStringAsync(uri, { encoding: "utf8" });
+      const parsed = readString(content);
+      const rows = await handleCSVtoArrayFormat(parsed.data);
+      if (rows.length === 0) { ToastAndroid.show("Arquivo vazio", ToastAndroid.SHORT); return; }
+      // Heuristic: if rows contain list header (description+location) treat as lists export, else as generic
+      for (const item of rows) {
+        if (item.description && item.location !== undefined && item.amount !== undefined) {
+          await listRepo.add({ description: String(item.description), location: String(item.location ?? ""), amount: Number(item.amount ?? 0), quantity: Number(item.quantity ?? 0), date: Number(item.date ?? Date.now()) });
+        }
+      }
+      await loadTransactionsLists();
+      ToastAndroid.show("Listas importadas!", ToastAndroid.SHORT);
+    } catch (e) { console.log(e); ToastAndroid.show("Falha ao importar listas", ToastAndroid.SHORT); }
+  };
 
   const isFocused = useIsFocused();
   const [inputOpenAiText, setInputOpenAiText] = useState("");
@@ -518,8 +601,18 @@ export default function AboutUs() {
   useEffect(() => {
     if (isFocused) {
       setInputOpenAiText(apiKey);
+      // auto-migrate legacy apiKey -> secureStore openai provider (one-shot)
+      if (apiKey && isFocused) {
+        (async () => {
+          try {
+            const { getProviderKey, saveProviderKey } = require("../utils/secureStore");
+            const existing = await getProviderKey("openai");
+            if (!existing && apiKey) await saveProviderKey("openai", apiKey);
+          } catch {}
+        })();
+      }
     }
-  }, [apiKey]);
+  }, [apiKey, isFocused]);
 
   return (
     <View style={{flex:1, backgroundColor:bg}}>
@@ -584,30 +677,41 @@ export default function AboutUs() {
           </View>
 
           {isAiEnabled && (
-            <View style={{gap:4}}>
-              <Text style={{color:text, fontSize:15, fontWeight:"600"}}>Chave de API</Text>
-              <View style={{ flexDirection: "row", alignItems: "stretch", height: 48, borderWidth: 1, borderColor: "#d4d4d8", borderRadius: 12, overflow: "hidden", backgroundColor: isDark ? "#27272a" : "white" }}>
-                <TextInput
-                  placeholder="Chave de API"
-                  placeholderTextColor="#a1a1aa"
-                  onChangeText={(text) => setInputOpenAiText(text)}
-                  value={inputOpenAiText}
-                  editable={isAiEnabled}
-                  style={{ flex: 1, paddingHorizontal: 12, color: text }}
-                />
-                <TouchableOpacity
-                  onPress={() => handleSaveApiKey(inputOpenAiText)}
-                  style={{ backgroundColor: theme.colors.purple[600], width: 56, justifyContent: "center", alignItems: "center" }}
-                >
-                  <Feather name="save" size={20} color="#FFF" />
-                </TouchableOpacity>
+            <View style={{gap:8, backgroundColor: isDark ? "#27272a" : "white", borderRadius:12, borderWidth:1, borderColor: isDark ? "#3f3f46" : "#e4e4e7", padding:12}} testID="ia-providers-card">
+              <View style={{flexDirection:"row", alignItems:"center", gap:8}}>
+                <View style={{width:36, height:36, borderRadius:18, backgroundColor: theme.colors.purple[600], alignItems:"center", justifyContent:"center"}}>
+                  <Feather name="cpu" size={18} color="#FFF" />
+                </View>
+                <View style={{flex:1}}>
+                  <Text style={{color:text, fontSize:15, fontWeight:"700"}}>Provedores de IA</Text>
+                  <Text style={{color:subText, fontSize:12}} numberOfLines={2}>OpenAI • Gemini • Anthropic • OpenRouter • Zen — 1 ativo + fallback</Text>
+                </View>
               </View>
-              <Text style={{color: subText, fontSize:13, marginTop:4}}>
-                Coloque aqui sua Chave de Api da OpenAI
+              <Text style={{color: subText, fontSize:12}}>
+                Chaves ficam em SecureStore. Modelos são buscados automaticamente após salvar a chave.
               </Text>
-              <TouchableOpacity onPress={() => Linking.openURL("https://platform.openai.com/account/api-keys")}>
-                <Text style={{ color: "#9c44dc" }}>Toque aqui para obter uma Chave de API OpenAi</Text>
+              <TouchableOpacity
+                testID="btn-open-ai-providers"
+                onPress={() => navigation.navigate("AIProviders")}
+                style={{ backgroundColor: theme.colors.purple[600], borderRadius: 12, paddingVertical: 12, alignItems:"center", flexDirection:"row", justifyContent:"center", gap:8 }}
+              >
+                <Feather name="settings" size={18} color="#FFF" />
+                <Text style={{ color: "white", fontWeight:"700" }}>Gerenciar provedores e modelos</Text>
               </TouchableOpacity>
+              <TouchableOpacity
+                testID="btn-open-ia-chat"
+                onPress={() => navigation.navigate("IAPage")}
+                style={{ backgroundColor: isDark ? "#3f3f46" : "white", borderWidth:1, borderColor: theme.colors.purple[600], borderRadius: 12, paddingVertical: 12, alignItems:"center", flexDirection:"row", justifyContent:"center", gap:8 }}
+              >
+                <Feather name="message-circle" size={18} color={theme.colors.purple[600]} />
+                <Text style={{ color: theme.colors.purple[600], fontWeight:"700" }}>Abrir chat IA</Text>
+              </TouchableOpacity>
+              {apiKey ? (
+                <View style={{backgroundColor: isDark ? "#422006" : "#fffbeb", borderWidth:1, borderColor:"#fde68a", borderRadius:8, padding:8}}>
+                  <Text style={{color:"#92400e", fontSize:12, fontWeight:"600"}}>Chave legada OpenAI detectada</Text>
+                  <Text style={{color:"#b45309", fontSize:11}}>Migre para “Gerenciar provedores” — salve como OpenAI para manter o histórico.</Text>
+                </View>
+              ) : null}
             </View>
           )}
 
@@ -669,6 +773,25 @@ export default function AboutUs() {
               value={isEnableTitheCard}
             />
           </View>
+          <View style={{flexDirection:"row", justifyContent:"space-between", alignItems:"center", paddingVertical:8, paddingHorizontal:12, backgroundColor: isDark ? "#27272a" : "white", borderRadius:12, borderWidth:1, borderColor: isDark ? "#3f3f46" : "#e4e4e7", marginBottom:8}}>
+            <Text style={{color:text, fontSize:15, fontWeight:"500", flex:1, marginRight:12}} numberOfLines={2}>Habilitar menu Dízimo (JFA)</Text>
+            <Switch
+              trackColor={{ false: theme.colors.gray[400], true: theme.colors.gray[400] }}
+              thumbColor={isTitheMenuEnabled ? theme.colors.purple[600] : theme.colors.gray[600]}
+              ios_backgroundColor={theme.colors.gray[600]}
+              onValueChange={handleToggleTitheMenu}
+              value={isTitheMenuEnabled}
+            />
+          </View>
+          <TouchableOpacity
+            testID="btn-open-tithe-settings"
+            onPress={() => navigation.navigate("TitheSettings")}
+            style={{ backgroundColor: isDark ? "#27272a" : "white", borderWidth:1, borderColor: theme.colors.purple[600], borderRadius:12, paddingVertical:12, paddingHorizontal:12, flexDirection:"row", alignItems:"center", justifyContent:"center", gap:8, marginBottom:8 }}
+          >
+            <Feather name="heart" size={18} color={theme.colors.purple[600]} />
+            <Text style={{ color: theme.colors.purple[600], fontWeight:"700", fontSize:14 }}>Configurar dízimo (percentual, base e escrituras)</Text>
+            <Feather name="chevron-right" size={18} color={theme.colors.purple[600]} />
+          </TouchableOpacity>
           <View style={{flexDirection:"row", justifyContent:"space-between", alignItems:"center", paddingVertical:8, paddingHorizontal:12, backgroundColor: isDark ? "#27272a" : "white", borderRadius:12, borderWidth:1, borderColor: isDark ? "#3f3f46" : "#e4e4e7", marginBottom:8}}>
             <Text style={{color:text, fontSize:15, fontWeight:"500", flex:1, marginRight:12}} numberOfLines={2}>Remover itens com o prefixo da soma do Dízimo</Text>
             <Switch

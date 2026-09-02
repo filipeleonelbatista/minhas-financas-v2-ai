@@ -93,11 +93,11 @@ export function parseImport(buffer: ArrayBuffer | Uint8Array | string, fileName?
     } else if (typeof buffer === 'string') {
       header = buffer.slice(0, 4);
     }
-    // If we can detect PK header, enforce; but XLSX files generated in tests will have PK
-    // If header is available and not PK, we could reject spoofed MIME - but not strict for tests
-    // We allow non-PK for now to not break tests that use small buffers; just log if needed
-    // Uncomment to enforce:
-    // if (header !== 'PK\x03\x04' && header.length >= 4) throw new Error('Magic bytes inválido para xlsx');
+    // Enforce PK magic bytes for xlsx (anti-MIME spoofing). Allow small buffers in tests where header <4 or empty; enforce when header length >=4
+    if (header.length >= 4 && header !== 'PK\x03\x04') {
+      // For buffers that are strings from XLSX.write (may start with PK), we check first 2 bytes also allow 'PK' prefix
+      if (!header.startsWith('PK')) throw new Error('Magic bytes inválido para xlsx');
+    }
   }
 
   const type = typeof buffer === 'string' ? 'string' : 'array';

@@ -7,7 +7,6 @@ import {
   TouchableOpacity,
   Pressable,
   Modal,
-  Alert,
   FlatList,
   useWindowDimensions,
 } from "react-native";
@@ -17,6 +16,8 @@ import { Picker } from "@react-native-picker/picker";
 import { openThemedDatePicker } from "../utils/datePicker";
 import { goalRepo, DEFAULT_GOAL_CATEGORIES, filterGoalsByStatus, calcGoalProgress, getDaysRemaining } from "../repositories/goal";
 import GoalCard from "../components/ui/GoalCard";
+import SwipeableGoalRow from "../components/SwipeableGoalRow";
+import ThemedAlert from "../components/ui/ThemedAlert";
 import Header from "../components/Header";
 import { useSettingsStore } from "../stores/settings";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -170,6 +171,8 @@ export default function Goals() {
   const [selectedCategory, setSelectedCategory] = useState(DEFAULT_GOAL_CATEGORIES[0]);
   const [showCustomCat, setShowCustomCat] = useState(false);
   const [customCategory, setCustomCategory] = useState("");
+  const [confirmDeleteGoal, setConfirmDeleteGoal] = useState(null);
+  const [errorAlert, setErrorAlert] = useState(null); // {title, message}
 
   const load = useCallback(async () => {
     const list = await goalRepo.getAll();
@@ -269,7 +272,7 @@ export default function Goals() {
   const handleSubmit = async () => {
     const categoryToSave = showCustomCat ? (customCategory.trim() || selectedCategory) : selectedCategory;
     if (!description.trim()) {
-      Alert.alert("Erro", "Descrição obrigatória");
+      setErrorAlert({ title: "Erro", message: "Descrição obrigatória" });
       return;
     }
     const dto = {
@@ -280,7 +283,7 @@ export default function Goals() {
       category: categoryToSave,
     };
     if (dto.amount <= 0) {
-      Alert.alert("Erro", "Valor da meta deve ser maior que zero");
+      setErrorAlert({ title: "Erro", message: "Valor da meta deve ser maior que zero" });
       return;
     }
     if (editing) {
@@ -293,18 +296,22 @@ export default function Goals() {
     load();
   };
 
-  const handleDelete = async (goal) => {
-    Alert.alert("Excluir meta", `Deseja excluir "${goal.description}"?`, [
-      { text: "Cancelar", style: "cancel" },
-      { text: "Excluir", style: "destructive", onPress: async () => { await goalRepo.delete(goal.id); load(); } },
-    ]);
+  const handleDelete = (goal) => {
+    setConfirmDeleteGoal(goal);
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!confirmDeleteGoal) return;
+    await goalRepo.delete(confirmDeleteGoal.id);
+    setConfirmDeleteGoal(null);
+    load();
   };
 
   const handleDepositConfirm = async () => {
     if (!depositGoal) return;
     const val = parseMoeda(depositAmount);
     if (val <= 0) {
-      Alert.alert("Erro", "Valor inválido");
+      setErrorAlert({ title: "Erro", message: "Valor inválido" });
       return;
     }
     const newCurrent = Number(depositGoal.currentAmount||0) + val;
@@ -357,7 +364,7 @@ export default function Goals() {
               <Text style={{ color: text, fontSize: 16 }}>Valor total</Text>
               <Feather name="dollar-sign" size={36} color={isDark ? "#86efac" : GREEN_500} />
             </View>
-            <Text style={{ color: text, fontSize: totalAmount < 10000 ? 22 : 18, fontWeight: "700" }} numberOfLines={1}>
+            <Text style={{ color: text, fontSize: totalAmount < 10000 ? 22 : 18, fontWeight: "700" }} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.5} ellipsizeMode="tail">
               {formatCurrency(totalAmount)}
             </Text>
             <Text style={{ color: subText, fontSize: 12 }} numberOfLines={1}>Soma de todas as metas</Text>
@@ -368,7 +375,7 @@ export default function Goals() {
               <Text style={{ color: text, fontSize: 16 }}>Guardado</Text>
               <Feather name="trending-up" size={36} color={isDark ? "#a78bfa" : PURPLE_600} />
             </View>
-            <Text style={{ color: text, fontSize: totalCurrent < 10000 ? 22 : 18, fontWeight: "700" }} numberOfLines={1}>
+            <Text style={{ color: text, fontSize: totalCurrent < 10000 ? 22 : 18, fontWeight: "700" }} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.5} ellipsizeMode="tail">
               {formatCurrency(totalCurrent)}
             </Text>
             <Text style={{ color: subText, fontSize: 12 }}>{totalAmount ? Math.round((totalCurrent/totalAmount)*100) : 0}% do total</Text>
@@ -443,12 +450,21 @@ export default function Goals() {
             </View>
           ) : (
             <View style={{ gap: 8 }}>
-              <Text style={{ color: subText, fontSize: 12, marginBottom: 4 }}>Toque para editar • Use o botão Depositar para adicionar valores</Text>
-              {filtered.map(goal => (
-                <View key={goal.id} testID={`goal-press-${goal.id}`} style={{ borderRadius: 4 }}>
-                  <GoalCard goal={goal} onDeposit={setDepositGoal} onPress={openEdit} />
-                </View>
-              ))}
+              <Text style={{ color: subText, fontSize: 12, marginBottom: 4 }}>Deslize para a direita para excluir • Deslize para a esquerda para editar • Toque para editar</Text>
+              <FlatList
+                data={filtered}
+                keyExtractor={(item) => item.id}
+                scrollEnabled={false}
+                ItemSeparatorComponent={() => <View style={{ height: 8 }} />}
+                renderItem={({ item }) => (
+                  <SwipeableGoalRow goal={item} onEdit={openEdit} onDelete={handleDelete}>
+                    <View testID={`goal-press-${item.id}`} style={{ borderRadius: 4 }}>
+                      <GoalCard goal={item} onDeposit={setDepositGoal} onPress={openEdit} />
+                    </View>
+                  </SwipeableGoalRow>
+                )}
+                testID="goals-flatlist"
+              />
             </View>
           )}
         </View>
@@ -581,9 +597,9 @@ export default function Goals() {
                   <TouchableOpacity
                     testID="delete-goal-button"
                     onPress={() => { setShowForm(false); handleDelete(editing); }}
-                    style={{ flex: 1, backgroundColor: "#fef2f2", borderWidth: 1, borderColor: "#fecaca", borderRadius: 12, paddingVertical: 12, alignItems: "center" }}
+                    style={{ flex: 1, backgroundColor: isDark ? "#7f1d1d" : "#fef2f2", borderWidth: 1, borderColor: isDark ? "#991b1b" : "#fecaca", borderRadius: 12, paddingVertical: 12, alignItems: "center" }}
                   >
-                    <Text style={{ color: RED_500, fontWeight: "700" }}>Excluir</Text>
+                    <Text style={{ color: isDark ? "#fca5a5" : RED_500, fontWeight: "700" }}>Excluir</Text>
                   </TouchableOpacity>
                 )}
                 <TouchableOpacity
@@ -603,7 +619,7 @@ export default function Goals() {
       {/* Deposit Modal */}
       <Modal visible={!!depositGoal} animationType="fade" transparent>
         <View style={{ flex: 1, backgroundColor: "rgba(0,0,0,0.4)", justifyContent: "center", paddingHorizontal: 24 }}>
-          <View style={{ backgroundColor: isDark ? "#27272a" : "white", borderRadius: 16, padding: 20 }}>
+          <View style={{ backgroundColor: isDark ? "#27272a" : "white", borderRadius: 16, padding: 20, borderWidth: isDark ? 1 : 0, borderColor: isDark ? "#3f3f46" : "transparent" }}>
             <Text style={{ fontSize: 18, fontWeight: "700", color: text, marginBottom: 8 }}>Depositar na meta</Text>
             {depositGoal && (
               <Text style={{ fontSize: 13, color: subText, marginBottom: 12 }}>{depositGoal.description} • {Number(depositGoal.currentAmount||0).toLocaleString('pt-BR',{style:'currency',currency:'BRL'})} de {Number(depositGoal.amount).toLocaleString('pt-BR',{style:'currency',currency:'BRL'})}</Text>
@@ -629,6 +645,34 @@ export default function Goals() {
           </View>
         </View>
       </Modal>
+
+      <ThemedAlert
+        visible={!!confirmDeleteGoal}
+        title="Excluir meta"
+        message={confirmDeleteGoal ? `Deseja excluir "${confirmDeleteGoal.description}"?` : undefined}
+        variant="danger"
+        confirmText="Excluir"
+        cancelText="Cancelar"
+        onConfirm={handleConfirmDelete}
+        onCancel={() => setConfirmDeleteGoal(null)}
+        onClose={() => setConfirmDeleteGoal(null)}
+        testID="delete-goal-alert"
+        confirmTestID="confirm-delete-goal"
+        cancelTestID="cancel-delete-goal"
+      />
+
+      <ThemedAlert
+        visible={!!errorAlert}
+        title={errorAlert?.title ?? "Erro"}
+        message={errorAlert?.message}
+        variant="warning"
+        confirmText="OK"
+        cancelText={null}
+        onConfirm={() => setErrorAlert(null)}
+        onClose={() => setErrorAlert(null)}
+        testID="error-alert"
+        confirmTestID="error-alert-ok"
+      />
 
       <Sheet ref={filterSheetRef} snapPoints={["55%"]} enableDynamicSizing={false} backgroundStyle={{ backgroundColor: bg }} handleIndicatorStyle={{ backgroundColor: isDark ? "#3f3f46" : "#e4e4e7" }}>
         <BottomSheetScrollView contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: insets.bottom + 24, gap: 16 }} style={{ flex: 1, backgroundColor: bg }}>

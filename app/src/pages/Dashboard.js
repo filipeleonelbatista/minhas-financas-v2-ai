@@ -240,7 +240,7 @@ export default function Dashboard() {
                 <Text style={{ color: text, fontSize: 18 }}>Saldo</Text>
                 <Feather name={hero.Saldo >= 0 ? "arrow-up-circle" : "arrow-down-circle"} size={48} color={GREEN_500} />
               </View>
-              <Text style={{ color: text, fontSize: Math.abs(hero.Saldo) < 10000 ? 26 : 20, maxWidth: 170 }} numberOfLines={1}>
+              <Text style={{ color: text, fontSize: Math.abs(hero.Saldo) < 10000 ? 26 : 20, maxWidth: 170 }} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.5} ellipsizeMode="tail">
                 {formatCurrency(hero.Saldo)}
               </Text>
             </View>
@@ -251,7 +251,7 @@ export default function Dashboard() {
               <Text style={{ color: text, fontSize: 18 }}>Entradas</Text>
               <Feather name="arrow-up-circle" size={48} color={GREEN_500} />
             </View>
-            <Text style={{ color: text, fontSize: hero.Incomings < 10000 ? 26 : 20, maxWidth: 170 }} numberOfLines={1}>
+            <Text style={{ color: text, fontSize: hero.Incomings < 10000 ? 26 : 20, maxWidth: 170 }} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.5} ellipsizeMode="tail">
               {formatCurrency(hero.Incomings)}
             </Text>
           </View>
@@ -261,7 +261,7 @@ export default function Dashboard() {
               <Text style={{ color: text, fontSize: 18 }}>Saídas</Text>
               <Feather name="arrow-down-circle" size={48} color={RED_500} />
             </View>
-            <Text style={{ color: text, fontSize: hero.Expenses < 10000 ? 26 : 20, maxWidth: 170 }} numberOfLines={1}>
+            <Text style={{ color: text, fontSize: hero.Expenses < 10000 ? 26 : 20, maxWidth: 170 }} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.5} ellipsizeMode="tail">
               {formatCurrency(hero.Expenses)}
             </Text>
           </View>
@@ -272,7 +272,7 @@ export default function Dashboard() {
                 <Text style={{ color: "white", fontSize: 18 }}>Dízimo</Text>
                 <Feather name="heart" size={48} color="white" />
               </View>
-              <Text style={{ color: "white", fontSize: hero.Tithe < 10000 ? 26 : 20, maxWidth: 170 }} numberOfLines={1}>
+              <Text style={{ color: "white", fontSize: hero.Tithe < 10000 ? 26 : 20, maxWidth: 170 }} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.5} ellipsizeMode="tail">
                 {formatCurrency(hero.Tithe)}
               </Text>
             </View>

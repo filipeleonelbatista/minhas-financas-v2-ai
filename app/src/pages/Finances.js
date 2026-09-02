@@ -25,6 +25,9 @@ import isSameOrAfter from "dayjs/plugin/isSameOrAfter";
 import isSameOrBefore from "dayjs/plugin/isSameOrBefore";
 import EditItemForm from "../components/EditItemForm";
 import EmptyMessage from "../components/EmptyMessage";
+import FinanceCard from "../components/ui/FinanceCard";
+import SwipeableFinanceRow from "../components/SwipeableFinanceRow";
+import ThemedAlert from "../components/ui/ThemedAlert";
 import Header from "../components/Header";
 import { useIsKeyboardOpen } from "../hooks/useIsKeyboardOpen";
 import { useSettingsStore } from "../stores/settings";
@@ -100,6 +103,7 @@ export default function Finances() {
   const setStartDate = (v) => setPeriod(v, useFinanceStore.getState().endDate);
   const setEndDate = (v) => setPeriod(useFinanceStore.getState().startDate, v);
   const handleFavorite = useFinanceStore((s) => s.handleFavorite);
+  const removeFinance = useFinanceStore((s) => s.remove);
   const load = useFinanceStore((s) => s.load);
 
   const isEnableTitheCard = useSettingsStore((s) => !!s.isEnableTitheCard);
@@ -109,8 +113,13 @@ export default function Finances() {
 
   const [selectedTransaction, setSelectedTransaction] = useState(null);
   const [isOpen, setIsOpen] = useState(false);
+  const [isEditMode, setIsEditMode] = useState(false);
   const onOpen = () => setIsOpen(true);
-  const onClose = () => setIsOpen(false);
+  const onClose = () => {
+    setIsOpen(false);
+    setIsEditMode(false);
+  };
+  const [confirmDeleteFinance, setConfirmDeleteFinance] = useState(null);
 
   const navigation = useNavigation();
   const isFocused = useIsFocused();
@@ -138,6 +147,23 @@ export default function Finances() {
 
   const insets = useSafeAreaInsets();
   const filterSheetRef = useSheetRef();
+
+  const handleViewFinance = (item) => {
+    setSelectedTransaction(item);
+    setIsEditMode(false);
+    onOpen();
+  };
+  const handleEditFinance = (item) => {
+    setSelectedTransaction(item);
+    setIsEditMode(true);
+    onOpen();
+  };
+  const handleDeleteFinance = (item) => setConfirmDeleteFinance(item);
+  const handleConfirmDeleteFinance = async () => {
+    if (!confirmDeleteFinance) return;
+    await removeFinance(confirmDeleteFinance);
+    setConfirmDeleteFinance(null);
+  };
 
   const categoryItemLib = {
     Outros: <Feather name="dollar-sign" size={28} color={"#e83e5a"} />,
@@ -193,7 +219,7 @@ export default function Finances() {
                 <Text style={{ color: text, fontSize: 18 }}>Saldo</Text>
                 <Feather name={Saldo >= 0 ? "arrow-up-circle" : "arrow-down-circle"} size={48} color={GREEN_500} />
               </View>
-              <Text style={{ color: text, fontSize: Math.abs(Saldo) < 10000 ? 26 : 20, maxWidth: 170 }} numberOfLines={1}>
+              <Text style={{ color: text, fontSize: Math.abs(Saldo) < 10000 ? 26 : 20, maxWidth: 170 }} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.5} ellipsizeMode="tail">
                 {formatCurrency(Saldo)}
               </Text>
             </View>
@@ -204,7 +230,7 @@ export default function Finances() {
               <Text style={{ color: text, fontSize: 18 }}>Entradas</Text>
               <Feather name="arrow-up-circle" size={48} color={GREEN_500} />
             </View>
-            <Text style={{ color: text, fontSize: Incomings < 10000 ? 26 : 20, maxWidth: 170 }} numberOfLines={1}>
+            <Text style={{ color: text, fontSize: Incomings < 10000 ? 26 : 20, maxWidth: 170 }} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.5} ellipsizeMode="tail">
               {formatCurrency(Incomings)}
             </Text>
           </View>
@@ -214,7 +240,7 @@ export default function Finances() {
               <Text style={{ color: text, fontSize: 18 }}>Saídas</Text>
               <Feather name="arrow-down-circle" size={48} color={RED_500} />
             </View>
-            <Text style={{ color: text, fontSize: Expenses < 10000 ? 26 : 20, maxWidth: 170 }} numberOfLines={1}>
+            <Text style={{ color: text, fontSize: Expenses < 10000 ? 26 : 20, maxWidth: 170 }} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.5} ellipsizeMode="tail">
               {formatCurrency(Expenses)}
             </Text>
           </View>
@@ -224,7 +250,7 @@ export default function Finances() {
               <Text style={{ color: "white", fontSize: 18 }}>Total</Text>
               <Feather name="dollar-sign" size={48} color="white" />
             </View>
-            <Text style={{ color: "white", fontSize: Total < 10000 ? 26 : 20, maxWidth: 170 }} numberOfLines={1}>
+            <Text style={{ color: "white", fontSize: Total < 10000 ? 26 : 20, maxWidth: 170 }} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.5} ellipsizeMode="tail">
               {formatCurrency(Total)}
             </Text>
           </View>
@@ -235,7 +261,7 @@ export default function Finances() {
                 <Text style={{ color: "white", fontSize: 18 }}>Dízimo</Text>
                 <Feather name="dollar-sign" size={48} color="white" />
               </View>
-              <Text style={{ color: "white", fontSize: Tithe < 10000 ? 26 : 20, maxWidth: 170 }} numberOfLines={1}>
+              <Text style={{ color: "white", fontSize: Tithe < 10000 ? 26 : 20, maxWidth: 170 }} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.5} ellipsizeMode="tail">
                 {formatCurrency(Tithe)}
               </Text>
             </View>
@@ -280,113 +306,43 @@ export default function Finances() {
         {filteredList.length === 0 ? (
           <EmptyMessage />
         ) : (
-          <View style={{ gap: 8, paddingHorizontal: 16, marginTop: 8, marginBottom: 24 }}>
-            <Text style={{ color: text, marginBottom: 8 }}>
-              Toque no item para visualizar e depois editar ou excluir.{"\n"}Segure para adicionar/remover dos favoritos
+          <View style={{ paddingHorizontal: 16, marginTop: 8, marginBottom: 24 }}>
+            <Text style={{ color: text, marginBottom: 8, fontSize: 12 }}>
+              Deslize para a direita para excluir • Deslize para a esquerda para editar • Toque na estrela para favoritar • Segure para visualizar
             </Text>
-
-            {filteredList.map((item) => (
-              <Pressable
-                key={item.id}
-                onPress={() => {
-                  setSelectedTransaction(item);
-                  onOpen();
-                }}
-                onLongPress={() => handleFavorite(item)}
-                style={({ pressed }) => ({
-                  shadowColor: "#000",
-                  shadowOpacity: 0.1,
-                  elevation: 2,
-                  borderRadius: 4,
-                  backgroundColor: pressed ? bgCardPressed : bgCard,
-                  position: "relative",
-                })}
-              >
-                <View style={{ flexDirection: "row", alignItems: "center", width: "100%", gap: 8, padding: 8 }}>
-                  <View style={{ position: "absolute", top: 8, right: 8, flexDirection: "row", gap: 8, alignItems: "center", zIndex: 1 }}>
-                    {!simpleFinancesItem && item.isEnabled === 1 && (
-                      <View
-                        style={{
-                          alignItems: "center",
-                          justifyContent: "center",
-                          paddingVertical: 2,
-                          paddingHorizontal: 8,
-                          borderWidth: 1,
-                          borderColor: item.paymentStatus === 1 ? GREEN_600 : RED_600,
-                          borderRadius: 999,
-                          backgroundColor: "transparent",
-                        }}
-                      >
-                        <Text style={{ fontSize: 10, color: item.paymentStatus === 1 ? GREEN_600 : RED_600 }}>
-                          {item.paymentStatus === 1 ? "Pago" : "Não Pago"}
-                        </Text>
-                      </View>
-                    )}
-                    <Pressable
-                      onPress={() => handleFavorite(item)}
-                      hitSlop={12}
-                      style={{ padding: 6, borderRadius: 999 }}
-                      android_ripple={{ color: isDark ? "#3f3f46" : "#e4e4e7", borderless: true }}
-                    >
-                      <FontAwesome
-                        name={item.isFavorited === 1 ? "star" : "star-o"}
-                        size={18}
-                        color={item.isFavorited === 1 ? YELLOW_400 : text}
-                      />
-                    </Pressable>
-                  </View>
-                  <View style={{ width: "100%", flexDirection: "row", alignItems: "center", gap: 16 }}>
-                    {item.isEnabled === 1 ? (
-                      item.category ? (
-                        categoryItemLib[item.category] || <Feather name="arrow-down-circle" size={28} color={RED_600} />
-                      ) : (
-                        <Feather name="arrow-down-circle" size={28} color={RED_600} />
-                      )
-                    ) : (
-                      <Feather name="arrow-up-circle" size={28} color={GREEN_600} />
-                    )}
-                    <View style={{ alignItems: "flex-start", flex: 1 }}>
-                      <Text style={{ fontSize: 18, color: text }}>{item.description}</Text>
-                      {item.date !== "" && (
-                        <Text style={{ color: text }}>
-                          {item.isEnabled === 1 ? "Dt. Venc.: " : "Dt. Receb.: "}
-                          {new Date(item.date).toLocaleDateString("pt-BR")}
-                        </Text>
-                      )}
-                      {!simpleFinancesItem && item.paymentDate !== "" && item.isEnabled === 1 && (
-                        <Text style={{ color: text }}>Dt. Pgto.: {new Date(item.paymentDate).toLocaleDateString("pt-BR")}</Text>
-                      )}
-                      {!simpleFinancesItem && <Text style={{ color: text }}>Cat.: {item.category}</Text>}
-                    </View>
-                    <View style={{ alignItems: "flex-end", width: "34%" }}>
-                      <Text style={{ fontSize: 18, color: text, marginTop: 16, marginRight: 12 }} numberOfLines={1}>
-                        {item.isEnabled === 1 ? "-" : ""}
-                        {item.amount.toLocaleString("pt-BR", {
-                          style: "currency",
-                          currency: "BRL",
-                          minimumFractionDigits: 2,
-                          maximumFractionDigits: 2,
-                          useGrouping: true,
-                        })}
-                      </Text>
-                    </View>
-                  </View>
+            <FlatList
+              data={filteredList}
+              keyExtractor={(item) => item.id}
+              scrollEnabled={false}
+              ItemSeparatorComponent={() => <View style={{ height: 8 }} />}
+              renderItem={({ item }) => (
+                <SwipeableFinanceRow item={item} onEdit={handleEditFinance} onDelete={handleDeleteFinance}>
+                  <FinanceCard
+                    item={item}
+                    onPress={() => {}}
+                    onLongPress={handleViewFinance}
+                    onFavorite={handleFavorite}
+                    simpleFinancesItem={simpleFinancesItem}
+                    testID={`finance-card-${item.id}`}
+                  />
+                </SwipeableFinanceRow>
+              )}
+              testID="finances-flatlist"
+              ListFooterComponent={
+                <View style={{ flexDirection: "row", justifyContent: "space-between", marginTop: 12, gap: 8 }}>
+                  <Text style={{ color: text, fontSize: 18, fontWeight: "700" }}>Total</Text>
+                  <Text style={{ color: text, fontSize: 18, fontWeight: "700", flex: 1, textAlign: "right" }} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.6} ellipsizeMode="tail">
+                    {listTotal.toLocaleString("pt-BR", {
+                      style: "currency",
+                      currency: "BRL",
+                      minimumFractionDigits: 2,
+                      maximumFractionDigits: 2,
+                      useGrouping: true,
+                    })}
+                  </Text>
                 </View>
-              </Pressable>
-            ))}
-
-            <View style={{ flexDirection: "row", justifyContent: "space-between" }}>
-              <Text style={{ color: text, fontSize: 18, fontWeight: "700" }}>Total</Text>
-              <Text style={{ color: text, fontSize: 18, fontWeight: "700" }}>
-                {listTotal.toLocaleString("pt-BR", {
-                  style: "currency",
-                  currency: "BRL",
-                  minimumFractionDigits: 2,
-                  maximumFractionDigits: 2,
-                  useGrouping: true,
-                })}
-              </Text>
-            </View>
+              }
+            />
           </View>
         )}
 
@@ -401,11 +357,26 @@ export default function Finances() {
             <Feather name="x" size={24} color={text} />
           </Pressable>
           {selectedTransaction && (
-            <EditItemForm onClose={onClose} selectedTransaction={selectedTransaction} />
+            <EditItemForm onClose={onClose} selectedTransaction={selectedTransaction} initialEditable={isEditMode} />
           )}
           <View style={{ height: 64, width: "100%" }} />
         </View>
       </Modal>
+
+      <ThemedAlert
+        visible={!!confirmDeleteFinance}
+        title="Excluir lançamento"
+        message={confirmDeleteFinance ? `Deseja excluir "${confirmDeleteFinance.description}"?` : undefined}
+        variant="danger"
+        confirmText="Excluir"
+        cancelText="Cancelar"
+        onConfirm={handleConfirmDeleteFinance}
+        onCancel={() => setConfirmDeleteFinance(null)}
+        onClose={() => setConfirmDeleteFinance(null)}
+        testID="finance-delete-alert"
+        confirmTestID="confirm-delete-finance"
+        cancelTestID="cancel-delete-finance"
+      />
 
       <Sheet ref={filterSheetRef} snapPoints={["85%"]} enableDynamicSizing={false} backgroundStyle={{ backgroundColor: bg }} handleIndicatorStyle={{ backgroundColor: isDark ? "#3f3f46" : "#e4e4e7" }}>
         <BottomSheetScrollView contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: insets.bottom + 24, gap: 16 }} style={{ flex: 1, backgroundColor: bg }}>

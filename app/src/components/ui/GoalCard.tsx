@@ -152,11 +152,11 @@ export default function GoalCard({ goal, onDeposit, onPress, testID, style }: Go
         {goal.description}
       </Text>
 
-      <View style={{ flexDirection: "row", justifyContent: "space-between", marginBottom: 8 }}>
-        <Text style={{ fontSize: 12, color: subText }}>
+      <View style={{ flexDirection: "row", justifyContent: "space-between", marginBottom: 8, gap: 8 }}>
+        <Text style={{ fontSize: 12, color: subText, flex: 1 }} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.6} ellipsizeMode="tail">
           {formatCurrency(goal.currentAmount)} de {formatCurrency(goal.amount)}
         </Text>
-        <Text style={{ fontSize: 12, color: subText }}>
+        <Text style={{ fontSize: 12, color: subText }} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.7}>
           {new Date(goal.date).toLocaleDateString('pt-BR')}
         </Text>
       </View>

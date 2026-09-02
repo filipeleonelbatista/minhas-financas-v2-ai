@@ -173,63 +173,57 @@ export default function AddItemForm({ onClose }) {
         Adicione informações sobre o entrada ou saída que está adicionando.
       </Text>
 
-      <View className="flex-col gap-2" style={{ gap: 8, marginBottom: 8 }}>
-        <Text style={{ color: text }}>Descrição</Text>
+      <Text style={{ fontSize: 14, fontWeight: "600", color: text, marginBottom: 4 }}>Descrição</Text>
+      <TextInput
+        testID="tour-input-description"
+        accessibilityLabel="Descrição"
+        placeholder="Descrição"
+        placeholderTextColor="#a1a1aa"
+        onChangeText={(t) => formik.setFieldValue("description", t)}
+        value={formik.values.description}
+        className="bg-white dark:bg-gray-800 rounded-xl p-3 border border-gray-200 dark:border-gray-700"
+        style={{ color: text, backgroundColor: isDark ? "#3f3f46" : "white", borderWidth: 1, borderColor: isDark ? "#3f3f46" : "#d4d4d8", borderRadius: 8, paddingHorizontal: 12, paddingVertical: 10, marginBottom: 12 }}
+      />
+      {formik.errors.description && (
+        <Text style={{ color: "#dc2626", marginBottom: 8 }}>{formik.errors.description}</Text>
+      )}
+      <Text style={{ fontSize: 14, fontWeight: "600", color: text, marginBottom: 4 }}>Valor</Text>
+      <TextInput
+        testID="tour-input-amount"
+        accessibilityLabel="Valor"
+        keyboardType="decimal-pad"
+        placeholder="Valor"
+        placeholderTextColor="#a1a1aa"
+        onChangeText={(t) => formik.setFieldValue("amount", moeda(t))}
+        value={formik.values.amount}
+        className="bg-white dark:bg-gray-800 rounded-xl p-3 border border-gray-200 dark:border-gray-700"
+        style={{ color: text, backgroundColor: isDark ? "#3f3f46" : "white", borderWidth: 1, borderColor: isDark ? "#3f3f46" : "#d4d4d8", borderRadius: 8, paddingHorizontal: 12, paddingVertical: 10, marginBottom: 12 }}
+      />
+      {formik.errors.amount && (
+        <Text style={{ color: "#dc2626", marginBottom: 8 }}>{formik.errors.amount}</Text>
+      )}
+      <Text style={{ fontSize: 14, fontWeight: "600", color: text, marginBottom: 4 }}>Data de vencimento</Text>
+      <Pressable onPress={() => openThemedDatePicker({ value: new Date(), onChange, isDark })} className="flex-row items-center bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden" style={{ flexDirection: "row", alignItems: "stretch", height: 48, backgroundColor: isDark ? "#27272a" : "white", borderWidth: 1, borderColor: isDark ? "#3f3f46" : "#e4e4e7", borderRadius: 12, overflow: "hidden", marginBottom: 12 }}>
         <TextInput
-          testID="tour-input-description"
-          accessibilityLabel="Descrição"
-          placeholder="Descrição"
+          placeholder="DD/MM/AAAA"
           placeholderTextColor="#a1a1aa"
-          onChangeText={(t) => formik.setFieldValue("description", t)}
-          value={formik.values.description}
-          className="bg-white dark:bg-gray-800 rounded-xl p-3 border border-gray-200 dark:border-gray-700"
-          style={{ color: text, backgroundColor: isDark ? "#27272a" : "white", borderWidth: 1, borderColor: isDark ? "#3f3f46" : "#e4e4e7", borderRadius: 12, padding: 12 }}
+          value={formik.values.date}
+          editable={false}
+          pointerEvents="none"
+          style={{ flex: 1, paddingHorizontal: 12, textAlignVertical: "center", color: text }}
         />
-        {formik.errors.description && (
-          <Text style={{ color: "#dc2626" }}>{formik.errors.description}</Text>
-        )}
-      </View>
-      <View className="flex-col gap-2" style={{ gap: 8, marginBottom: 8 }}>
-        <Text style={{ color: text }}>Valor</Text>
-        <TextInput
-          testID="tour-input-amount"
-          accessibilityLabel="Valor"
-          keyboardType="decimal-pad"
-          placeholder="Valor"
-          placeholderTextColor="#a1a1aa"
-          onChangeText={(t) => formik.setFieldValue("amount", moeda(t))}
-          value={formik.values.amount}
-          className="bg-white dark:bg-gray-800 rounded-xl p-3 border border-gray-200 dark:border-gray-700"
-          style={{ color: text, backgroundColor: isDark ? "#27272a" : "white", borderWidth: 1, borderColor: isDark ? "#3f3f46" : "#e4e4e7", borderRadius: 12, padding: 12 }}
-        />
-        {formik.errors.amount && (
-          <Text style={{ color: "#dc2626" }}>{formik.errors.amount}</Text>
-        )}
-      </View>
-      <View className="flex-col gap-2" style={{ gap: 8, marginBottom: 8 }}>
-        <Text style={{ color: text }}>Data de vencimento</Text>
-        <Pressable onPress={() => openThemedDatePicker({ value: new Date(), onChange, isDark })} className="flex-row items-center bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden" style={{ flexDirection: "row", alignItems: "stretch", height: 48, backgroundColor: isDark ? "#27272a" : "white", borderWidth: 1, borderColor: isDark ? "#3f3f46" : "#e4e4e7", borderRadius: 12, overflow: "hidden" }}>
-          <TextInput
-            placeholder="DD/MM/AAAA"
-            placeholderTextColor="#a1a1aa"
-            value={formik.values.date}
-            editable={false}
-            pointerEvents="none"
-            style={{ flex: 1, paddingHorizontal: 12, textAlignVertical: "center", color: text }}
-          />
-          <View style={{ backgroundColor: PURPLE_600, justifyContent: "center", alignItems: "center", width: 56, borderTopRightRadius: 12, borderBottomRightRadius: 12 }}>
-            <Feather name="calendar" size={20} color="#FFF" />
-          </View>
-        </Pressable>
-        {formik.errors.date && (
-          <Text style={{ color: "#dc2626" }}>{formik.errors.date}</Text>
-        )}
-      </View>
+        <View style={{ backgroundColor: PURPLE_600, justifyContent: "center", alignItems: "center", width: 56, borderTopRightRadius: 12, borderBottomRightRadius: 12 }}>
+          <Feather name="calendar" size={20} color="#FFF" />
+        </View>
+      </Pressable>
+      {formik.errors.date && (
+        <Text style={{ color: "#dc2626", marginBottom: 8 }}>{formik.errors.date}</Text>
+      )}
 
       {!simpleFinancesItem && (
         <>
-          <View className="flex-col gap-2" style={{ gap: 8, marginBottom: 8 }}>
-            <Text style={{ fontWeight: "700", fontSize: 18, color: text }}>Categoria</Text>
+          <Text style={{ fontSize: 14, fontWeight: "600", color: text, marginBottom: 4 }}>Categoria</Text>
+          <View style={{ borderWidth: 1, borderColor: isDark ? "#3f3f46" : "#e4e4e7", borderRadius: 12, overflow: "hidden", backgroundColor: isDark ? "#27272a" : "white", marginBottom: 12 }}>
             <Picker
               selectedValue={formik.values.category ?? "Outros"}
               onValueChange={(itemValue) =>
@@ -240,8 +234,8 @@ export default function AddItemForm({ onClose }) {
               enabled
               style={{
                 width: "100%",
-                borderRadius: 4,
                 color: text,
+                height: 48,
               }}
             >
               {categoriesList.map((cat, index) =>
@@ -250,33 +244,31 @@ export default function AddItemForm({ onClose }) {
                 )
               )}
             </Picker>
-            {formik.errors.category && (
-              <Text style={{ color: "#dc2626" }}>{formik.errors.category}</Text>
-            )}
           </View>
-          <View className="flex-col gap-2" style={{ gap: 8, marginBottom: 8 }}>
-            <Text style={{ color: text }}>Data do pagamento</Text>
-            <Pressable onPress={() => openThemedDatePicker({ value: new Date(), onChange: onChangePaymentDate, isDark })} className="flex-row items-center bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden" style={{ flexDirection: "row", alignItems: "stretch", height: 48, backgroundColor: isDark ? "#27272a" : "white", borderWidth: 1, borderColor: isDark ? "#3f3f46" : "#e4e4e7", borderRadius: 12, overflow: "hidden" }}>
-              <TextInput
-                placeholder="DD/MM/AAAA"
-                placeholderTextColor="#a1a1aa"
-                value={formik.values.paymentDate}
-                editable={false}
-                pointerEvents="none"
-                style={{ flex: 1, paddingHorizontal: 12, textAlignVertical: "center", color: text }}
-              />
-              <View style={{ backgroundColor: PURPLE_600, justifyContent: "center", alignItems: "center", width: 56, borderTopRightRadius: 12, borderBottomRightRadius: 12 }}>
-                <Feather name="calendar" size={20} color="#FFF" />
-              </View>
-            </Pressable>
-            {formik.errors.paymentDate && (
-              <Text style={{ color: "#dc2626" }}>{formik.errors.paymentDate}</Text>
-            )}
-          </View>
+          {formik.errors.category && (
+            <Text style={{ color: "#dc2626", marginBottom: 8 }}>{formik.errors.category}</Text>
+          )}
+          <Text style={{ fontSize: 14, fontWeight: "600", color: text, marginBottom: 4 }}>Data do pagamento</Text>
+          <Pressable onPress={() => openThemedDatePicker({ value: new Date(), onChange: onChangePaymentDate, isDark })} className="flex-row items-center bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden" style={{ flexDirection: "row", alignItems: "stretch", height: 48, backgroundColor: isDark ? "#27272a" : "white", borderWidth: 1, borderColor: isDark ? "#3f3f46" : "#e4e4e7", borderRadius: 12, overflow: "hidden", marginBottom: 12 }}>
+            <TextInput
+              placeholder="DD/MM/AAAA"
+              placeholderTextColor="#a1a1aa"
+              value={formik.values.paymentDate}
+              editable={false}
+              pointerEvents="none"
+              style={{ flex: 1, paddingHorizontal: 12, textAlignVertical: "center", color: text }}
+            />
+            <View style={{ backgroundColor: PURPLE_600, justifyContent: "center", alignItems: "center", width: 56, borderTopRightRadius: 12, borderBottomRightRadius: 12 }}>
+              <Feather name="calendar" size={20} color="#FFF" />
+            </View>
+          </Pressable>
+          {formik.errors.paymentDate && (
+            <Text style={{ color: "#dc2626", marginBottom: 8 }}>{formik.errors.paymentDate}</Text>
+          )}
         </>
       )}
 
-      <View className="flex-row items-center gap-2" style={{ flexDirection: "row", alignItems: "center", gap: 8, marginTop: 8 }}>
+      <View className="flex-row items-center gap-2" style={{ flexDirection: "row", alignItems: "center", gap: 8, marginTop: 12 }}>
         <Switch
           trackColor={{
             false: "#a1a1aa",
@@ -294,15 +286,15 @@ export default function AddItemForm({ onClose }) {
         <Text style={{ fontSize: 14, color: text }}>É despesa?</Text>
       </View>
       {formik.errors.isEnabled && (
-        <Text style={{ color: "#dc2626" }}>{formik.errors.isEnabled}</Text>
+        <Text style={{ color: "#dc2626", marginBottom: 8 }}>{formik.errors.isEnabled}</Text>
       )}
-      <Text style={{ fontSize: 14, color: text }}>
+      <Text style={{ fontSize: 14, color: text, marginBottom: 12 }}>
         Deixe marcado caso esteja adicionando uma saída (Despesa).
       </Text>
 
       {!simpleFinancesItem && (
         <>
-          <View className="flex-row items-center gap-2" style={{ flexDirection: "row", alignItems: "center", gap: 8, marginTop: 8 }}>
+          <View className="flex-row items-center gap-2" style={{ flexDirection: "row", alignItems: "center", gap: 8, marginTop: 12 }}>
             <Switch
               trackColor={{
                 false: "#a1a1aa",
@@ -328,7 +320,7 @@ export default function AddItemForm({ onClose }) {
       <Pressable
         onPress={formik.submitForm}
         className="bg-purple-600 rounded-xl p-3 mt-2 mb-8 items-center justify-center active:bg-purple-900"
-        style={{ backgroundColor: PURPLE_600, marginTop: 8, marginBottom: 32, padding: 12, borderRadius: 12, alignItems: "center", justifyContent: "center" }}
+        style={{ backgroundColor: PURPLE_600, marginTop: 20, marginBottom: 32, padding: 12, borderRadius: 12, alignItems: "center", justifyContent: "center" }}
       >
         <Text style={{ color: "white", fontWeight: "600" }}>Adicionar</Text>
       </Pressable>

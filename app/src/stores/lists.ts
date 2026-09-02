@@ -13,6 +13,8 @@ type ListsState = {
   handleSelect: (id: string) => Promise<void>;
   deleteList: (id: string) => Promise<void>;
   updateQuantity: (item: any, isAdd: boolean) => Promise<void>;
+  deleteItem: (id: string, listId: string) => Promise<void>;
+  updateItem: (id: string, dto: any) => Promise<void>;
   setSearch: (v: string) => void;
   setSelectedCategory: (v: string) => void;
   getFilteredList: () => any[];
@@ -29,6 +31,15 @@ function computeFiltered(selectedListItems: any[], search: string, selectedCateg
     f = f.filter((i) => String(i.description).includes(search));
   }
   return f;
+}
+
+async function recalcListTotals(listId: string) {
+  try {
+    const items = await listRepo.getItems(listId);
+    const totalAmount = items.reduce((acc: number, it: any) => acc + Number(it.amount) * Number(it.quantity), 0);
+    const totalQuantity = items.reduce((acc: number, it: any) => acc + Number(it.quantity), 0);
+    await listRepo.update(listId, { amount: totalAmount, quantity: totalQuantity });
+  } catch {}
 }
 
 export const useListsStore = create<ListsState>((set, get) => ({
@@ -52,6 +63,7 @@ export const useListsStore = create<ListsState>((set, get) => ({
   addItem: async (dto: any) => {
     await listRepo.addItem(dto);
     await get().handleSelect(dto.list_id);
+    await recalcListTotals(dto.list_id);
     await get().load();
   },
 
@@ -72,7 +84,28 @@ export const useListsStore = create<ListsState>((set, get) => ({
     const newQty = isAdd ? Number(item.quantity) + 1 : Number(item.quantity) - 1;
     const clamped = newQty < 0 ? 0 : newQty;
     await listRepo.updateItem(item.id, { quantity: clamped });
+    await recalcListTotals(item.list_id);
     await get().handleSelect(item.list_id);
+    await get().load();
+  },
+  deleteItem: async (id: string, listId: string) => {
+    await listRepo.deleteItem(id);
+    if (listId) {
+      await recalcListTotals(listId);
+      await get().handleSelect(listId);
+    }
+    await get().load();
+  },
+  updateItem: async (id: string, dto: any) => {
+    await listRepo.updateItem(id, dto);
+    const listId = dto.list_id ?? (await listRepo.getItems(dto.list_id).then(() => dto.list_id).catch(() => null));
+    // Try to get listId from dto or from current selectedList
+    const targetListId = dto.list_id ?? get().selectedList?.id ?? null;
+    if (targetListId) {
+      await recalcListTotals(targetListId);
+      await get().handleSelect(targetListId);
+    }
+    await get().load();
   },
 
   setSearch: (v: string) => set({ search: v }),

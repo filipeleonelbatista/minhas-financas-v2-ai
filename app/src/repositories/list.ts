@@ -22,5 +22,10 @@ export const listRepo={
     if(idx>=0){ memItems[idx]={ ...memItems[idx], ...dto }; return memItems[idx]; }
     return null;
   },
+  async deleteItem(id:string){
+    const db=getDb();
+    if(db){ try{ await db.delete(items).where(eq(items.id,id)); }catch{}}
+    memItems=memItems.filter(r=>r.id!==id);
+  },
   async clearMemory(){ memLists=[]; memItems=[]; const db=getDb(); if(db){ try{ await db.delete(items); await db.delete(lists);}catch{}}},
 };

@@ -51,8 +51,13 @@ export default function List() {
 
   const { setSelectedSheet } = usePagesStore();
   const isFocused = useIsFocused();
+  const refreshSelectedList = useListsStore((s) => s.handleSelect);
+  const loadLists = useListsStore((s) => s.load);
   useEffect(() => {
-    if (isFocused) setSelectedSheet("List");
+    if (isFocused) {
+      setSelectedSheet("List");
+      if (selectedList?.id) refreshSelectedList(selectedList.id);
+    }
   }, [isFocused]);
 
   const isKeyboardOpen = useIsKeyboardOpen();
@@ -105,12 +110,8 @@ export default function List() {
   const handleDeleteItem = (item) => setConfirmDeleteItem(item);
   const handleConfirmDeleteItem = async () => {
     if (!confirmDeleteItem) return;
-    try {
-      const { listRepo } = require("../repositories/list");
-      await listRepo.deleteItem(confirmDeleteItem.id);
-      const { useListsStore: _store } = require("../stores/lists");
-      await _store.getState().handleSelect(selectedList?.id);
-    } catch {}
+    const storeDeleteItem = useListsStore.getState().deleteItem;
+    await storeDeleteItem(confirmDeleteItem.id, confirmDeleteItem.list_id ?? selectedList?.id);
     setConfirmDeleteItem(null);
   };
   const onCloseItemModal = () => {
@@ -137,29 +138,34 @@ export default function List() {
 
       <ScrollView style={{ flex: 1, width: "100%", height: "100%" }} contentContainerStyle={{ paddingBottom: tabBarHeight + 24 }} showsVerticalScrollIndicator={false}>
         <View style={{ padding: 16, gap: 8 }}>
-          <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
-            <View style={{ marginBottom: 16 }}>
-              <Text style={{ fontWeight: "700", fontSize: 20, color: text }}>{selectedList?.description}</Text>
-              <Text style={{ fontSize: 14, color: text }}>Local de compra: {selectedList?.location === "" ? "Sem mercado" : selectedList?.location}</Text>
+          <View style={{ gap: 12 }}>
+            <View>
+              <Text style={{ fontWeight: "700", fontSize: 20, color: text }} numberOfLines={2} adjustsFontSizeToFit minimumFontScale={0.7}>{selectedList?.description}</Text>
+              <Text style={{ fontSize: 14, color: text, marginTop: 4 }}>Local de compra: {selectedList?.location === "" ? "Sem mercado" : selectedList?.location}</Text>
               <Text style={{ fontSize: 14, color: text }}>Criado em: {selectedList?.date ? new Date(selectedList?.date).toLocaleDateString("pt-BR") : ""}</Text>
             </View>
-            <View style={{ flexDirection: "row", gap: 8 }}>
+            <View style={{ flexDirection: "row", gap: 12 }}>
               <TouchableOpacity
-                style={{ width: 40, height: 40, borderRadius: 999, borderWidth: 1, borderColor: "#22c55e", alignItems: "center", justifyContent: "center" }}
+                testID="edit-list-header-button"
                 onPress={() => { setSelectedSheetOpen("editar"); onOpen(); }}
+                style={{ flex: 1, flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 8, paddingVertical: 12, borderRadius: 12, borderWidth: 1, borderColor: isDark ? "#16a34a" : "#22c55e", backgroundColor: isDark ? "#14532d" : "#f0fdf4" }}
               >
-                <Feather name="edit" size={20} color="#22c55e" />
+                <Feather name="edit" size={18} color={isDark ? "#86efac" : "#16a34a"} />
+                <Text style={{ color: isDark ? "#86efac" : "#16a34a", fontWeight: "700" }}>Editar lista</Text>
               </TouchableOpacity>
               <TouchableOpacity
-                style={{ width: 40, height: 40, borderRadius: 999, borderWidth: 1, borderColor: "#ef4444", alignItems: "center", justifyContent: "center" }}
+                testID="delete-list-header-button"
                 onPress={() => handleDeleteList(selectedList?.id)}
+                style={{ flex: 1, flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 8, paddingVertical: 12, borderRadius: 12, borderWidth: 1, borderColor: isDark ? "#991b1b" : "#fecaca", backgroundColor: isDark ? "#7f1d1d" : "#fef2f2" }}
               >
-                <Feather name="trash" size={20} color="#ef4444" />
+                <Feather name="trash" size={18} color={isDark ? "#fca5a5" : "#ef4444"} />
+                <Text style={{ color: isDark ? "#fca5a5" : "#ef4444", fontWeight: "700" }}>Excluir lista</Text>
               </TouchableOpacity>
             </View>
+            <View style={{ height: 1, backgroundColor: isDark ? "#3f3f46" : "#e7e5e4", marginTop: 8 }} />
           </View>
 
-          <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginTop: -16 }}>
+          <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
             <Text style={{ fontWeight: "700", fontSize: 20, color: text }}>Sua lista</Text>
             <View style={{ borderWidth: 1, borderColor: isDark ? "#3f3f46" : "#e4e4e7", borderRadius: 12, overflow: "hidden", backgroundColor: isDark ? "#27272a" : "white", flex: 1, marginLeft: 12, maxWidth: "50%" }}>
               <Picker
@@ -231,56 +237,6 @@ export default function List() {
         </View>
         {isAiEnabled && <View style={{ width: "100%", height: 64 }} />}
       </ScrollView>
-
-      {(() => {
-        const fabSize = 64;
-        const fabBottom = tabBarHeight + 16;
-        const FabContent = (
-          <View style={{ width: fabSize, height: fabSize, alignItems: 'center', justifyContent: 'center' }}>
-            <Feather name="plus" size={28} color="white" />
-          </View>
-        );
-        const onPressFab = () => { setSelectedSheetOpen("adicionar-item"); onOpen(); };
-        if (RadiantButton) {
-          return (
-            <View style={{ position: "absolute", bottom: fabBottom, right: 16, zIndex: 10 }} testID="list-fab-wrapper">
-              <RadiantButton
-                testID="list-fab"
-                onPress={onPressFab}
-                borderRadius={fabSize / 2}
-                borderWidth={2}
-                duration={2800}
-                showDots={false}
-                showShimmer={true}
-                showGlow={true}
-                glowBlur={18}
-                glowWidth={0.7}
-                breathingEnabled={true}
-                paddingHorizontal={0}
-                paddingVertical={0}
-                style={{ width: fabSize, height: fabSize, borderRadius: fabSize / 2 }}
-                theme={{ background: "#9333ea", backgroundSubtle: "#581C87", foreground: "#ffffff", highlight: "#f3e8ff", highlightSubtle: "#a78bfa" }}
-              >
-                <View style={{ width: fabSize, height: fabSize, alignItems: 'center', justifyContent: 'center' }}>
-                  <Feather name="plus" size={28} color="white" />
-                </View>
-              </RadiantButton>
-            </View>
-          );
-        }
-        if (ChromaRing) {
-          return (
-            <Pressable testID="list-fab" onPress={onPressFab} style={{ position: "absolute", bottom: fabBottom, right: 16, zIndex: 10 }}>
-              <ChromaRing width={fabSize} height={fabSize} borderWidth={2} speed={1.0} base="#581C87" glow={PURPLE_600} background={PURPLE_600} style={{ width: fabSize, height: fabSize, borderRadius: fabSize / 2 }}>{FabContent}</ChromaRing>
-            </Pressable>
-          );
-        }
-        return (
-          <TouchableOpacity testID="list-fab" onPress={onPressFab} style={{ position: "absolute", bottom: fabBottom, right: 16, width: 56, height: 56, backgroundColor: PURPLE_600, borderRadius: 28, alignItems: "center", justifyContent: "center", elevation: 6, zIndex: 10 }}>
-            <Feather name="plus" size={28} color="#FFF" />
-          </TouchableOpacity>
-        );
-      })()}
 
       <ThemedAlert
         visible={!!confirmDeleteListAlert}

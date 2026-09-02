@@ -235,7 +235,7 @@ export default function Dashboard() {
           testID="hero-scroll"
         >
           {isEnableTotalHistoryCard && (
-            <View style={{ marginHorizontal: 4, backgroundColor: bgCard, minWidth: 180, height: 110, borderRadius: 4, padding: 16, elevation: 2, shadowColor: "#000", shadowOpacity: 0.1 }} testID="card-saldo">
+            <View style={{ marginHorizontal: 4, backgroundColor: isDark ? "#27272a" : "white", minWidth: 180, height: 110, borderRadius: 4, padding: 16, elevation: 2, shadowColor: "#000", shadowOpacity: isDark ? 0.15 : 0.08, borderWidth: 1, borderColor: isDark ? "#3f3f46" : "#e7e5e4" }} testID="card-saldo">
               <View style={{ flexDirection: "row", justifyContent: "space-between" }}>
                 <Text style={{ color: text, fontSize: 18 }}>Saldo</Text>
                 <Feather name={hero.Saldo >= 0 ? "arrow-up-circle" : "arrow-down-circle"} size={48} color={GREEN_500} />
@@ -246,7 +246,7 @@ export default function Dashboard() {
             </View>
           )}
 
-          <View style={{ marginHorizontal: 4, backgroundColor: bgCard, minWidth: 180, height: 110, borderRadius: 4, padding: 16, elevation: 2, shadowColor: "#000", shadowOpacity: 0.1 }} testID="card-entradas">
+          <View style={{ marginHorizontal: 4, backgroundColor: isDark ? "#27272a" : "white", minWidth: 180, height: 110, borderRadius: 4, padding: 16, elevation: 2, shadowColor: "#000", shadowOpacity: isDark ? 0.15 : 0.08, borderWidth: 1, borderColor: isDark ? "#3f3f46" : "#e7e5e4" }} testID="card-entradas">
             <View style={{ flexDirection: "row", justifyContent: "space-between" }}>
               <Text style={{ color: text, fontSize: 18 }}>Entradas</Text>
               <Feather name="arrow-up-circle" size={48} color={GREEN_500} />
@@ -256,7 +256,7 @@ export default function Dashboard() {
             </Text>
           </View>
 
-          <View style={{ marginHorizontal: 4, backgroundColor: bgCard, minWidth: 180, height: 110, borderRadius: 4, padding: 16, elevation: 2, shadowColor: "#000", shadowOpacity: 0.1 }} testID="card-saidas">
+          <View style={{ marginHorizontal: 4, backgroundColor: isDark ? "#27272a" : "white", minWidth: 180, height: 110, borderRadius: 4, padding: 16, elevation: 2, shadowColor: "#000", shadowOpacity: isDark ? 0.15 : 0.08, borderWidth: 1, borderColor: isDark ? "#3f3f46" : "#e7e5e4" }} testID="card-saidas">
             <View style={{ flexDirection: "row", justifyContent: "space-between" }}>
               <Text style={{ color: text, fontSize: 18 }}>Saídas</Text>
               <Feather name="arrow-down-circle" size={48} color={RED_500} />

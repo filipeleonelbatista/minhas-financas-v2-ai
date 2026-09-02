@@ -117,48 +117,46 @@ export default function Market() {
     setIsEditMode(false);
   };
 
+  const [showAddToListAlert, setShowAddToListAlert] = useState(false);
+  const [addToListCallback, setAddToListCallback] = useState(null);
   const handleAddItensOnBuyList = (goListsPage) => {
-    const { Alert, ToastAndroid } = require("react-native");
-    Alert.alert("Adicionar itens do estoque", "Deseja adicionar itens do estoque a uma lista de compras?", [
-      { text: "Cancelar", style: "cancel" },
-      {
-        text: "Somente em falta",
-        onPress: async () => {
-          const lowest = MarketList.filter((i) => i.quantity < i.quantityDesired);
-          if (lowest.length > 0) {
-            const totalAmount = lowest.reduce((acc, t) => acc + Number(t.amount) * Number(t.quantity), 0);
-            const totalQuantity = lowest.reduce((acc, t) => acc + Number(t.quantity), 0);
-            const createdList = { description: "Em falta no estoque", location: "", amount: totalAmount, quantity: totalQuantity, date: Date.now() + 43200000 };
-            const currentId = await listsAddList(createdList);
-            if (currentId !== null) {
-              for (const item of lowest) {
-                await listsAddItem({ list_id: currentId, description: item.description, category: item.category, amount: item.amount, quantity: item.quantity, quantityDesired: item.quantityDesired, location: createdList.location, date: createdList.date });
-              }
-            }
-            if (goListsPage) goListsPage();
-          } else {
-            ToastAndroid.show("Nenhum item em falta para criar esta lista", ToastAndroid.SHORT);
+    setAddToListCallback(() => goListsPage);
+    setShowAddToListAlert(true);
+  };
+  const handleAddToListConfirm = async (mode) => {
+    const { ToastAndroid } = require("react-native");
+    const goListsPage = addToListCallback;
+    setShowAddToListAlert(false);
+    if (mode === "falta") {
+      const lowest = MarketList.filter((i) => i.quantity < i.quantityDesired);
+      if (lowest.length > 0) {
+        const totalAmount = lowest.reduce((acc, t) => acc + Number(t.amount) * Number(t.quantity), 0);
+        const totalQuantity = lowest.reduce((acc, t) => acc + Number(t.quantity), 0);
+        const createdList = { description: "Em falta no estoque", location: "", amount: totalAmount, quantity: totalQuantity, date: Date.now() + 43200000 };
+        const currentId = await listsAddList(createdList);
+        if (currentId !== null) {
+          for (const item of lowest) {
+            await listsAddItem({ list_id: currentId, description: item.description, category: item.category, amount: item.amount, quantity: item.quantity, quantityDesired: item.quantityDesired, location: createdList.location, date: createdList.date });
           }
-        },
-      },
-      {
-        text: "Todos os itens",
-        onPress: async () => {
-          if (MarketList.length > 0) {
-            const totalAmount = MarketList.reduce((acc, t) => acc + Number(t.amount) * Number(t.quantity), 0);
-            const totalQuantity = MarketList.reduce((acc, t) => acc + Number(t.quantity), 0);
-            const createdList = { description: "Itens do estoque", location: "", amount: totalAmount, quantity: totalQuantity, date: Date.now() + 43200000 };
-            const currentId = await listsAddList(createdList);
-            if (currentId !== null) {
-              for (const item of MarketList) {
-                await listsAddItem({ list_id: currentId, description: item.description, category: item.category, amount: item.amount, quantity: item.quantity, quantityDesired: item.quantityDesired, location: createdList.location, date: createdList.date });
-              }
-            }
-            if (goListsPage) goListsPage();
+        }
+        if (goListsPage) goListsPage();
+      } else {
+        ToastAndroid.show("Nenhum item em falta para criar esta lista", ToastAndroid.SHORT);
+      }
+    } else if (mode === "todos") {
+      if (MarketList.length > 0) {
+        const totalAmount = MarketList.reduce((acc, t) => acc + Number(t.amount) * Number(t.quantity), 0);
+        const totalQuantity = MarketList.reduce((acc, t) => acc + Number(t.quantity), 0);
+        const createdList = { description: "Itens do estoque", location: "", amount: totalAmount, quantity: totalQuantity, date: Date.now() + 43200000 };
+        const currentId = await listsAddList(createdList);
+        if (currentId !== null) {
+          for (const item of MarketList) {
+            await listsAddItem({ list_id: currentId, description: item.description, category: item.category, amount: item.amount, quantity: item.quantity, quantityDesired: item.quantityDesired, location: createdList.location, date: createdList.date });
           }
-        },
-      },
-    ]);
+        }
+        if (goListsPage) goListsPage();
+      }
+    }
   };
 
   return (
@@ -166,7 +164,7 @@ export default function Market() {
       <ScrollView style={{ flex: 1, width: "100%", height: "100%" }} contentContainerStyle={{ paddingBottom: tabBarHeight + 24 }} showsVerticalScrollIndicator={false}>
         <Header
           isShort
-          title="Compra"
+          title="Estoque"
           isRightIconComponent={
             <TouchableOpacity onPress={() => navigation.navigate("Configuracoes")} style={{ width: 40, height: 40, borderRadius: 999, alignItems: "center", justifyContent: "center" }}>
               <Feather name="settings" size={20} color={headerText} />
@@ -174,15 +172,16 @@ export default function Market() {
           }
         />
 
-        <View style={{ padding: 16, gap: 16 }}>
-          <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginTop: -16 }}>
+        <View style={{ padding: 16, gap: 16, marginTop: 12 }}>
+          <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
             <Text style={{ fontWeight: "700", fontSize: 20, color: text }}>Seu estoque</Text>
             <TouchableOpacity
               onPress={() => filterSheetRef.current?.present()}
-              style={{ alignItems: "center", justifyContent: "center", paddingHorizontal: 28, paddingVertical: 6, borderWidth: 1, borderRadius: 20, backgroundColor: "transparent", borderColor: "#9c44dc" }}
+              style={{ alignItems: "center", justifyContent: "center", paddingHorizontal: 28, paddingVertical: 6, borderWidth: 1, borderRadius: 20, backgroundColor: isDark ? "#27272a" : "transparent", borderColor: isDark ? "#6d28d9" : "#9c44dc" }}
+              testID="market-filter-button"
             >
-              <Text style={{ fontSize: 16, color: "#9c44dc" }}>
-                <Feather name="filter" size={18} color="#9c44dc" /> Filtros
+              <Text style={{ fontSize: 16, color: isDark ? "#c4b5fd" : "#9c44dc" }}>
+                <Feather name="filter" size={18} color={isDark ? "#c4b5fd" : "#9c44dc"} /> Filtros
               </Text>
             </TouchableOpacity>
           </View>
@@ -243,6 +242,34 @@ export default function Market() {
           </View>
         )}
       </ScrollView>
+
+      <Modal visible={showAddToListAlert} animationType="fade" transparent onRequestClose={() => setShowAddToListAlert(false)}>
+        <View style={{ flex: 1, backgroundColor: "rgba(0,0,0,0.5)", justifyContent: "center", paddingHorizontal: 24 }}>
+          <View style={{ backgroundColor: isDark ? "#27272a" : "white", borderRadius: 16, padding: 20, borderWidth: isDark ? 1 : 0, borderColor: isDark ? "#3f3f46" : "transparent" }}>
+            <View style={{ flexDirection: "row", alignItems: "center", gap: 12, marginBottom: 12 }}>
+              <View style={{ width: 48, height: 48, borderRadius: 24, backgroundColor: isDark ? "#581c87" : "#f3e8ff", alignItems: "center", justifyContent: "center", borderWidth: 1, borderColor: isDark ? "#6d28d9" : "#e9d5ff" }}>
+                <Feather name="shopping-cart" size={24} color={isDark ? "#c4b5fd" : PURPLE_600} />
+              </View>
+              <View style={{ flex: 1 }}>
+                <Text style={{ fontSize: 18, fontWeight: "700", color: text }}>Adicionar itens do estoque</Text>
+                <Text style={{ fontSize: 13, color: isDark ? "#a1a1aa" : "#6b7280", marginTop: 2 }}>Escolha quais itens levar para a lista</Text>
+              </View>
+            </View>
+            <Text style={{ fontSize: 14, color: text, marginBottom: 20 }}>Deseja adicionar itens do estoque a uma lista de compras?</Text>
+            <View style={{ gap: 8 }}>
+              <TouchableOpacity onPress={() => setShowAddToListAlert(false)} style={{ backgroundColor: isDark ? "#3f3f46" : "#f3f4f6", borderRadius: 12, paddingVertical: 12, alignItems: "center", borderWidth: isDark ? 1 : 0, borderColor: isDark ? "#52525b" : "transparent" }} testID="market-add-cancel">
+                <Text style={{ color: text, fontWeight: "700" }}>Cancelar</Text>
+              </TouchableOpacity>
+              <TouchableOpacity onPress={() => handleAddToListConfirm("falta")} style={{ backgroundColor: isDark ? "#581c87" : "#f3e8ff", borderRadius: 12, paddingVertical: 12, alignItems: "center", borderWidth: 1, borderColor: isDark ? "#6d28d9" : "#e9d5ff" }} testID="market-add-falta">
+                <Text style={{ color: isDark ? "#c4b5fd" : PURPLE_600, fontWeight: "700" }}>somente itens em estoque baixo</Text>
+              </TouchableOpacity>
+              <TouchableOpacity onPress={() => handleAddToListConfirm("todos")} style={{ backgroundColor: PURPLE_600, borderRadius: 12, paddingVertical: 12, alignItems: "center" }} testID="market-add-todos">
+                <Text style={{ color: "white", fontWeight: "700" }}>todos os itens do estoque</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
 
       {(() => {
         const fabSize = 64;

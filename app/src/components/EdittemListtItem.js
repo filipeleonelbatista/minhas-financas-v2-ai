@@ -95,11 +95,7 @@ export default function EditItemListItem({ onClose, selectedTransaction, initial
         ).getTime() + 43200000,
     };
 
-    const { listRepo } = require("../repositories/list");
-    await listRepo.updateItem(data.id, data);
-    const store = useListsStore.getState();
-    await store.handleSelect(data.list_id);
-    await store.load();
+    await useListsStore.getState().updateItem(data.id, data);
 
     ToastAndroid.show("Item atualizado com sucesso", ToastAndroid.SHORT);
     onClose();
@@ -281,7 +277,7 @@ export default function EditItemListItem({ onClose, selectedTransaction, initial
         variant="danger"
         confirmText="Excluir"
         cancelText="Cancelar"
-        onConfirm={async () => { const { listRepo } = require("../repositories/list"); await listRepo.deleteItem(selectedTransaction.id); const store = useListsStore.getState(); await store.handleSelect(selectedTransaction.list_id); await store.load(); setConfirmDelete(false); onClose(); }}
+        onConfirm={async () => { await useListsStore.getState().deleteItem(selectedTransaction.id, selectedTransaction.list_id ?? selectedList?.id); setConfirmDelete(false); onClose(); }}
         onCancel={() => setConfirmDelete(false)}
         onClose={() => setConfirmDelete(false)}
         testID="listitem-edit-delete-alert"

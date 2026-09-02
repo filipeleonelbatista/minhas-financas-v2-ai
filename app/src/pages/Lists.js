@@ -15,6 +15,7 @@ import Header from "../components/Header";
 import ListCard from "../components/ui/ListCard";
 import SwipeableRow from "../components/SwipeableRow";
 import ThemedAlert from "../components/ui/ThemedAlert";
+import EditListForm from "../components/EditListForm";
 import { useIsKeyboardOpen } from "../hooks/useIsKeyboardOpen";
 import { useListsStore } from "../stores/lists";
 import { useSettingsStore } from "../stores/settings";
@@ -48,9 +49,13 @@ export default function Lists() {
 
   const { setSelectedSheet } = usePagesStore();
   const isFocused = useIsFocused();
+  const loadLists = useListsStore((s) => s.load);
   useEffect(() => {
-    if (isFocused) setSelectedSheet("Lists");
-  }, [isFocused]);
+    if (isFocused) {
+      setSelectedSheet("Lists");
+      loadLists();
+    }
+  }, [isFocused, loadLists]);
 
   const isKeyboardOpen = useIsKeyboardOpen();
   const insets = useSafeAreaInsets();
@@ -75,9 +80,8 @@ export default function Lists() {
     await deleteList(confirmDeleteList.id);
     setConfirmDeleteList(null);
   };
-  const handleEditListSwipe = (item) => {
-    // Abrir edição da lista - reaproveita modal existente
-    handleSelectList(item.id);
+  const handleEditListSwipe = async (item) => {
+    await handleSelectList(item.id);
     setSelectedSheetOpen("editar");
     onOpen();
   };
@@ -145,56 +149,6 @@ export default function Lists() {
         </View>
       </ScrollView>
 
-      {(() => {
-        const fabSize = 64;
-        const fabBottom = tabBarHeight + 16;
-        const FabContent = (
-          <View style={{ width: fabSize, height: fabSize, alignItems: 'center', justifyContent: 'center' }}>
-            <Feather name="plus" size={28} color="white" />
-          </View>
-        );
-        const onPressFab = () => navigation.navigate("Stock");
-        if (RadiantButton) {
-          return (
-            <View style={{ position: "absolute", bottom: fabBottom, right: 16, zIndex: 10 }} testID="lists-fab-wrapper">
-              <RadiantButton
-                testID="lists-fab"
-                onPress={onPressFab}
-                borderRadius={fabSize / 2}
-                borderWidth={2}
-                duration={2800}
-                showDots={false}
-                showShimmer={true}
-                showGlow={true}
-                glowBlur={18}
-                glowWidth={0.7}
-                breathingEnabled={true}
-                paddingHorizontal={0}
-                paddingVertical={0}
-                style={{ width: fabSize, height: fabSize, borderRadius: fabSize / 2 }}
-                theme={{ background: "#9333ea", backgroundSubtle: "#581C87", foreground: "#ffffff", highlight: "#f3e8ff", highlightSubtle: "#a78bfa" }}
-              >
-                <View style={{ width: fabSize, height: fabSize, alignItems: 'center', justifyContent: 'center' }}>
-                  <Feather name="plus" size={28} color="white" />
-                </View>
-              </RadiantButton>
-            </View>
-          );
-        }
-        if (ChromaRing) {
-          return (
-            <Pressable testID="lists-fab" onPress={onPressFab} style={{ position: "absolute", bottom: fabBottom, right: 16, zIndex: 10 }}>
-              <ChromaRing width={fabSize} height={fabSize} borderWidth={2} speed={1.0} base="#581C87" glow={PURPLE_600} background={PURPLE_600} style={{ width: fabSize, height: fabSize, borderRadius: fabSize / 2 }}>{FabContent}</ChromaRing>
-            </Pressable>
-          );
-        }
-        return (
-          <TouchableOpacity testID="lists-fab" onPress={onPressFab} style={{ position: "absolute", bottom: fabBottom, right: 16, width: 56, height: 56, backgroundColor: PURPLE_600, borderRadius: 28, alignItems: "center", justifyContent: "center", elevation: 6, zIndex: 10 }}>
-            <Feather name="plus" size={28} color="#FFF" />
-          </TouchableOpacity>
-        );
-      })()}
-
       <ThemedAlert
         visible={!!confirmDeleteList}
         title="Excluir lista"
@@ -225,7 +179,7 @@ export default function Lists() {
           </View>
           <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : "height"} keyboardVerticalOffset={insets.top + 12} style={{ flex: 1 }}>
           {selectedSheetOpen === "editar" ? (
-            <EditShoppingCartItem onClose={onClose} selectedTransaction={{}} />
+            <EditListForm onClose={onClose} />
           ) : selectedSheetOpen === "estimativa" ? (
             <EstimativeForm onClose={onClose} />
           ) : (

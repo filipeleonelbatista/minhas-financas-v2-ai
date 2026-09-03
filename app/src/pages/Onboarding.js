@@ -7,7 +7,6 @@ import { Alert, Platform, ToastAndroid, useWindowDimensions, View, Text, FlatLis
 import Loading from "../components/Loading";
 import { useSettings } from "../hooks/useSettings";
 import CTA from "../components/ui/CTA";
-import { setHasSeenTour } from "../components/Tour";
 
 export default function Onboarding() {
   const { width } = useWindowDimensions();
@@ -103,10 +102,6 @@ export default function Onboarding() {
   async function handleLeaveOnboarding() {
     try {
       await AsyncStorage.setItem("@onboarding", "true");
-      // persist interactive tour as NOT seen so spotlight starts after onboarding
-      try {
-        await setHasSeenTour(false);
-      } catch {}
       setIsOnboardingPassed("passed");
       navigation.navigate("TabNavigator", { screen: "Início" });
     } catch (e) {
@@ -117,10 +112,6 @@ export default function Onboarding() {
   async function handleSkip() {
     try {
       await AsyncStorage.setItem("@onboarding", "true");
-      // Pular marks tour as seen (user opted to skip spotlight)
-      try {
-        await setHasSeenTour(true);
-      } catch {}
       setIsOnboardingPassed("passed");
       navigation.navigate("TabNavigator", { screen: "Início" });
     } catch (e) {

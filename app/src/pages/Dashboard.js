@@ -10,7 +10,6 @@ import InteractivePieChart from "../components/InteractivePieChart";
 import { financeRepo, calcTithePure } from "../repositories/finance";
 import { goalRepo } from "../repositories/goal";
 import { useSettingsStore } from "../stores/settings";
-import { useTour, Tour, getHasSeenTour } from "../components/Tour";
 
 // Charts fallback (jest without native svg may fail)
 let PieChartComp = null;
@@ -197,15 +196,6 @@ export default function Dashboard() {
     else load();
   }, [isFocused, load]);
 
-  const { visible, step, next, skip, complete, setVisible } = useTour(false);
-  useEffect(() => {
-    if (isFocused) {
-      getHasSeenTour().then((seen) => {
-        if (!seen) setTimeout(() => setVisible(true), 800);
-      });
-    }
-  }, [isFocused]);
-
   const hero = useMemo(() => {
     const base = calcHeroValues(finances);
     const titheAmount = calcTithePure(finances, { percent: tithePercent, categories: titheCategories });
@@ -307,7 +297,6 @@ export default function Dashboard() {
 
         {/* Pizza gastos por categoria */}
         <View style={{ marginHorizontal: 16, marginTop: 16, backgroundColor: cardBgWhite, borderRadius: 16, padding: 16, shadowColor: "#000", shadowOpacity: 0.05, elevation: 2 }}>
-          <View testID="tour-reports-anchor" style={{ position: 'absolute', width: 1, height: 1, opacity: 0 }} pointerEvents="none" />
           <Text style={{ fontSize: 18, fontWeight: "700", color: titleText }} testID="pizza-title">
             Gastos por categoria
           </Text>
@@ -709,7 +698,6 @@ export default function Dashboard() {
           </Text>
         )}
       </ScrollView>
-      <Tour visible={visible} currentStep={step} onNext={next} onSkip={skip} onComplete={complete} />
     </View>
   );
 }

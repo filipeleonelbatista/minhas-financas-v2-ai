@@ -149,7 +149,6 @@ export default function Runs() {
             </TouchableOpacity>
           }
         />
-        <View testID="tour-runs-anchor" style={{ position: 'absolute', width: 1, height: 1, opacity: 0 }} pointerEvents="none" />
 
         <ScrollView horizontal style={{ width: "100%", marginTop: -50, height: 150 }} showsHorizontalScrollIndicator={false} contentContainerStyle={{ height: 130, paddingHorizontal: 8 }}>
           <View style={{ marginHorizontal: 4, backgroundColor: "#581c87", minWidth: 180, height: 110, borderRadius: 4, padding: 16, elevation: 2, shadowColor: "#000", shadowOpacity: 0.1 }} testID="card-km-estimado">

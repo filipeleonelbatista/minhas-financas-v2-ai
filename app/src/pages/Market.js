@@ -171,7 +171,6 @@ export default function Market() {
             </TouchableOpacity>
           }
         />
-        <View testID="tour-stock-anchor" style={{ position: 'absolute', width: 1, height: 1, opacity: 0 }} pointerEvents="none" />
 
         <View style={{ padding: 16, gap: 16, marginTop: 12 }}>
           <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>

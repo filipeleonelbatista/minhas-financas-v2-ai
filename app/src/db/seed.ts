@@ -95,7 +95,6 @@ export async function seedDatabase(): Promise<SeedResult> {
     tithePercent: 10,
     titheCategories: JSON.stringify(['Ganhos', 'Investimentos']),
     isTitheMenuEnabled: 1,
-    hasSeenInteractiveTour: 0,
   });
 
   // 2. FINANCES - ~30 linhas cobrindo todos os filtros e edge cases

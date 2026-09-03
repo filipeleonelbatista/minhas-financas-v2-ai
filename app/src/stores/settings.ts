@@ -58,7 +58,6 @@ type SettingsState = {
   tithePercent: number;
   titheCategories: string;
   isTitheMenuEnabled: number;
-  hasSeenInteractiveTour: number;
   // actions
   load: () => Promise<void>;
   toggleColorMode: () => Promise<void>;
@@ -91,7 +90,6 @@ export const useSettingsStore = create<SettingsState>((set, get) => ({
   tithePercent: 10,
   titheCategories: '',
   isTitheMenuEnabled: 0,
-  hasSeenInteractiveTour: 0,
 
   load: async () => {
     const c: any = await configRepo.get();

@@ -40,7 +40,6 @@ function getInitialState() {
     tithePercent: 10,
     titheCategories: '',
     isTitheMenuEnabled: 0,
-    hasSeenInteractiveTour: 0,
   } as any;
 }
 

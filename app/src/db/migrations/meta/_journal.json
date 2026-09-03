@@ -22,13 +22,6 @@
       "when": 1787961700000,
       "tag": "0002_add_tithe",
       "breakpoints": true
-    },
-    {
-      "idx": 3,
-      "version": "7",
-      "when": 1787961800000,
-      "tag": "0003_add_tour",
-      "breakpoints": true
     }
   ]
 }

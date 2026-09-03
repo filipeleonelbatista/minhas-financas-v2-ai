@@ -291,9 +291,64 @@ export default function Dashboard() {
             </View>
           )}
         </ScrollView>
-        <Text style={{ fontSize: 12, color: subText, marginTop: 8, paddingHorizontal: 16, marginBottom: 4 }}>
-          * Totais do período geral
-        </Text>
+
+        {/* Saúde das finanças - card nativewind */}
+        <View className="mx-4 mt-4 bg-white dark:bg-gray-800 rounded-2xl p-4 shadow" style={{ marginHorizontal: 16, marginTop: 16, backgroundColor: cardBgWhite, borderRadius: 16, padding: 16, elevation: 2, shadowColor: "#000", shadowOpacity: 0.06 }} testID="saude-card">
+          {!hasFinances ? (
+            <View className="items-center justify-center py-2" style={{ alignItems: "center", justifyContent: "center", paddingVertical: 8 }}>
+              <Text className="text-gray-700 dark:text-gray-200 font-bold text-lg" style={{ color: titleText, fontSize: 16, fontWeight: "700", textAlign: "center" }}>Sem dados para analisar</Text>
+              <Text className="text-gray-500 dark:text-gray-400 text-sm text-center mt-1" style={{ color: subText, fontSize: 13, textAlign: "center", marginTop: 4 }}>Adicione transações para ver a saúde financeira aqui.</Text>
+            </View>
+          ) : (
+            <View style={{ gap: 12 }}>
+              <View className="flex-row items-center justify-between" style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>
+                <Text className="text-gray-800 dark:text-gray-100 font-bold text-lg" style={{ fontWeight: "700", color: titleText, fontSize: 16 }} testID="saude-title">Saúde das finanças</Text>
+                <View className="bg-purple-50 dark:bg-purple-900/30 px-2 py-1 rounded-full" style={{ backgroundColor: isDark ? "rgba(88,28,135,0.2)" : "#f5f3ff", paddingHorizontal: 8, paddingVertical: 4, borderRadius: 999 }}>
+                  <Text className="text-xs font-bold text-purple-700 dark:text-purple-300" style={{ fontSize: 11, fontWeight: "700", color: PURPLE_600 }}>
+                    {hero.Incomings + hero.Expenses > 0 ? `${Math.round((hero.Incomings / (hero.Incomings + hero.Expenses)) * 100)}%` : "0%"} saudável
+                  </Text>
+                </View>
+              </View>
+
+              <View className="flex-row items-center justify-between" style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>
+                <View className="flex-row items-center" style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
+                  <View className="w-10 h-10 rounded-full bg-green-50 dark:bg-green-900/30 items-center justify-center" style={{ width: 40, height: 40, borderRadius: 20, backgroundColor: isDark ? "rgba(34,197,94,0.15)" : "#f0fdf4", alignItems: "center", justifyContent: "center" }}>
+                    <Feather name="arrow-up-circle" size={22} color="#16a34a" />
+                  </View>
+                  <View>
+                    <Text className="text-xs text-gray-500 dark:text-gray-400" style={{ color: subText, fontSize: 11 }}>Ganhos</Text>
+                    <Text className="text-gray-800 dark:text-gray-100 font-bold text-base" style={{ color: titleText, fontSize: 15, fontWeight: "700" }} testID="saude-ganhos">{formatCurrency(hero.Incomings)}</Text>
+                  </View>
+                </View>
+                <View className="flex-row items-center" style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
+                  <View style={{ alignItems: "flex-end" }}>
+                    <Text className="text-xs text-gray-500 dark:text-gray-400 text-right" style={{ color: subText, fontSize: 11, textAlign: "right" }}>Despesas</Text>
+                    <Text className="text-gray-800 dark:text-gray-100 font-bold text-base text-right" style={{ color: titleText, fontSize: 15, fontWeight: "700", textAlign: "right" }} testID="saude-despesas">{formatCurrency(hero.Expenses)}</Text>
+                  </View>
+                  <View className="w-10 h-10 rounded-full bg-red-50 dark:bg-red-900/30 items-center justify-center" style={{ width: 40, height: 40, borderRadius: 20, backgroundColor: isDark ? "rgba(239,68,68,0.15)" : "#fef2f2", alignItems: "center", justifyContent: "center" }}>
+                    <Feather name="arrow-down-circle" size={22} color="#dc2626" />
+                  </View>
+                </View>
+              </View>
+
+              <View className="h-3 bg-gray-100 dark:bg-gray-700 rounded-full overflow-hidden" style={{ height: 12, backgroundColor: isDark ? "#3f3f46" : "#f3f4f6", borderRadius: 999, overflow: "hidden" }} testID="saude-progress-track">
+                <View
+                  testID="saude-progress-fill"
+                  style={{
+                    width: `${Math.min(100, Math.max(0, hero.Incomings + hero.Expenses === 0 ? 0 : (hero.Incomings / (hero.Incomings + hero.Expenses)) * 100))}%`,
+                    height: 12,
+                    backgroundColor: hero.Incomings >= hero.Expenses ? "#16a34a" : "#dc2626",
+                    borderRadius: 999,
+                  }}
+                />
+              </View>
+              <View className="flex-row justify-between" style={{ flexDirection: "row", justifyContent: "space-between" }}>
+                <Text className="text-xs text-gray-500 dark:text-gray-400" style={{ fontSize: 11, color: subText }}>{hero.Incomings >= hero.Expenses ? "Saldo positivo" : "Atenção: despesas maiores"}</Text>
+                <Text className="text-xs font-semibold text-gray-600 dark:text-gray-300" style={{ fontSize: 11, fontWeight: "600", color: titleText }}>{formatCurrency(hero.Incomings - hero.Expenses)} saldo</Text>
+              </View>
+            </View>
+          )}
+        </View>
 
         {/* Pizza gastos por categoria */}
         <View style={{ marginHorizontal: 16, marginTop: 16, backgroundColor: cardBgWhite, borderRadius: 16, padding: 16, shadowColor: "#000", shadowOpacity: 0.05, elevation: 2 }}>

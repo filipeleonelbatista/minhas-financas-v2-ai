@@ -10,6 +10,7 @@ import InteractivePieChart from "../components/InteractivePieChart";
 import { financeRepo, calcTithePure } from "../repositories/finance";
 import { goalRepo } from "../repositories/goal";
 import { runRepo } from "../repositories/run";
+import { marketRepo } from "../repositories/market";
 import { useSettingsStore } from "../stores/settings";
 
 // Charts fallback (jest without native svg may fail)
@@ -147,6 +148,19 @@ export function calcGoalProgress(goal) {
   return p >= 1 ? 1 : p < 0 ? 0 : p;
 }
 
+export function getStockMissing(stock = []) {
+  return stock.filter((it) => Number(it.quantity) < Number(it.quantityDesired));
+}
+
+export function getStockNearMissing(stock = []) {
+  // Próximos de faltar: em estoque mas no limite (quantity == quantityDesired ou +1)
+  return stock.filter((it) => {
+    const q = Number(it.quantity);
+    const d = Number(it.quantityDesired);
+    return q >= d && q <= d + 1;
+  });
+}
+
 export function getLast7RunsChartData(runs = [], filter = "litro") {
   const sorted = [...runs].sort((a, b) => Number(a.date) - Number(b.date)).slice(-7);
   const labels = sorted.map((item) => {
@@ -187,6 +201,7 @@ export default function Dashboard() {
   const [finances, setFinances] = useState([]);
   const [goals, setGoals] = useState([]);
   const [runs, setRuns] = useState([]);
+  const [stock, setStock] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedPieIndex, setSelectedPieIndex] = useState(null);
   const [selectedLineIndex, setSelectedLineIndex] = useState(null);
@@ -197,14 +212,16 @@ export default function Dashboard() {
   const load = useCallback(async () => {
     setLoading(true);
     try {
-      const [f, g, r] = await Promise.all([financeRepo.getAll(), goalRepo.getAll(), runRepo.getAll().catch(() => [])]);
+      const [f, g, r, s] = await Promise.all([financeRepo.getAll(), goalRepo.getAll(), runRepo.getAll().catch(() => []), marketRepo.getAll().catch(() => [])]);
       setFinances(f || []);
       setGoals(g || []);
       setRuns(r || []);
+      setStock(s || []);
     } catch {
       setFinances([]);
       setGoals([]);
       setRuns([]);
+      setStock([]);
     }
     setLoading(false);
   }, []);
@@ -225,6 +242,9 @@ export default function Dashboard() {
   const urgentGoals = useMemo(() => getUrgentGoals(goals), [goals]);
   const runsChartData = useMemo(() => getLast7RunsChartData(runs, selectedRunsFilter), [runs, selectedRunsFilter]);
   const hasRuns = runs.length > 0;
+  const stockMissing = useMemo(() => getStockMissing(stock), [stock]);
+  const stockNearMissing = useMemo(() => getStockNearMissing(stock), [stock]);
+  const hasStock = stock.length > 0;
 
   useEffect(() => {
     if (selectedPieIndex !== null && selectedPieIndex >= pieData.length) {
@@ -605,6 +625,85 @@ export default function Dashboard() {
                 </>
               ) : (
                 <Text testID="runs-fallback">{runsChartData.labels.join(" | ")}</Text>
+              )}
+            </View>
+          </View>
+        )}
+
+        {/* Estoque - em falta */}
+        {hasStock && stockMissing.length > 0 && (
+          <View className="mx-4 mt-4 bg-white dark:bg-gray-800 rounded-2xl p-4 shadow" style={{ marginHorizontal: 16, marginTop: 16, backgroundColor: cardBgWhite, borderRadius: 16, padding: 16, elevation: 2, shadowColor: "#000", shadowOpacity: 0.05 }} testID="stock-missing-card">
+            <View className="flex-row items-center justify-between" style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>
+              <View className="flex-row items-center" style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
+                <View className="w-9 h-9 rounded-full bg-red-50 dark:bg-red-900/30 items-center justify-center" style={{ width: 36, height: 36, borderRadius: 18, backgroundColor: isDark ? "rgba(239,68,68,0.15)" : "#fef2f2", alignItems: "center", justifyContent: "center" }}>
+                  <Feather name="alert-circle" size={18} color="#dc2626" />
+                </View>
+                <View>
+                  <Text className="text-gray-800 dark:text-gray-100 font-bold text-base" style={{ fontWeight: "700", color: titleText, fontSize: 15 }} testID="stock-missing-title">Estoque em falta</Text>
+                  <Text className="text-xs text-gray-500 dark:text-gray-400" style={{ fontSize: 11, color: subText }}>{stockMissing.length} {stockMissing.length === 1 ? "item precisa comprar" : "itens precisam comprar"}</Text>
+                </View>
+              </View>
+              <View className="bg-red-50 dark:bg-red-900/20 px-2 py-1 rounded-full" style={{ backgroundColor: isDark ? "rgba(239,68,68,0.12)" : "#fef2f2", paddingHorizontal: 8, paddingVertical: 4, borderRadius: 999 }}>
+                <Text className="text-xs font-bold text-red-600 dark:text-red-300" style={{ fontSize: 11, fontWeight: "700", color: "#dc2626" }}>{stockMissing.reduce((acc: number, it: any) => acc + (Number(it.quantityDesired) - Number(it.quantity)), 0)} un.</Text>
+              </View>
+            </View>
+            <View style={{ marginTop: 12, gap: 8 }}>
+              {stockMissing.slice(0, 5).map((it: any) => {
+                const falta = Number(it.quantityDesired) - Number(it.quantity);
+                return (
+                  <View key={it.id} testID={`stock-missing-${it.id}`} className="flex-row items-center justify-between bg-gray-50 dark:bg-gray-700/50 rounded-xl px-3 py-2" style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", backgroundColor: isDark ? "#3f3f46" : "#f9fafb", borderRadius: 12, paddingHorizontal: 12, paddingVertical: 8, borderWidth: 1, borderColor: isDark ? "#52525b" : "#f3f4f6" }}>
+                    <View style={{ flex: 1, marginRight: 8 }}>
+                      <Text className="text-sm font-semibold text-gray-800 dark:text-gray-100" style={{ fontSize: 13, fontWeight: "600", color: titleText }} numberOfLines={1}>{it.description}</Text>
+                      <Text className="text-xs text-gray-500 dark:text-gray-400" style={{ fontSize: 11, color: subText }}>{it.category} • tem {it.quantity} / precisa {it.quantityDesired}</Text>
+                    </View>
+                    <View className="bg-red-100 dark:bg-red-900/30 px-2 py-1 rounded-full" style={{ backgroundColor: isDark ? "rgba(239,68,68,0.2)" : "#fee2e2", paddingHorizontal: 8, paddingVertical: 4, borderRadius: 999 }}>
+                      <Text className="text-xs font-bold text-red-700 dark:text-red-300" style={{ fontSize: 11, fontWeight: "700", color: "#dc2626" }}>Falta {falta}</Text>
+                    </View>
+                  </View>
+                );
+              })}
+              {stockMissing.length > 5 && (
+                <Text className="text-xs text-center text-gray-500 dark:text-gray-400" style={{ fontSize: 11, color: subText, textAlign: "center", marginTop: 4 }}>+ {stockMissing.length - 5} itens em falta</Text>
+              )}
+            </View>
+            <TouchableOpacity onPress={() => navigation.navigate("Mercado")} testID="stock-missing-cta" style={{ marginTop: 12, backgroundColor: isDark ? "#7f1d1d" : "#fef2f2", borderWidth: 1, borderColor: "#fecaca", borderRadius: 12, paddingVertical: 10, alignItems: "center", flexDirection: "row", justifyContent: "center", gap: 6 }}>
+              <Feather name="shopping-cart" size={16} color="#dc2626" />
+              <Text style={{ color: "#dc2626", fontWeight: "700", fontSize: 13 }}>Ver estoque</Text>
+            </TouchableOpacity>
+          </View>
+        )}
+
+        {/* Estoque - próximos de faltar */}
+        {hasStock && stockNearMissing.length > 0 && (
+          <View className="mx-4 mt-4 bg-white dark:bg-gray-800 rounded-2xl p-4 shadow" style={{ marginHorizontal: 16, marginTop: 16, backgroundColor: cardBgWhite, borderRadius: 16, padding: 16, elevation: 2, shadowColor: "#000", shadowOpacity: 0.05 }} testID="stock-near-card">
+            <View className="flex-row items-center justify-between" style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>
+              <View className="flex-row items-center" style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
+                <View className="w-9 h-9 rounded-full bg-amber-50 dark:bg-amber-900/30 items-center justify-center" style={{ width: 36, height: 36, borderRadius: 18, backgroundColor: isDark ? "rgba(245,158,11,0.15)" : "#fffbeb", alignItems: "center", justifyContent: "center" }}>
+                  <Feather name="alert-triangle" size={18} color="#d97706" />
+                </View>
+                <View>
+                  <Text className="text-gray-800 dark:text-gray-100 font-bold text-base" style={{ fontWeight: "700", color: titleText, fontSize: 15 }} testID="stock-near-title">Próximos de faltar</Text>
+                  <Text className="text-xs text-gray-500 dark:text-gray-400" style={{ fontSize: 11, color: subText }}>{stockNearMissing.length} {stockNearMissing.length === 1 ? "item no limite" : "itens no limite"}</Text>
+                </View>
+              </View>
+              <View className="bg-amber-50 dark:bg-amber-900/20 px-2 py-1 rounded-full" style={{ backgroundColor: isDark ? "rgba(245,158,11,0.12)" : "#fffbeb", paddingHorizontal: 8, paddingVertical: 4, borderRadius: 999 }}>
+                <Text className="text-xs font-bold text-amber-700 dark:text-amber-300" style={{ fontSize: 11, fontWeight: "700", color: "#d97706" }}>Atenção</Text>
+              </View>
+            </View>
+            <View style={{ marginTop: 12, gap: 8 }}>
+              {stockNearMissing.slice(0, 5).map((it: any) => (
+                <View key={it.id} testID={`stock-near-${it.id}`} className="flex-row items-center justify-between bg-gray-50 dark:bg-gray-700/50 rounded-xl px-3 py-2" style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", backgroundColor: isDark ? "#3f3f46" : "#f9fafb", borderRadius: 12, paddingHorizontal: 12, paddingVertical: 8, borderWidth: 1, borderColor: isDark ? "#52525b" : "#f3f4f6" }}>
+                  <View style={{ flex: 1, marginRight: 8 }}>
+                    <Text className="text-sm font-semibold text-gray-800 dark:text-gray-100" style={{ fontSize: 13, fontWeight: "600", color: titleText }} numberOfLines={1}>{it.description}</Text>
+                    <Text className="text-xs text-gray-500 dark:text-gray-400" style={{ fontSize: 11, color: subText }}>{it.category} • tem {it.quantity} / precisa {it.quantityDesired}</Text>
+                  </View>
+                  <View className="bg-amber-100 dark:bg-amber-900/30 px-2 py-1 rounded-full" style={{ backgroundColor: isDark ? "rgba(245,158,11,0.2)" : "#fef3c7", paddingHorizontal: 8, paddingVertical: 4, borderRadius: 999 }}>
+                    <Text className="text-xs font-bold text-amber-800 dark:text-amber-200" style={{ fontSize: 11, fontWeight: "700", color: "#92400e" }}>{Number(it.quantity) === Number(it.quantityDesired) ? "No limite" : "Quase"}</Text>
+                  </View>
+                </View>
+              ))}
+              {stockNearMissing.length > 5 && (
+                <Text className="text-xs text-center text-gray-500 dark:text-gray-400" style={{ fontSize: 11, color: subText, textAlign: "center", marginTop: 4 }}>+ {stockNearMissing.length - 5} itens próximos</Text>
               )}
             </View>
           </View>

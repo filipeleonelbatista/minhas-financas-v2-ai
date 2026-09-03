@@ -3,7 +3,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useIsFocused, useNavigation } from "@react-navigation/native";
 import * as FileSystem from "expo-file-system";
 import { useEffect, useState, useRef } from "react";
-import { Alert, ToastAndroid, useWindowDimensions, View, Text, FlatList, Image, TouchableOpacity } from "react-native";
+import { Alert, Platform, ToastAndroid, useWindowDimensions, View, Text, FlatList, Image, TouchableOpacity } from "react-native";
 import Loading from "../components/Loading";
 import { useSettings } from "../hooks/useSettings";
 import CTA from "../components/ui/CTA";
@@ -73,6 +73,10 @@ export default function Onboarding() {
   ];
 
   async function preleavingOnboarding() {
+    if (Platform.OS !== 'android') {
+      await handleLeaveOnboarding();
+      return;
+    }
     Alert.alert(
       "Antes de começar...",
       `Precisamos definir um local onde vamos salvar as tabelas onde você pode acessar e compartilhar com seus amigos e familiares. confirme a solicitação a seguir e crie uma pasta para salvar se for necessário.`,

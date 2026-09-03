@@ -1,3 +1,21 @@
+jest.mock('@react-native-async-storage/async-storage', () => require('@react-native-async-storage/async-storage/jest/async-storage-mock'));
+jest.mock('react-native-walkthrough-tooltip', () => {
+  const ReactMod = require('react');
+  const { View: RNView } = require('react-native');
+  const MockTooltip = ({ isVisible, content, children, testID }: any) =>
+    ReactMod.createElement(RNView, { testID: testID ?? 'tooltip-mock' }, children, isVisible ? ReactMod.createElement(RNView, { testID: 'tooltip-content-mock' }, content) : null);
+  return { __esModule: true, default: MockTooltip, Tooltip: MockTooltip };
+});
+jest.mock('../../src/repositories/config', () => {
+  let mem: any = {};
+  return {
+    configRepo: {
+      get: jest.fn(async () => (Object.keys(mem).length ? mem : null)),
+      upsert: jest.fn(async (dto: any) => { mem = { ...mem, ...dto }; return dto; }),
+    },
+  };
+});
+
 import { calcHeroValues, getExpensesByCategory, getLast6MonthsLineData, getUrgentGoals, calcGoalProgress } from '../../src/pages/Dashboard';
 import { financeRepo } from '../../src/repositories/finance';
 import { goalRepo } from '../../src/repositories/goal';

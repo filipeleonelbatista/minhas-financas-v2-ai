@@ -10,6 +10,7 @@ import AboutUs from "./pages/AboutUs";
 import IAPage from "./pages/IAPage";
 import AIProviders from "./pages/AIProviders";
 import Goals from "./pages/Goals";
+import Reports from "./pages/Reports";
 import TitheSettings from "./pages/TitheSettings";
 import { useSettingsStore } from "./stores/settings";
 
@@ -33,6 +34,7 @@ export default function Routes() {
           <Stack.Screen name="AIProviders" component={AIProviders} />
           <Stack.Screen name="TitheSettings" component={TitheSettings} />
           <Stack.Screen name="Goals" component={Goals} />
+          <Stack.Screen name="Reports" component={Reports} />
           <Stack.Screen name="TabNavigator" component={BottomTabRoutes} />
         </Stack.Navigator>
       </BottomSheetModalProvider>

@@ -1,4 +1,6 @@
 import "./global.css";
+import * as SplashScreen from 'expo-splash-screen';
+try { SplashScreen.preventAutoHideAsync(); } catch {}
 import { StatusBar } from "expo-status-bar";
 import React, { useCallback, useEffect, useState } from "react";
 import { AppState, StatusBar as RNStatusBar, Text, TouchableOpacity, View, ActivityIndicator } from "react-native";
@@ -130,18 +132,20 @@ export default function App() {
     Poppins_600SemiBold,
   });
 
-  const load = useSettingsStore((s) => s.load);
+  const loadSettings = useSettingsStore((s) => s.load);
+  const [appIsReady, setAppIsReady] = useState(false);
 
   useEffect(() => {
     (async () => {
-      await load();
-      if (process.env.NODE_ENV !== 'test') {
-        try {
-          const m = await import('./src/db/seed');
-          const res = await m.ensureSeeded?.();
-          if (res) {
-            // recarrega todas as stores para refletir seed (finanças, corridas, estoque, listas, metas)
-            try {
+      try {
+        // 1) load settings first (has isBiometricEnabled etc)
+        await loadSettings();
+        // 2) seed if needed (already there)
+        if (process.env.NODE_ENV !== 'test') {
+          try {
+            const m = await import('./src/db/seed');
+            const res = await m.ensureSeeded?.();
+            if (res) {
               const { useFinanceStore } = await import('./src/stores/finance');
               const { useRunsStore } = await import('./src/stores/runs');
               const { useMarketStore } = await import('./src/stores/market');
@@ -153,21 +157,42 @@ export default function App() {
                 useMarketStore.getState().load?.(),
                 useListsStore.getState().load?.(),
                 useGoalsStore.getState().load?.(),
-                load(),
+                loadSettings(),
               ]);
-            } catch {}
-          }
-        } catch {}
+            } else {
+              // still preload other stores even without seed
+              const { useFinanceStore } = await import('./src/stores/finance');
+              const { useRunsStore } = await import('./src/stores/runs');
+              const { useMarketStore } = await import('./src/stores/market');
+              const { useListsStore } = await import('./src/stores/lists');
+              const { useGoalsStore } = await import('./src/stores/goals');
+              await Promise.all([
+                useFinanceStore.getState().load?.(),
+                useRunsStore.getState().load?.(),
+                useMarketStore.getState().load?.(),
+                useListsStore.getState().load?.(),
+                useGoalsStore.getState().load?.(),
+              ]);
+            }
+          } catch {}
+        }
+      } finally {
+        setAppIsReady(true);
       }
     })();
   }, []);
 
-  if (!fontsLoaded) {
+  const onLayoutRootView = useCallback(async () => {
+    if (appIsReady && fontsLoaded) {
+      try { await SplashScreen.hideAsync(); } catch {}
+    }
+  }, [appIsReady, fontsLoaded]);
+
+  if (!appIsReady || !fontsLoaded) {
     return <Loading />;
   }
-
   return (
-    <GestureHandlerRootView style={{ flex: 1 }}>
+    <GestureHandlerRootView style={{ flex: 1 }} onLayout={onLayoutRootView}>
       <SafeAreaProvider>
         <View
           style={{

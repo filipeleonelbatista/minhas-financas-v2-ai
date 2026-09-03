@@ -1,6 +1,6 @@
-# Dossiê Completo — Financas App v2.2.2 (feature/watermelondb)
+# Dossiê Completo — Financas App v2.3.0 (app/ • Managed)
 
-> Gerado em 2026-08-28 | Projeto: `finances-app-feature-adicionando-watermelondb/` | Expo ~48.0.18 + React 18.2.0 + WatermelonDB 0.26.0
+> Gerado em 2026-09-03 | Projeto: `app/` | Expo ~57.0.19 + React 19.2.3 + React Native 0.86.3 + expo-sqlite/drizzle (WatermelonDB removido)
 
 ---
 
@@ -9,50 +9,57 @@
 App React Native (Expo Managed + Prebuild) para **gestão financeira familiar** com 4 domínios integrados: Finanças, Combustível/Hodômetro, Mercado/Estoque e Metas, com Relatórios e IA (OpenAI). Evolução da v2.0.2 (Play Store `com.finances`) para v2.2.2 com migração total de `AsyncStorage` para banco SQLite relacional via WatermelonDB e novo domínio de **Listas de Compras**.
 
 - **Slug/packge:** `finances` / `com.finances` (`app.json:8`)
-- **VersionCode:** 222, **BuildNumber iOS:** 2.2.2, **EAS projectId:** `007d84b9-db5f-4e91-8537-b64bd4edafbe`
+- **VersionCode:** 230, **Version:** 2.3.0, **BuildNumber iOS:** 2.3.0, **EAS projectId:** `007d84b9-db5f-4e91-8537-b64bd4edafbe`
 - **Orientação:** portrait only, `userInterfaceStyle: automatic` (segue sistema)
-- **Workspace:** `finances-app-feature-adicionando-watermelondb/` (antiga `finances-app-main` removida — era baseline 2.0.2 sem DB)
+- **Workspace:** `app/` (renomeado de `finances-app-feature-adicionando-watermelondb/` em `ae034a8`; `app/android/` ignorado via `.gitignore`)
+- **Doctor:** `npx expo-doctor` **21/21** (com `expo.install.exclude: ["expo-sqlite"]`)
 
 ---
 
 ## 2. Stack Técnica
 
-### 2.1 Core
+### 2.1 Core (SDK 57 — atualizado 2026-09-03)
 
 | Camada | Lib | Versão | Papel |
 |---|---|---|---|
-| Runtime | `expo` | ~48.0.18 | Managed workflow + EAS Build |
-|  | `react` | 18.2.0 |  |
-|  | `react-native` | 0.71.8 |  |
+| Runtime | `expo` | ~57.0.19 | Managed workflow + EAS Build |
+|  | `react` | 19.2.3 |  |
+|  | `react-native` | 0.86.3 |  |
+|  | `expo-splash-screen` | ~57.0.8 | `preventAutoHideAsync`/`hideAsync` splash gate em `App.js` |
+|  | `expo-file-system` | ~57.0.6 | SAF `StorageAccessFramework` (Android) + `documentDirectory` fallback iOS |
+|  | `expo-local-authentication` | ~57.0.2 | Biometria `isBiometricAvailable`/`authenticateAsync` |
+|  | `expo-secure-store` | ~57.0.3 | Chaves IA por provider |
+|  | `expo-sqlite` | ^57.0.2 | SQLite `openDatabaseSync("financas.db")` + `expo.install.exclude` para doctor 21/21 |
+|  | `drizzle-orm` / `drizzle-kit` | ^0.45.2 / ^0.31.10 | ORM + migrations (`src/db/schema.ts`, `drizzle.config.ts`) |
+|  | `zustand` | ^5.0.8 | Stores `settings/finance/runs/market/lists/goals` |
 | Navegação | `@react-navigation/native` | ^6.1.6 | NavigationContainer + theming |
 |  | `@react-navigation/stack` | ^6.3.16 | Stack (Onboarding, MarketStack) |
 |  | `@react-navigation/bottom-tabs` | ^6.5.7 | Bottom Tabs |
-| UI | `native-base` | ^3.4.28 | Design system, `useColorMode`, `useTheme`, VStack/HStack etc. |
+| UI | `nativewind` | ^4.1 + `tailwindcss@3.4.17` | Design system util-first, `global.css` + `withNativewind` |
 |  | `@expo-google-fonts/poppins` | ^0.2.3 | `Poppins_400Regular/600SemiBold` (`App.js:8`) |
-|  | `react-native-svg` | 13.4.0 | Necessário para native-base + chart-kit |
-|  | `react-native-gesture-handler` | ~2.9.0 |  |
-|  | `react-native-safe-area-context` | 4.5.0 |  |
-|  | `expo-status-bar` | ~1.4.4 |  |
-|  | `expo-splash-screen` | ~0.18.2 |  |
+|  | `react-native-svg` | 15.15.4 | Necessário para chart-kit |
+|  | `react-native-gesture-handler` | ~2.32.0 |  |
+|  | `react-native-safe-area-context` | ~5.7.0 |  |
+|  | `react-native-reanimated` | 4.5.1 |  |
+|  | `react-native-chart-kit` + `react-native-progress` | 6.12.0 / 5.0.0 | PieChart, LineChart, Progress.Bar em `Reports.js` |
+|  | `react-native-walkthrough-tooltip` | ^1.6.0 | Tour spotlight 6 steps |
 |  | `@expo/vector-icons` (Feather, FontAwesome, MaterialCommunityIcons, Fontisto, Ionicons, Octicons) | bundled | Ícones em toda UI |
 | Forms | `formik` + `yup` | 2.2.9 / 1.0.2 | Validação em `AddItemForm`, `AddFuelForm`, etc. |
-| Data | `@nozbe/watermelondb` | ^0.26.0 | **Novo:** SQLite offline-first |
-|  | `@react-native-async-storage/async-storage` | 1.17.11 | Legado: ainda usado para `@onboarding` flag e `clear()` em `SettingsContext.js:114` |
-|  | `dayjs` + `date-fns` | 1.11.7 / 2.30.0 | Manipulação datas, `isSameOrAfter/Before` |
-|  | `@react-native-community/datetimepicker` | 6.7.3 | `DateTimePickerAndroid.open` (Filtros período) |
-|  | `@react-native-picker/picker` | 2.4.8 | Dropdowns categoria/tipo pagamento |
-| Export | `expo-file-system` | ~15.2.2 | `StorageAccessFramework.createFileAsync/writeAsStringAsync`, `readAsStringAsync` |
-|  | `expo-media-library` | ^15.2.3 | `getPermissionsAsync/requestPermissionsAsync` (gate de permissão) |
-|  | `expo-document-picker` | ~11.2.2 | `getDocumentAsync` tipo `text/*` (import CSV) |
-|  | `expo-sharing` | ^11.2.2 | (legado, não usado ativamente em 2.2.2) |
+| Data | `zustand` + `drizzle-orm` + `expo-sqlite` | 5 / 0.45 / 57 | SQLite offline-first (WatermelonDB **removido** em Fase 1 gaps) |
+|  | `@react-native-async-storage/async-storage` | 2.2.0 | `@onboarding` flag + fallback `hasSeenInteractiveTour` |
+|  | `dayjs` + `date-fns` | 1.11.7 / 2.30.0 | Manipulação datas |
+|  | `@react-native-community/datetimepicker` | 9.1.0 | `DateTimePickerAndroid.open` |
+|  | `@react-native-picker/picker` | 2.11.4 | Dropdowns categoria |
+| Export | `expo-file-system` | ~57.0.6 | **SAF iOS branch:** `Platform.OS === 'android' ? StorageAccessFramework.createFileAsync/writeAsStringAsync : FileSystem.writeAsStringAsync(documentDirectory + fileName)` (`AboutUs.js`/`Onboarding.js`) |
+|  | `expo-media-library` | ~57.0.4 | `getPermissionsAsync/requestPermissionsAsync` |
+|  | `expo-document-picker` | ~57.0.1 | `getDocumentAsync` tipo `text/*` |
 |  | `react-native-csv` | ^0.2.0 | `jsonToCSV`, `readString` |
-|  | `xlsx` | ^0.18.5 | Dependência instalada, import XLSX não exposto em UI (preparado) |
-| Charts | `react-native-chart-kit` + `react-native-progress` + `react-native-svg` | 6.12.0 / 5.0.0 | PieChart, LineChart, Progress.Bar em `Reports.js` |
-| IA | `openai` | ^3.3.0 | `Configuration`, `OpenAIApi.createChatCompletion` gpt-3.5-turbo |
-|  | `axios` | ^1.4.0 | `src/services/api.js` (não usado ativamente, preparado p/ backend) |
-| Build | `expo-dev-client` + `expo-build-properties` | ~2.2.1 / ~0.6.0 | Necessários para WatermelonDB (código nativo) |
-|  | `expo-asset` | ^8.9.1 |  |
-| Babel | `@babel/plugin-proposal-decorators` legacy | ^7.22.7 | Requerido por WatermelonDB (`@nozbe/watermelondb` usa decorators) |
+|  | `xlsx` | ^0.18.5 | Import XLSX com allowlist `xlsx/csv` |
+| IA | `openai` | ^4.28.0 | `new OpenAI({apiKey})` via `src/utils/aiProviders.ts` `chatWithFallback` (openai 3.x `Configuration` removido) |
+|  | `zustand` + `expo-secure-store` | 5 / 57 | `getProviderKey` por provider |
+| Build | `expo-build-properties` | ~57.0.16 | `compileSdk 36/targetSdk 36`, `kotlinVersion 2.1.0` |
+|  | `jest-expo` | ~57.0.5 | Preset `jest-expo` + `react-native-walkthrough-tooltip` mock |
+| Babel | `nativewind` preset | — | Sem `plugin-proposal-decorators` (WatermelonDB removido) |
 
 ### 2.2 Configuração de Build
 
@@ -206,16 +213,18 @@ Slides: 1 Organize finanças, 2 Export/Import, 3 Compras, 4 Autonomia veículo, 
 - **Minhas metas:** Lista `goalsList` Pressable -> `EditGoalForm`. Cada meta: `description`, `Prazo: date`, `amount / currentAmount`, `Restam X dias` se <=30, `Progress.Bar` roxo (claro se 100%).
 - **EmptyMessage** se sem dados.
 
-### 5.8 Configurações (`src/pages/AboutUs.js` — 1150 linhas)
+### 5.8 Configurações (`src/pages/AboutUs.js` — ~1200 linhas, com Privacidade/Export iOS)
 
 Seções com `Switch` + `Button` roxos:
 
 1. **Aparência:** `Tema Escuro`, `Títulos nos ícones`, `IA Beta` (mostra input API key + link `platform.openai.com/account/api-keys` + `handleSaveApiKey` que testa `createChatCompletion Olá mundo`).
-2. **Finanças:** `formulário simplificado`, `card Saldo`, `card Dízimo`, `Remover prefixo da soma Dízimo` + `Input prefixTithe`; Botões `Exportar/Importar finanças` (CSV via SAF + reselect folder), `Apagar finanças`.
-3. **Corridas:** `adicionar abastecimento em finanças`; `Exportar/Importar Abastecimentos`, `Apagar Abastecimentos`.
-4. **Compras:** `formulário simplificado itens`; `Exportar/Importar Estoque`, `Importar Lista`, `Apagar Compras` (dialog Apagar Listas/estoque/tudo).
-5. **Geral:** `Redefinir configurações` (`handleResetConfigs` apaga row config), `Apagar tabelas` (`handleCleanStorage` destrói tudo + reload), `Alterar pasta de exportação` (`requestDirectoryPermissionsAsync`), `Exportar finanças antigo` (`getAllDataAsJSON` de AsyncStorage legado).
-6. Rodapé link `filipeleonelbatista.vercel.app` + `Constants.manifest.version`.
+2. **Privacidade (NOVO 2026-09-03):** `Exigir biometria ao abrir` (`testID biometry-switch`) com guard `isBiometricAvailable()`; `disabled` se hardware indisponível + mensagem `biometry-unavailable`. Persiste `isBiometricEnabled` (0/1) e bloqueia `BiometricGate` em `App.js`.
+3. **Finanças:** `formulário simplificado`, `card Saldo`, `card Dízimo`, `Remover prefixo da soma Dízimo` + `Input prefixTithe`; Botões `Exportar/Importar finanças` (CSV via SAF Android / `documentDirectory` iOS + reselect folder), `Apagar finanças`.
+4. **Corridas:** `adicionar abastecimento em finanças`; `Exportar/Importar Abastecimentos`, `Apagar Abastecimentos`.
+5. **Compras:** `formulário simplificado itens`; `Exportar/Importar Estoque`, `Importar Lista`, `Apagar Compras` (dialog Apagar Listas/estoque/tudo).
+6. **Geral:** `Redefinir configurações` (`handleResetConfigs` apaga row config), `Apagar tabelas` (`handleCleanStorage` destrói tudo + reload), `Alterar pasta de exportação` (`requestDirectoryPermissionsAsync` — só Android; iOS usa `documentDirectory` direto), `Exportar finanças antigo` (`getAllDataAsJSON` legado).
+7. **Export SAF iOS branch:** `AboutUs.js` `exportSomeData` e `Onboarding.js` `preleavingOnboarding` usam `Platform.OS === 'android' ? StorageAccessFramework.createFileAsync/writeAsStringAsync : FileSystem.writeAsStringAsync(documentDirectory + fileName)` com `Alert` fallback.
+8. Rodapé link `filipeleonelbatista.vercel.app` + `Constants.manifest.version`.
 
 ### 5.9 IA (`src/components/AIComponent.js` + `src/pages/IAPage.js` + `src/hooks/useOpenAi.js`)
 
@@ -271,16 +280,18 @@ Seções com `Switch` + `Button` roxos:
 
 `xlsx@0.18.5` e `expo-sharing` instalados mas não usados em UI 2.2.2. Export só CSV. Observação para modernização: `readString` não parseia XLSX; necessário `XLSX.readFile` + `expo-sharing` para abrir arquivo.
 
+**Nota SAF watermelon removida:** tabela comparativa removida (era scaffolding Expo 48 / WatermelonDB). Stack atual Managed puro via `expo-sqlite` + `drizzle-orm` (ver §2.1).
+
 ---
 
-## 7. Bugs & Débitos Conhecidos (a corrigir na modernização)
+## 7. Bugs & Débitos Conhecidos (atualizado 2026-09-03)
 
-1. **Items schema mismatch:** `itemShcema.js:27` coluna `desiredQuantity` vs `ListsContext.js:185`/`Market` usa `quantityDesired`/`quantityDesired`. `create` com nome errado silenciosamente perde dado (SQLite ignora coluna inexistente vira null). Requer migration ou renomear coluna.
-2. **SAF em iOS:** `StorageAccessFramework` não existe em iOS — envolver com `Platform.select`.
-3. **AsyncStorage legado:** `@onboarding` ainda em AsyncStorage enquanto resto em WatermelonDB; `saveStorageToExportedFile` exporta AsyncStorage como txt — órfão.
-4. **OpenAI SDK deprecated:** `openai@3.3.0` `Configuration/OpenAIApi` removido em `openai@4+`. Modernizar para `new OpenAI({apiKey})` + `chat.completions.create`.
-5. **NativeBase deprecated:** NativeBase 3.4.28 arquivado; migrar para Gluestack UI ou Tamagui/NativeWind na modernização.
-6. **React Native 0.71.8 + Kotlin 1.6.0** desatualizados (2023). Expo 48 EOL. Necessário bump Expo 52/53+ para targetSdk 34/35.
+1. **Items schema mismatch:** `itemShcema.js:27` coluna `desiredQuantity` vs `ListsContext.js:185`/`Market` usa `quantityDesired` — **corrigido** em Fase 1 com `drizzle` `quantityDesired` (migration 0000) e `ListsContext` normalizado; `stock`/`items` usam `quantityDesired` consistente.
+2. **SAF em iOS:** `StorageAccessFramework` não existe em iOS — **corrigido** com branch `Platform.OS === 'android' ? SAF : FileSystem.documentDirectory` em `AboutUs.js:193-240` e `Onboarding.js:84` (testes `saf-ios` PASS).
+3. **AsyncStorage legado:** `@onboarding` ainda em AsyncStorage enquanto resto em `drizzle`; `saveStorageToExportedFile` exporta AsyncStorage como txt — órfão (mantido para compat, fallback `hasSeenInteractiveTour` também em `config`).
+4. **OpenAI SDK deprecated:** `openai@3.3.0` `Configuration/OpenAIApi` — **corrigido** para `openai@^4.28.0` + `src/utils/aiProviders.ts` `chatWithFallback` / `fetchModels` (teste `secureStore-migration` PASS, sem `Configuration` import).
+5. **NativeBase deprecated:** NativeBase 3.4.28 arquivado — **removido**; migrado para `nativewind@4.1` + `tailwindcss@3.4.17`.
+6. **React Native 0.71.8 + Kotlin 1.6.0** desatualizados (2023) — **corrigido** para `RN 0.86.3` + `Kotlin 2.1.0` + `Expo 57` + `compileSdk 36/targetSdk 36` (doctor 21/21).
 
 ---
 

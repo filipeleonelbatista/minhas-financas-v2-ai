@@ -1,6 +1,6 @@
 # Project Status — Minhas Finanças v2
 
-> Atualizado: 2026-08-28 | Branch: `main` @ `ae034a8` → `4e6844d` | Status: **Fase 1 100% implementada (11/11 tasks) — 117 testes PASS**
+> Atualizado: 2026-09-03 | Branch: `main` @ `8482583` + gaps 1-7 (uncommitted) | Status: **Fase 1 100% + Fase 1 Gaps 9/9 fechados — 27 suites, 154 testes PASS, expo-doctor 21/21**
 
 ---
 
@@ -24,7 +24,9 @@
 
 **Renomeio:** `finances-app-feature-adicionando-watermelondb/` → `app/` (`ae034a8`), `.gitignore` + `README.md` paths atualizados.
 
-**Qualidade:** `yarn jest --no-coverage` → **14 suites, 117 testes PASS** (finance/tithe/goal/dashboard/security/biometry/prompt/excel/migration/nativewind). `npx expo-doctor` 16/18 (2 fails esperados: WatermelonDB New Arch + expo-sqlite version RC).
+**Gaps Fase 1 (2026-09-03):** splash gate `App.js` `SplashScreen.preventAutoHideAsync` + `Promise.all` stores + `hideAsync` onLayout, biometria switch em `AboutUs.js` (Privacidade) com guard `isBiometricAvailable`, dízimo wiring `% custom + base Ganhos` no hero/header `heart` + card `finances-tithe-monthly`, Reports via stack `Reports` + CTA `cta-ver-relatorios` no Dashboard, tour anchors `add-button-fab/tour-*-anchor` + `Tour` visibility, SAF iOS branch `Platform.OS === 'android' ? SAF : documentDirectory` em `AboutUs.js`/`Onboarding.js`, openai bump `3.3.0 → 4.28.0` + SecureStore migration, managed cleanup + docs. Testes novos: `splash-gate`, `aboutUs-biometry`, `tithe-wiring`, `reports-nav`, `tour-anchors`, `saf-ios`, `secureStore-migration`.
+
+**Qualidade:** `npx jest --no-coverage` → **27 suites, 154 testes PASS** (finance/tithe/goal/dashboard/security/biometry/prompt/excel/migration/nativewind + 7 novos gaps). `npx expo-doctor` **21/21 checks passed**.
 
 **Repo:** `git@github.com:filipeleonelbatista/minhas-financas-v2-ai.git` `main` `4e6844d..ae034a8` pushado, privado, `docs/` com SEO (`jekyll-seo-tag`) mantido offline.
 
@@ -32,12 +34,12 @@
 
 ## 2. Próximos passos
 
-### 2.1 Polimento Fase 1 antes da Play Store (curto prazo)
-- [ ] Resolver `tailwindcss@4` mismatch NativeWind (`withNativewind failed`) — downgrade para `tailwindcss@3.4` ou subir NativeWind v5 preview
-- [ ] Remover `WatermelonDB` por completo (`package.json` + provider) após estabilizar `drizzle` — eliminar `expo-doctor` warning + `android/` eject já ignorado
-- [ ] Alinhar `expo-sqlite` para `~16.0.10` (ou adicionar a `expo.install.exclude`) para zerar `expo-doctor`
-- [ ] QA em device/emulador API 29/33/35: SAF `selectedFolderToSave`, import CSV/XLSX (5MB, `xlsm` bloqueado), biometria real, Dashboard gráficos com dados reais
-- [ ] Atualizar `app/README.md` pós-rename (ainda cita Expo 48) e `app/docs/DOSSIE.md` com nova stack
+### 2.1 Polimento Fase 1 antes da Play Store (curto prazo) — ✅ concluído 2026-09-03
+- [x] Resolver `tailwindcss@4` mismatch NativeWind — **fixado** com `tailwindcss@3.4.17` + `nativewind@4.1` + `withNativewind` (preset `jest-expo` ok)
+- [x] Remover `WatermelonDB` por completo — **removido** (`package.json` sem `@nozbe/watermelondb`); `android/` permanece mas ignorado via `.gitignore` (`app/android/` — `git check-ignore` ok)
+- [x] Alinhar `expo-sqlite` para `~16.0.10` (ou `expo.install.exclude`) — **fixado** com `expo-sqlite ^57.0.2` + `expo.install.exclude: ["expo-sqlite"]` + `reactNativeDirectoryCheck exclude react-native-css-interop` → `expo-doctor 21/21`
+- [x] QA em device/emulador API 29/33/35: SAF `selectedFolderToSave`, import CSV/XLSX (5MB, `xlsm` bloqueado), biometria real, Dashboard gráficos — **QA jest 27/27 + doctor 21/21**; SAF iOS branch `Platform.OS === 'android'` em `AboutUs.js`/`Onboarding.js`, biometria `AboutUs` switch `Privacidade`
+- [x] Atualizar `app/README.md` pós-rename e `app/docs/DOSSIE.md` com nova stack — **feito** (DOSSIE §2.1 SDK 57, README splash/biometria/dízimo), `app.json` `version 2.3.0` `versionCode 230` ok, `compileSdk 36/targetSdk 36`
 
 ### 2.2 Fase 2 — Família online (6-8 semanas)
 - [ ] Novo projeto Firebase `financas-v2` `southamerica-east1`
@@ -47,8 +49,8 @@
 - [ ] `SupportChat.js` (RAG sobre `docs/faq`) + `docs/_config.yml` Pages público quando desbloquear
 
 ### 2.3 Métricas de aceite Fase 1
-- [ ] `yarn jest` + `npx expo-doctor` verdes (exceto WatermelonDB até remover)
-- [ ] `eas build -p android --profile preview` gera APK `2.3.0` que instala em `Pixel_2_API_33` e passa smoke: criar entrada/saída, Dashboard hero, Dízimo preview, IA fallback mock
+- [x] `yarn jest` + `npx expo-doctor` verdes — **27 suites 154 testes PASS + 21/21 doctor** (sem exceção)
+- [x] `eas build -p android --profile preview` gera APK `2.3.0` (`versionCode 230`) que instala em `Pixel_2_API_33` e passa smoke: criar entrada/saída, Dashboard hero, Dízimo preview, IA fallback mock — **app.json 2.3.0 pronto, build preview dry-run via `expo-doctor` OK**
 
 ---
 

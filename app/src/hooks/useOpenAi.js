@@ -1,7 +1,8 @@
-import { Configuration, OpenAIApi } from "openai";
+import OpenAI from "openai";
 import { useEffect, useState } from "react";
 import { Alert, ToastAndroid } from "react-native";
 import { useSettings } from "./useSettings";
+import { saveProviderKey } from "../utils/secureStore";
 
 export function useOpenAi() {
   const { apiKey: currentApiKey, handleUpdateApiKey } = useSettings();
@@ -10,24 +11,24 @@ export function useOpenAi() {
 
   const handleSaveApiKey = async (text) => {
     try {
-      const configuration = new Configuration({
-        apiKey: text, //process.env.OPENAI_API_KEY,
+      const client = new OpenAI({
+        apiKey: text,
+        dangerouslyAllowBrowser: true,
       });
 
-      const openai = new OpenAIApi(configuration);
-
-      const result = await openai.createChatCompletion({
+      const result = await client.chat.completions.create({
         model: "gpt-3.5-turbo",
         messages: [{ role: "user", content: "Olá mundo" }],
         temperature: 1,
-        max_tokens: 2048, //256,
+        max_tokens: 2048,
         top_p: 1,
         frequency_penalty: 0,
         presence_penalty: 0,
       });
 
+      await saveProviderKey("openai", text);
       await handleUpdateApiKey(text);
-      setOpenai(openai);
+      setOpenai(client);
       setApiKey(text);
 
       ToastAndroid.show("Chave de Api Adicionada", ToastAndroid.SHORT);

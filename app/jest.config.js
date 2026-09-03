@@ -4,4 +4,9 @@ module.exports = {
   transformIgnorePatterns: [
     "node_modules/(?!(jest-)?react-native|@react-native|@expo|expo|nativewind|react-native-css-interop|react-native-reanimated|react-native-worklets|zustand|@gorhom/bottom-sheet|@gorhom/portal)",
   ],
+  moduleNameMapper: {
+    "\\.(css|png|jpg|jpeg|gif|webp|svg)$": "<rootDir>/__mocks__/cssMock.js",
+    "^@expo/vector-icons$": "<rootDir>/__mocks__/vectorIconsMock.js",
+    "^@expo/vector-icons/(.*)$": "<rootDir>/__mocks__/vectorIconsMock.js",
+  },
 };

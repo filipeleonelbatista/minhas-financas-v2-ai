@@ -1,9 +1,11 @@
-# Financas App v2.3.0 — Fase 1 (NativeWind + expo-sqlite)
+# Financas App v2.3.0 — Fase 1 (NativeWind + expo-sqlite) + Gaps 9/9
 
-> **Status 2026-08-28: Fase 1 11/11 implementada — 117 testes PASS** (ver `docs/project-status.md`). Branch `feature/adicionando-watermelondb` renomeado para `app/` — **A' Managed** offline-first. Ex-Play Store `com.finances` `2.2.2` → agora `2.3.0` managed.
+> **Status 2026-09-03: Fase 1 11/11 + Gaps 9/9 fechados — 27 suites 154 testes PASS, expo-doctor 21/21** (ver `docs/project-status.md`). `app/` **Managed** offline-first (WatermelonDB removido). `com.finances` `2.2.2` → `2.3.0` (`versionCode 230`, `compileSdk 36/targetSdk 36`, Expo SDK 57, RN 0.86.3).
 
-> 📚 **Dossiê:** `docs/DOSSIE.md` (stacks/telas/schemas) • **Roadmap:** `docs/ROADMAP.md` (Fase 1 ✅) • **Spec:** `docs/superpowers/specs/2026-08-28-fase1-redesign-offline-design.md` • **Status:** `docs/project-status.md`
+> 📚 **Dossiê:** `docs/DOSSIE.md` (stacks/telas/schemas) • **Roadmap:** `docs/ROADMAP.md` (Fase 1 ✅) • **Spec:** `docs/superpowers/specs/2026-08-28-fase1-redesign-offline-design.md` + `docs/superpowers/plans/2026-09-03-fase1-gaps.md` • **Status:** `docs/project-status.md`
 > 🤖 **Guia para agentes/LLM:** `AGENTS.md` (regras, SOLID/TDD, quality gate `test:security`)
+
+> **Gaps entregues 2026-09-03:** splash gate `SplashScreen.preventAutoHideAsync` + `Promise.all` stores, biometria `Privacidade` switch `biometry-switch` com guard `isBiometricAvailable`, dízimo `tithePercent/titheCategories` no hero + header `heart` (`header-tithe-heart`) + card `finances-tithe-monthly`, Reports stack + `cta-ver-relatorios`, tour anchors `add-button-fab` + 6 `tour-*-anchor`, SAF iOS branch `Platform.OS === 'android'`, `openai ^4.28.0`.
 
 ---
 
@@ -12,14 +14,14 @@
 - **Node** 20 LTS (testado em 20.x; Node 22 também funciona mas EAS usa 20) + `yarn` 1.22 ou `npm` 10
 - **Java 17** (Gradle 7.4+ para `android/` ejectado) + **Android SDK** `platform-tools`, `build-tools 33`, `platforms android-33`
 - **Xcode 15+** apenas para iOS (`expo run:ios`)
-- **Expo CLI**: `npm i -g eas-cli` + `npx expo --version` (SDK 48)
-- **Chave OpenAI** opcional (para IA): criar em https://platform.openai.com/account/api-keys
+- **Expo CLI**: `npm i -g eas-cli` + `npx expo --version` (SDK 57)
+- **Chave OpenAI** opcional (para IA): criar em https://platform.openai.com/account/api-keys (SDK `openai ^4.28.0` via `src/utils/aiProviders.ts`)
 
-> ⚠️ **Não use Expo Go.** WatermelonDB exige código nativo → só via `dev-client` / `expo run:*`.
+> ⚠️ **Não use Expo Go.** `expo-sqlite`/`expo-secure-store` exigem código nativo → só via `dev-client` / `expo run:*`. `npx expo-doctor` deve dar **21/21**.
 
 ---
 
-## 2. Como Rodar (hoje — Expo 48)
+## 2. Como Rodar (hoje — Expo 57)
 
 ```bash
 # 1. Clonar e entrar
@@ -61,7 +63,7 @@ yarn start:emulator   # emulator -avd Pixel_2_API_33
 
 ## 3. Modernização — Atualizando Expo / React / Libs
 
-Este app está em **Expo 48 (RN 0.71.8, React 18.2, Kotlin 1.6.0)** — EOL. A Play Store exige `targetSdk 35` a partir de ago/2025. Siga este roteiro incremental (nunca pule majors).
+Este app está em **Expo 57 (RN 0.86.3, React 19.2.3, Kotlin 2.1.0, compileSdk 36/targetSdk 36)** — **atualizado** (ex-Expo 48 EOL). Play Store `targetSdk 35+` já atendido. Histórico abaixo para referência.
 
 ### 3.1 Roteiro Recomendado (1 major por PR, com testes verdes)
 

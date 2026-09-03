@@ -6,6 +6,7 @@ import {
   Alert,
   BackHandler,
   Linking,
+  Platform,
   Switch,
   ToastAndroid,
   View,
@@ -35,6 +36,7 @@ import { financeRepo } from "../repositories/finance";
 import { marketRepo } from "../repositories/market";
 import { listRepo } from "../repositories/list";
 import { runRepo } from "../repositories/run";
+import { isBiometricAvailable } from "../utils/biometry";
 
 export default function AboutUs() {
   const colorModeState = useSettingsStore((s) => s.colorModeState);
@@ -78,6 +80,8 @@ export default function AboutUs() {
   const handleSetIsAiEnabled = (v) => s.update('isAiEnabled', v ? 1 : 0);
   const isTitheMenuEnabled = !!s.isTitheMenuEnabled;
   const handleToggleTitheMenu = (v) => s.update('isTitheMenuEnabled', v ? 1 : 0);
+  const isBiometricEnabled = !!s.isBiometricEnabled;
+  const handleSetIsBiometricEnabled = (v) => s.update('isBiometricEnabled', v ? 1 : 0);
   const selectedFolderToSave = s.selectedFolderToSave;
   const handleUpdateSelectedFolderToSave = (v) => s.update('selectedFolderToSave', v);
   const handleResetConfigs = async () => { if (s.reset) await s.reset(); };
@@ -184,6 +188,17 @@ export default function AboutUs() {
 
   const isFocused = useIsFocused();
   const [inputOpenAiText, setInputOpenAiText] = useState("");
+  const [bioAvailable, setBioAvailable] = useState(null);
+  useEffect(() => {
+    let mounted = true;
+    (async () => {
+      try {
+        const avail = await isBiometricAvailable();
+        if (mounted) setBioAvailable(avail);
+      } catch { if (mounted) setBioAvailable(false); }
+    })();
+    return () => { mounted = false; };
+  }, [isFocused]);
 
   async function getAllDataAsJSON() {
     try {
@@ -222,42 +237,31 @@ export default function AboutUs() {
         ""
       );
 
-      const directoryUri = selectedFolderToSave;
-      const fileName = `${filePrefix.replace(
-        /[^\w\s]/gi,
-        ""
-      )}-${currentDateString}.${format}`;
+      const fileName = `${filePrefix.replace(/[^\w\s]/gi, "")}-${currentDateString}.${format}`;
 
       const result = await checkPermissions();
-      if (result) {
-        const createdFile =
-          await FileSystem.StorageAccessFramework.createFileAsync(
-            directoryUri,
-            fileName,
-            "text/*"
-          );
-        const writedFile =
-          await FileSystem.StorageAccessFramework.writeAsStringAsync(
-            createdFile,
-            data,
-            { encoding: "utf8" }
-          );
-
-        ToastAndroid.show(
-          `Exportação ${filePrefix.replace(
-            /[^\w\s]/gi,
-            ""
-          )} realizada com sucesso!`,
-          ToastAndroid.SHORT
-        );
-      } else {
-        ToastAndroid.show(
-          `Houve um problema ao exportar ${filePrefix.replace(
-            /[^\w\s]/gi,
-            ""
-          )}!`,
-          ToastAndroid.SHORT
-        );
+      if (!result) {
+        ToastAndroid.show(`Houve um problema ao exportar ${filePrefix.replace(/[^\w\s]/gi, "")}!`, ToastAndroid.SHORT);
+        return;
+      }
+      try {
+        if (Platform.OS === 'android') {
+          const directoryUri = selectedFolderToSave;
+          if (!directoryUri) {
+            Alert.alert("Selecione pasta", "Escolha a pasta em Configurações → Alterar pasta de exportação");
+            return;
+          }
+          const createdFile = await FileSystem.StorageAccessFramework.createFileAsync(directoryUri, fileName, "text/*");
+          await FileSystem.StorageAccessFramework.writeAsStringAsync(createdFile, data, { encoding: "utf8" });
+        } else {
+          const fileUri = FileSystem.documentDirectory + fileName;
+          await FileSystem.writeAsStringAsync(fileUri, data, { encoding: "utf8" });
+          Alert.alert("Exportado", `Arquivo salvo em ${fileUri}`);
+        }
+        ToastAndroid.show(`Exportação ${filePrefix.replace(/[^\w\s]/gi, "")} realizada com sucesso!`, ToastAndroid.SHORT);
+      } catch (e) {
+        console.log(e);
+        ToastAndroid.show(`Falha ao exportar ${filePrefix}`, ToastAndroid.SHORT);
       }
     } catch (error) {
       console.log(error);
@@ -474,7 +478,6 @@ export default function AboutUs() {
     const currentDate = new Date();
     try {
       const CSV = jsonToCSV(transactionsList);
-      const directoryUri = selectedFolderToSave;
       const fileName = `financas-${
         currentDate.getDate() < 10
           ? "0" + currentDate.getDate()
@@ -485,29 +488,29 @@ export default function AboutUs() {
           : currentDate.getMonth() + 1
       }-${currentDate.getFullYear()}_${currentDate.getHours()}-${currentDate.getMinutes()}.csv`;
       const result = await checkPermissions();
-      if (result) {
-        const createdFile =
-          await FileSystem.StorageAccessFramework.createFileAsync(
-            directoryUri,
-            fileName,
-            "text/*"
-          );
-        const writedFile =
-          await FileSystem.StorageAccessFramework.writeAsStringAsync(
-            createdFile,
-            CSV,
-            { encoding: "utf8" }
-          );
-
-        ToastAndroid.show(
-          "Finanças exportadas com sucesso para a pasta selecionada",
-          ToastAndroid.SHORT
-        );
-      } else {
-        ToastAndroid.show(
-          "Houve um problema ao exportar as finanças!",
-          ToastAndroid.SHORT
-        );
+      if (!result) {
+        ToastAndroid.show("Houve um problema ao exportar as finanças!", ToastAndroid.SHORT);
+        return;
+      }
+      try {
+        if (Platform.OS === 'android') {
+          const directoryUri = selectedFolderToSave;
+          if (!directoryUri) {
+            Alert.alert("Selecione pasta", "Escolha a pasta em Configurações → Alterar pasta de exportação");
+            return;
+          }
+          const createdFile = await FileSystem.StorageAccessFramework.createFileAsync(directoryUri, fileName, "text/*");
+          await FileSystem.StorageAccessFramework.writeAsStringAsync(createdFile, CSV, { encoding: "utf8" });
+          ToastAndroid.show("Finanças exportadas com sucesso para a pasta selecionada", ToastAndroid.SHORT);
+        } else {
+          const fileUri = FileSystem.documentDirectory + fileName;
+          await FileSystem.writeAsStringAsync(fileUri, CSV, { encoding: "utf8" });
+          Alert.alert("Exportado", `Arquivo salvo em ${fileUri}`);
+          ToastAndroid.show("Finanças exportadas com sucesso!", ToastAndroid.SHORT);
+        }
+      } catch (e) {
+        console.log(e);
+        ToastAndroid.show("Houve um problema ao exportar as finanças!", ToastAndroid.SHORT);
       }
     } catch (error) {
       console.log(error);
@@ -717,6 +720,33 @@ export default function AboutUs() {
 
           <View style={{height:1, backgroundColor: isDark ? "#3f3f46" : "#e4e4e7", marginVertical:16}} />
         </View>
+
+        <View style={{gap:8, paddingHorizontal:16}}>
+          <Text style={{color:text, fontWeight:"700", fontSize:20}}>Privacidade</Text>
+          <View style={{flexDirection:"row", justifyContent:"space-between", alignItems:"center", paddingVertical:8, paddingHorizontal:12, backgroundColor: isDark ? "#27272a" : "white", borderRadius:12, borderWidth:1, borderColor: isDark ? "#3f3f46" : "#e4e4e7", marginBottom:8}}>
+            <View style={{flex:1, marginRight:12}}>
+              <Text style={{color:text, fontSize:15, fontWeight:"500"}} numberOfLines={1}>Exigir biometria ao abrir</Text>
+              <Text style={{color:subText, fontSize:12}} numberOfLines={2}>
+                {bioAvailable === null ? "Verificando..." : bioAvailable ? "Usa biometria/PIN do sistema" : "Biometria não disponível neste aparelho"}
+              </Text>
+            </View>
+            <Switch
+              testID="biometry-switch"
+              trackColor={{false: theme.colors.gray[400], true: theme.colors.gray[400]}}
+              thumbColor={isBiometricEnabled ? theme.colors.purple[600] : theme.colors.gray[600]}
+              ios_backgroundColor={theme.colors.gray[600]}
+              onValueChange={handleSetIsBiometricEnabled}
+              value={isBiometricEnabled}
+              disabled={bioAvailable === false}
+            />
+          </View>
+          {bioAvailable === false && (
+            <Text testID="biometry-unavailable" style={{color:subText, fontSize:12, textAlign:"center"}}>
+              Configure biometria/PIN nas configurações do sistema para ativar.
+            </Text>
+          )}
+        </View>
+        <View style={{height:1, backgroundColor: isDark ? "#3f3f46" : "#e4e4e7", marginVertical:16, marginHorizontal:16}} />
 
         <View style={{gap:12, paddingHorizontal:16, paddingVertical:8}}>
           <Text style={{color:text, fontWeight:"700", fontSize:20}}>

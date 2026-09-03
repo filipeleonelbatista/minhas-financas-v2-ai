@@ -7,9 +7,10 @@ import "dayjs/locale/pt-br";
 import { differenceInCalendarDays } from "date-fns";
 import Header from "../components/Header";
 import InteractivePieChart from "../components/InteractivePieChart";
-import { financeRepo } from "../repositories/finance";
+import { financeRepo, calcTithePure } from "../repositories/finance";
 import { goalRepo } from "../repositories/goal";
 import { useSettingsStore } from "../stores/settings";
+import { useTour, Tour, getHasSeenTour } from "../components/Tour";
 
 // Charts fallback (jest without native svg may fail)
 let PieChartComp = null;
@@ -161,6 +162,15 @@ export default function Dashboard() {
   const headerText = isDark ? "#27272a" : "white";
   const isEnableTotalHistoryCard = useSettingsStore((s) => !!s.isEnableTotalHistoryCard);
   const isEnableTitheCard = useSettingsStore((s) => !!s.isEnableTitheCard);
+  const tithePercent = useSettingsStore((s) => s.tithePercent ?? 10);
+  const titheCategoriesRaw = useSettingsStore((s) => s.titheCategories);
+  const titheCategories = useMemo(() => {
+    try {
+      const parsed = typeof titheCategoriesRaw === 'string' ? JSON.parse(titheCategoriesRaw) : titheCategoriesRaw;
+      if (Array.isArray(parsed) && parsed.length) return parsed;
+    } catch {}
+    return ['Ganhos'];
+  }, [titheCategoriesRaw]);
 
   const [finances, setFinances] = useState([]);
   const [goals, setGoals] = useState([]);
@@ -187,7 +197,20 @@ export default function Dashboard() {
     else load();
   }, [isFocused, load]);
 
-  const hero = useMemo(() => calcHeroValues(finances), [finances]);
+  const { visible, step, next, skip, complete, setVisible } = useTour(false);
+  useEffect(() => {
+    if (isFocused) {
+      getHasSeenTour().then((seen) => {
+        if (!seen) setTimeout(() => setVisible(true), 800);
+      });
+    }
+  }, [isFocused]);
+
+  const hero = useMemo(() => {
+    const base = calcHeroValues(finances);
+    const titheAmount = calcTithePure(finances, { percent: tithePercent, categories: titheCategories });
+    return { ...base, Tithe: titheAmount };
+  }, [finances, tithePercent, titheCategories]);
   const pieData = useMemo(() => getExpensesByCategory(finances), [finances]);
   const pieTotal = useMemo(() => pieData.reduce((acc, cur) => acc + (Number(cur.population) || 0), 0), [pieData]);
   const lineData = useMemo(() => getLast6MonthsLineData(finances), [finances]);
@@ -284,6 +307,7 @@ export default function Dashboard() {
 
         {/* Pizza gastos por categoria */}
         <View style={{ marginHorizontal: 16, marginTop: 16, backgroundColor: cardBgWhite, borderRadius: 16, padding: 16, shadowColor: "#000", shadowOpacity: 0.05, elevation: 2 }}>
+          <View testID="tour-reports-anchor" style={{ position: 'absolute', width: 1, height: 1, opacity: 0 }} pointerEvents="none" />
           <Text style={{ fontSize: 18, fontWeight: "700", color: titleText }} testID="pizza-title">
             Gastos por categoria
           </Text>
@@ -602,6 +626,10 @@ export default function Dashboard() {
           )}
         </View>
 
+        <TouchableOpacity testID="cta-ver-relatorios" onPress={() => navigation.navigate("Reports")} style={{ marginHorizontal:16, marginTop:16, backgroundColor:"#9c44dc", borderRadius:12, padding:14, alignItems:"center", flexDirection:"row", justifyContent:"center", gap:8 }}>
+          <Feather name="pie-chart" size={18} color="white" /><Text style={{ color:"white", fontWeight:"700" }}>Ver Relatórios detalhados</Text>
+        </TouchableOpacity>
+
         {/* Metas e objetivos */}
         <View style={{ marginHorizontal: 16, marginTop: 16, marginBottom: 24, backgroundColor: cardBgWhite, borderRadius: 16, padding: 16, shadowColor: "#000", shadowOpacity: 0.05, elevation: 2 }}>
           <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
@@ -681,6 +709,7 @@ export default function Dashboard() {
           </Text>
         )}
       </ScrollView>
+      <Tour visible={visible} currentStep={step} onNext={next} onSkip={skip} onComplete={complete} />
     </View>
   );
 }

@@ -9,6 +9,7 @@ import Header from "../components/Header";
 import InteractivePieChart from "../components/InteractivePieChart";
 import { financeRepo, calcTithePure } from "../repositories/finance";
 import { goalRepo } from "../repositories/goal";
+import { runRepo } from "../repositories/run";
 import { useSettingsStore } from "../stores/settings";
 
 // Charts fallback (jest without native svg may fail)
@@ -146,6 +147,18 @@ export function calcGoalProgress(goal) {
   return p >= 1 ? 1 : p < 0 ? 0 : p;
 }
 
+export function getLast7RunsChartData(runs = [], filter = "litro") {
+  const sorted = [...runs].sort((a, b) => Number(a.date) - Number(b.date)).slice(-7);
+  const labels = sorted.map((item) => {
+    const d = new Date(Number(item.date));
+    const dia = String(d.getUTCDate()).padStart(2, "0");
+    const mes = String(d.getUTCMonth() + 1).padStart(2, "0");
+    return `${dia}/${mes}`;
+  });
+  const data = sorted.map((item) => (filter === "litro" ? Number(item.unityAmount) || 0 : Number(item.amount) || 0));
+  return { labels, data, fullList: sorted };
+}
+
 export default function Dashboard() {
   const navigation = useNavigation();
   const isFocused = useIsFocused();
@@ -173,20 +186,25 @@ export default function Dashboard() {
 
   const [finances, setFinances] = useState([]);
   const [goals, setGoals] = useState([]);
+  const [runs, setRuns] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedPieIndex, setSelectedPieIndex] = useState(null);
   const [selectedLineIndex, setSelectedLineIndex] = useState(null);
+  const [selectedRunsFilter, setSelectedRunsFilter] = useState("litro");
+  const [selectedRunsIndex, setSelectedRunsIndex] = useState(null);
   const tabBarHeight = (() => { try { const { useBottomTabBarHeight } = require("@react-navigation/bottom-tabs"); return useBottomTabBarHeight(); } catch { return 80; } })();
 
   const load = useCallback(async () => {
     setLoading(true);
     try {
-      const [f, g] = await Promise.all([financeRepo.getAll(), goalRepo.getAll()]);
+      const [f, g, r] = await Promise.all([financeRepo.getAll(), goalRepo.getAll(), runRepo.getAll().catch(() => [])]);
       setFinances(f || []);
       setGoals(g || []);
+      setRuns(r || []);
     } catch {
       setFinances([]);
       setGoals([]);
+      setRuns([]);
     }
     setLoading(false);
   }, []);
@@ -205,6 +223,8 @@ export default function Dashboard() {
   const pieTotal = useMemo(() => pieData.reduce((acc, cur) => acc + (Number(cur.population) || 0), 0), [pieData]);
   const lineData = useMemo(() => getLast6MonthsLineData(finances), [finances]);
   const urgentGoals = useMemo(() => getUrgentGoals(goals), [goals]);
+  const runsChartData = useMemo(() => getLast7RunsChartData(runs, selectedRunsFilter), [runs, selectedRunsFilter]);
+  const hasRuns = runs.length > 0;
 
   useEffect(() => {
     if (selectedPieIndex !== null && selectedPieIndex >= pieData.length) {
@@ -217,6 +237,12 @@ export default function Dashboard() {
       setSelectedLineIndex(null);
     }
   }, [lineData.labels.length, selectedLineIndex]);
+
+  useEffect(() => {
+    if (selectedRunsIndex !== null && selectedRunsIndex >= runsChartData.labels.length) {
+      setSelectedRunsIndex(null);
+    }
+  }, [runsChartData.labels.length, selectedRunsIndex]);
 
   const hasFinances = finances.length > 0;
   const chartWidth = width * 0.92;
@@ -450,6 +476,139 @@ export default function Dashboard() {
             </View>
           )}
         </View>
+
+        {/* Abastecimentos - últimos 7 - toggle Por Litro / Pago - nativewind card */}
+        {hasRuns && (
+          <View className="mx-4 mt-4 bg-white dark:bg-gray-800 rounded-2xl p-4 shadow" style={{ marginHorizontal: 16, marginTop: 16, backgroundColor: cardBgWhite, borderRadius: 16, padding: 16, shadowColor: "#000", shadowOpacity: 0.05, elevation: 2 }} testID="runs-card">
+            <Text className="text-gray-800 dark:text-gray-100 font-bold text-lg" style={{ fontSize: 18, fontWeight: "700", color: titleText }} testID="runs-title">Abastecimentos</Text>
+            <Text className="text-xs text-gray-500 dark:text-gray-400 mt-1" style={{ fontSize: 12, color: subText, marginTop: 4 }}>Últimos 7 abastecimentos</Text>
+
+            <View className="flex-row mt-3 rounded-xl overflow-hidden border border-gray-200 dark:border-gray-700" style={{ flexDirection: "row", marginTop: 12, borderRadius: 12, overflow: "hidden", borderWidth: 1, borderColor: isDark ? "#3f3f46" : "#e5e7eb", backgroundColor: isDark ? "#27272a" : "#f9fafb" }}>
+              <TouchableOpacity
+                testID="runs-filter-litro"
+                onPress={() => setSelectedRunsFilter("litro")}
+                className={`flex-1 items-center justify-center py-2 ${selectedRunsFilter === "litro" ? "bg-purple-600" : "bg-transparent"}`}
+                style={{ flex: 1, paddingVertical: 10, alignItems: "center", justifyContent: "center", backgroundColor: selectedRunsFilter === "litro" ? PURPLE_600 : "transparent" }}
+              >
+                <Text className={`text-sm font-semibold ${selectedRunsFilter === "litro" ? "text-white" : "text-gray-600 dark:text-gray-400"}`} style={{ fontSize: 13, fontWeight: "600", color: selectedRunsFilter === "litro" ? "white" : subText }}>Por Litro</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                testID="runs-filter-pago"
+                onPress={() => setSelectedRunsFilter("pago")}
+                className={`flex-1 items-center justify-center py-2 ${selectedRunsFilter === "pago" ? "bg-purple-600" : "bg-transparent"}`}
+                style={{ flex: 1, paddingVertical: 10, alignItems: "center", justifyContent: "center", backgroundColor: selectedRunsFilter === "pago" ? PURPLE_600 : "transparent" }}
+              >
+                <Text className={`text-sm font-semibold ${selectedRunsFilter === "pago" ? "text-white" : "text-gray-600 dark:text-gray-400"}`} style={{ fontSize: 13, fontWeight: "600", color: selectedRunsFilter === "pago" ? "white" : subText }}>Pago</Text>
+              </TouchableOpacity>
+            </View>
+
+            <View style={{ width: "100%", alignItems: "center", marginTop: 12, position: "relative" }} testID="runs-chart">
+              {LineChartComp && runsChartData.labels.length > 0 ? (
+                <>
+                  <View style={{ width: chartInnerWidth, height: 220, position: "relative" }}>
+                    <LineChartComp
+                      data={{
+                        labels: runsChartData.labels,
+                        datasets: [{ data: runsChartData.data.length ? runsChartData.data : [0], color: () => PURPLE_900, strokeWidth: 2 }],
+                      }}
+                      width={chartInnerWidth}
+                      height={220}
+                      yAxisLabel=""
+                      yAxisSuffix=""
+                      yLabelsOffset={8}
+                      formatYLabel={(yLabel: string) => {
+                        const num = Number(String(yLabel).replace(",", "."));
+                        if (Number.isNaN(num)) return String(yLabel);
+                        if (selectedRunsFilter === "litro") return num.toFixed(2);
+                        return num.toLocaleString("pt-BR", { style: "currency", currency: "BRL", minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                      }}
+                      formatXLabel={(xLabel: string) => String(xLabel)}
+                      chartConfig={{
+                        backgroundColor: cardBgWhite,
+                        backgroundGradientFrom: cardBgWhite,
+                        backgroundGradientTo: cardBgWhite,
+                        decimalPlaces: 2,
+                        color: (opacity = 1) => (isDark ? `rgba(228,228,231,${opacity})` : `rgba(88,28,135,${opacity})`),
+                        labelColor: (opacity = 1) => (isDark ? `rgba(161,161,170,${opacity})` : `rgba(107,114,128,${opacity})`),
+                        propsForDots: { r: "5", strokeWidth: "2", stroke: PURPLE_900 },
+                        propsForHorizontalLabels: { fontSize: 9 },
+                        propsForVerticalLabels: { fontSize: 11 },
+                      }}
+                      getDotProps={(value: any, index: number) => ({ r: selectedRunsIndex === index ? "7" : "5", strokeWidth: "2", stroke: PURPLE_900 })}
+                      bezier
+                      style={{ borderRadius: 16 }}
+                      withDots
+                      withInnerLines
+                      withOuterLines
+                      withVerticalLines
+                      withHorizontalLabels
+                      withVerticalLabels={false}
+                      onDataPointClick={({ index }: any) => setSelectedRunsIndex((prev: any) => (prev === index ? null : index))}
+                      decorator={({ width: w, height: h, paddingTop, paddingRight, data }: any) => {
+                        if (selectedRunsIndex === null || !data || !data[0] || selectedRunsIndex < 0 || selectedRunsIndex >= data[0].data.length) return null;
+                        try {
+                          const { G, Line } = require("react-native-svg");
+                          const x = paddingRight + (selectedRunsIndex * (w - paddingRight)) / data[0].data.length;
+                          return <G key={`sel-runs-${selectedRunsIndex}`}><Line x1={x} y1={paddingTop} x2={x} y2={h * 0.75 + paddingTop} stroke="#52525b" strokeWidth={2} strokeDasharray="6,4" opacity={0.85} /></G>;
+                        } catch { return null; }
+                      }}
+                    />
+                    <View style={{ position: "absolute", top: 0, left: 0, width: chartInnerWidth, height: 220, flexDirection: "row", zIndex: 5 }} pointerEvents="box-none">
+                      {runsChartData.labels.map((_: any, idx: number) => (
+                        <TouchableOpacity key={`runs-hit-${idx}`} onPress={() => setSelectedRunsIndex((prev: any) => (prev === idx ? null : idx))} testID={`runs-dot-hit-${idx}`} hitSlop={{ top: 20, bottom: 20, left: 12, right: 12 }} style={{ flex: 1, marginHorizontal: 1 }} accessibilityLabel={`Ponto ${runsChartData.labels[idx]}`}>
+                          <View style={{ flex: 1 }} />
+                        </TouchableOpacity>
+                      ))}
+                    </View>
+                    {selectedRunsIndex !== null && runsChartData.labels[selectedRunsIndex] !== undefined ? (() => {
+                      const paddingRight = 64;
+                      const x = paddingRight + (selectedRunsIndex * (chartInnerWidth - paddingRight)) / runsChartData.labels.length;
+                      const isLeftSide = selectedRunsIndex <= 2;
+                      const availableToRight = chartInnerWidth - x - 12;
+                      const availableToLeft = x - 12;
+                      const maxW = isLeftSide ? Math.min(availableToRight, chartInnerWidth - 16) : Math.min(availableToLeft, chartInnerWidth - 16);
+                      const left = isLeftSide ? x + 10 : undefined;
+                      const right = !isLeftSide ? chartInnerWidth - x + 10 : undefined;
+                      const item = runsChartData.fullList[selectedRunsIndex];
+                      const litros = item ? (Number(item.amount) / Number(item.unityAmount) || 0).toFixed(2) : "-";
+                      const valor = selectedRunsFilter === "litro" ? `R$ ${Number(runsChartData.data[selectedRunsIndex]).toFixed(2).replace(".", ",")}/L` : formatCurrency(Number(runsChartData.data[selectedRunsIndex]));
+                      return (
+                        <View testID="runs-tooltip" style={{ position: "absolute", top: 8, left, right, backgroundColor: isDark ? "#27272a" : "white", borderRadius: 10, paddingHorizontal: 10, paddingVertical: 8, shadowColor: "#000", shadowOpacity: 0.12, shadowRadius: 6, elevation: 4, borderWidth: 1, borderColor: isDark ? "#3f3f46" : "#e5e7eb", minWidth: 130, maxWidth: Math.max(160, Math.min(maxW, chartInnerWidth - 16)), alignItems: "flex-start", zIndex: 10 }}>
+                          <Text style={{ fontSize: 12, fontWeight: "700", color: titleText, marginBottom: 4 }}>{runsChartData.labels[selectedRunsIndex]}</Text>
+                          <View style={{ flexDirection: "row", alignItems: "center", gap: 6, marginTop: 1 }}>
+                            <View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: PURPLE_900 }} />
+                            <Text style={{ fontSize: 11, color: subText }}>{selectedRunsFilter === "litro" ? "Preço/L:" : "Pago:"} </Text>
+                            <Text style={{ fontSize: 11, fontWeight: "700", color: titleText }}>{valor}</Text>
+                          </View>
+                          {item && (
+                            <Text style={{ fontSize: 10, color: subText, marginTop: 3 }}>{item.location} • {litros} L</Text>
+                          )}
+                          <TouchableOpacity onPress={() => setSelectedRunsIndex(null)} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }} style={{ marginTop: 6, alignSelf: "center" }} testID="runs-tooltip-close">
+                            <Text style={{ fontSize: 10, color: subText }}>Fechar</Text>
+                          </TouchableOpacity>
+                        </View>
+                      );
+                    })() : null}
+                  </View>
+                  <View style={{ width: chartInnerWidth, height: 30, marginTop: 2, position: "relative" }} testID="runs-x-pressables">
+                    {runsChartData.labels.map((label: string, idx: number) => {
+                      const isSelected = selectedRunsIndex === idx;
+                      const paddingRight = 64;
+                      const x = paddingRight + (idx * (chartInnerWidth - paddingRight)) / runsChartData.labels.length;
+                      return (
+                        <TouchableOpacity key={`runs-x-${label}-${idx}`} onPress={() => setSelectedRunsIndex((prev: any) => (prev === idx ? null : idx))} testID={`runs-point-${idx}`} accessibilityLabel={`Ponto ${label}`} hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }} style={{ position: "absolute", left: x - 28, width: 56, alignItems: "center", paddingVertical: 4, paddingHorizontal: 4, borderRadius: 6, backgroundColor: isSelected ? (isDark ? "#3f3f46" : "#f3e8ff") : "transparent", borderWidth: isSelected ? 1 : 0, borderColor: isSelected ? PURPLE_900 : "transparent" }}>
+                          <Text style={{ fontSize: 11, fontWeight: isSelected ? "700" : "500", color: isSelected ? PURPLE_900 : subText }}>{label}</Text>
+                        </TouchableOpacity>
+                      );
+                    })}
+                  </View>
+                </>
+              ) : (
+                <Text testID="runs-fallback">{runsChartData.labels.join(" | ")}</Text>
+              )}
+            </View>
+          </View>
+        )}
 
         {/* Linha 6 meses */}
         <View style={{ marginHorizontal: 16, marginTop: 16, backgroundColor: cardBgWhite, borderRadius: 16, padding: 16, shadowColor: "#000", shadowOpacity: 0.05, elevation: 2 }}>

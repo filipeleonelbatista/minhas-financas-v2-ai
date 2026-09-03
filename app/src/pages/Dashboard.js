@@ -339,7 +339,7 @@ export default function Dashboard() {
         </ScrollView>
 
         {/* Saúde das finanças - card nativewind */}
-        <View className="mx-4 mt-4 bg-white dark:bg-gray-800 rounded-2xl p-4 shadow" style={{ marginHorizontal: 16, marginTop: 16, backgroundColor: cardBgWhite, borderRadius: 16, padding: 16, elevation: 2, shadowColor: "#000", shadowOpacity: 0.06 }} testID="saude-card">
+        <View className="mx-4 mt-3 bg-white dark:bg-gray-800 rounded-2xl p-4 shadow" style={{ marginHorizontal: 16, marginTop: 12, backgroundColor: cardBgWhite, borderRadius: 16, padding: 16, elevation: 2, shadowColor: "#000", shadowOpacity: 0.06 }} testID="saude-card">
           {!hasFinances ? (
             <View className="items-center justify-center py-2" style={{ alignItems: "center", justifyContent: "center", paddingVertical: 8 }}>
               <Text className="text-gray-700 dark:text-gray-200 font-bold text-lg" style={{ color: titleText, fontSize: 16, fontWeight: "700", textAlign: "center" }}>Sem dados para analisar</Text>
@@ -397,7 +397,7 @@ export default function Dashboard() {
         </View>
 
         {/* Pizza gastos por categoria */}
-        <View style={{ marginHorizontal: 16, marginTop: 16, backgroundColor: cardBgWhite, borderRadius: 16, padding: 16, shadowColor: "#000", shadowOpacity: 0.05, elevation: 2 }}>
+        <View style={{ marginHorizontal: 16, marginTop: 12, backgroundColor: cardBgWhite, borderRadius: 16, padding: 16, shadowColor: "#000", shadowOpacity: 0.05, elevation: 2 }}>
           <Text style={{ fontSize: 18, fontWeight: "700", color: titleText }} testID="pizza-title">
             Gastos por categoria
           </Text>
@@ -499,7 +499,7 @@ export default function Dashboard() {
 
         {/* Abastecimentos - últimos 7 - toggle Por Litro / Pago - nativewind card */}
         {hasRuns && (
-          <View className="mx-4 mt-4 bg-white dark:bg-gray-800 rounded-2xl p-4 shadow" style={{ marginHorizontal: 16, marginTop: 16, backgroundColor: cardBgWhite, borderRadius: 16, padding: 16, shadowColor: "#000", shadowOpacity: 0.05, elevation: 2 }} testID="runs-card">
+          <View className="mx-4 mt-3 bg-white dark:bg-gray-800 rounded-2xl p-4 shadow" style={{ marginHorizontal: 16, marginTop: 12, backgroundColor: cardBgWhite, borderRadius: 16, padding: 16, shadowColor: "#000", shadowOpacity: 0.05, elevation: 2 }} testID="runs-card">
             <Text className="text-gray-800 dark:text-gray-100 font-bold text-lg" style={{ fontSize: 18, fontWeight: "700", color: titleText }} testID="runs-title">Abastecimentos</Text>
             <Text className="text-xs text-gray-500 dark:text-gray-400 mt-1" style={{ fontSize: 12, color: subText, marginTop: 4 }}>Últimos 7 abastecimentos</Text>
 
@@ -631,7 +631,7 @@ export default function Dashboard() {
         )}
 
         {/* Linha 6 meses */}
-        <View style={{ marginHorizontal: 16, marginTop: 16, backgroundColor: cardBgWhite, borderRadius: 16, padding: 16, shadowColor: "#000", shadowOpacity: 0.05, elevation: 2 }}>
+        <View style={{ marginHorizontal: 16, marginTop: 12, backgroundColor: cardBgWhite, borderRadius: 16, padding: 16, shadowColor: "#000", shadowOpacity: 0.05, elevation: 2 }}>
           <Text style={{ fontSize: 18, fontWeight: "700", color: titleText }} testID="line-title">
             Evolução 6 meses
           </Text>
@@ -852,7 +852,7 @@ export default function Dashboard() {
 
 
         {/* Metas e objetivos */}
-        <View style={{ marginHorizontal: 16, marginTop: 16, marginBottom: 24, backgroundColor: cardBgWhite, borderRadius: 16, padding: 16, shadowColor: "#000", shadowOpacity: 0.05, elevation: 2 }}>
+        <View style={{ marginHorizontal: 16, marginTop: 12, marginBottom: 24, backgroundColor: cardBgWhite, borderRadius: 16, padding: 16, shadowColor: "#000", shadowOpacity: 0.05, elevation: 2 }}>
           <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
             <Text style={{ fontSize: 18, fontWeight: "700", color: titleText }} testID="goals-title">
               Metas e objetivos
@@ -924,19 +924,17 @@ export default function Dashboard() {
           )}
         </View>
 
-        {/* Separador + Sessão Estoque - por último */}
+        {/* Sessão Estoque - por último */}
         {hasStock && (stockMissing.length > 0 || stockNearMissing.length > 0) && (
-          <View testID="estoque-section" style={{ marginTop: 8 }}>
-            <View testID="estoque-separator" style={{ marginHorizontal: 16, marginTop: 8, marginBottom: 8 }}>
-              <View style={{ height: 1, backgroundColor: isDark ? "#3f3f46" : "#e5e7eb", marginVertical: 12 }} />
+          <View testID="estoque-section" style={{ marginTop: 0 }}>
+            <View testID="estoque-separator" style={{ marginHorizontal: 16, paddingTop: 12, paddingBottom: 4 }}>
               <Text className="text-gray-800 dark:text-gray-100 font-bold text-xl" style={{ fontSize: 20, fontWeight: "700", color: titleText }} testID="estoque-title">Estoque</Text>
               <Text className="text-xs text-gray-500 dark:text-gray-400 mt-1" style={{ fontSize: 12, color: subText, marginTop: 2 }} testID="estoque-subtitle">Itens que precisam de atenção</Text>
-              <View style={{ height: 1, backgroundColor: isDark ? "#3f3f46" : "#e5e7eb", marginTop: 8 }} />
             </View>
 
             {/* Em falta */}
             {stockMissing.length > 0 && (
-              <View className="mx-4 mt-4 bg-white dark:bg-gray-800 rounded-2xl p-4 shadow" style={{ marginHorizontal: 16, marginTop: 16, backgroundColor: cardBgWhite, borderRadius: 16, padding: 16, elevation: 2, shadowColor: "#000", shadowOpacity: 0.05 }} testID="stock-missing-card">
+              <View className="mx-4 mt-3 bg-white dark:bg-gray-800 rounded-2xl p-4 shadow" style={{ marginHorizontal: 16, marginTop: 12, backgroundColor: cardBgWhite, borderRadius: 16, padding: 16, elevation: 2, shadowColor: "#000", shadowOpacity: 0.05 }} testID="stock-missing-card">
                 <View className="flex-row items-center justify-between" style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>
                   <View className="flex-row items-center" style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
                     <View className="w-9 h-9 rounded-full bg-red-50 dark:bg-red-900/30 items-center justify-center" style={{ width: 36, height: 36, borderRadius: 18, backgroundColor: isDark ? "rgba(239,68,68,0.15)" : "#fef2f2", alignItems: "center", justifyContent: "center" }}>
@@ -979,7 +977,7 @@ export default function Dashboard() {
 
             {/* Próximos de faltar */}
             {stockNearMissing.length > 0 && (
-              <View className="mx-4 mt-4 bg-white dark:bg-gray-800 rounded-2xl p-4 shadow" style={{ marginHorizontal: 16, marginTop: 16, backgroundColor: cardBgWhite, borderRadius: 16, padding: 16, elevation: 2, shadowColor: "#000", shadowOpacity: 0.05 }} testID="stock-near-card">
+              <View className="mx-4 mt-3 bg-white dark:bg-gray-800 rounded-2xl p-4 shadow" style={{ marginHorizontal: 16, marginTop: 12, backgroundColor: cardBgWhite, borderRadius: 16, padding: 16, elevation: 2, shadowColor: "#000", shadowOpacity: 0.05 }} testID="stock-near-card">
                 <View className="flex-row items-center justify-between" style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>
                   <View className="flex-row items-center" style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
                     <View className="w-9 h-9 rounded-full bg-amber-50 dark:bg-amber-900/30 items-center justify-center" style={{ width: 36, height: 36, borderRadius: 18, backgroundColor: isDark ? "rgba(245,158,11,0.15)" : "#fffbeb", alignItems: "center", justifyContent: "center" }}>

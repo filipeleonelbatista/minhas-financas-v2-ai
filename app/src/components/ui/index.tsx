@@ -235,6 +235,38 @@ export const RadiantButton: React.FC<IRadiantButton> &
       return children;
     };
 
+    const fallbackBackground = disabled ? "#6b7280" : theme.background;
+    const shaderReady = !!borderGlowShader && !!Skia;
+    // Fallback when Skia not ready or layout not measured yet: show solid background
+    if (!hasLayout || !shaderReady) {
+      return (
+        <Animated.View style={animatedPressStyle}>
+          <Pressable
+            onPress={onPress}
+            onPressIn={handlePressIn}
+            onPressOut={handlePressOut}
+            onLayout={handleLayout}
+            disabled={disabled}
+            style={[
+              styles.button,
+              {
+                borderRadius,
+                paddingHorizontal,
+                paddingVertical,
+                opacity: disabled ? 0.5 : 1,
+                backgroundColor: fallbackBackground,
+                minWidth: width || undefined,
+                minHeight: height || undefined,
+              },
+              style,
+            ]}
+          >
+            <View style={styles.content}>{renderChildren()}</View>
+          </Pressable>
+        </Animated.View>
+      );
+    }
+
     return (
       <Animated.View style={animatedPressStyle}>
         <Pressable
@@ -250,6 +282,7 @@ export const RadiantButton: React.FC<IRadiantButton> &
               paddingHorizontal,
               paddingVertical,
               opacity: disabled ? 0.5 : 1,
+              backgroundColor: fallbackBackground,
             },
             style,
           ]}

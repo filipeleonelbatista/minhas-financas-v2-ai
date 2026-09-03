@@ -57,19 +57,27 @@ export default function CTA({ onPress, children, testID, variant = 'chroma', sty
     const styleHeight = (style as any)?.height ?? height;
     const w = typeof styleWidth === 'number' ? styleWidth : width;
     const h = typeof styleHeight === 'number' ? styleHeight : height;
-    return (
-      <Pressable testID={testID} onPress={onPress} disabled={disabled} accessibilityLabel={accessibilityLabel} accessibilityRole="button" style={({ pressed }) => [{ opacity: pressed ? 0.85 : 1 }, style]}>
-        <ChromaRing width={w} height={h} borderWidth={2} speed={1.0} base="#581C87" glow="#9c44dc" background={disabled ? '#6b7280' : '#9c44dc'} style={{ width: w, height: h, borderRadius: h / 2 }}>
-          <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', paddingHorizontal: 16 }}>
-            {typeof children === 'string' ? (
-              <Text style={{ color: 'white', fontWeight: '700', fontSize: 16 }}>{children}</Text>
-            ) : (
-              children
-            )}
-          </View>
-        </ChromaRing>
-      </Pressable>
-    );
+    // Verify Skia availability via try to avoid transparent fallback
+    let skiaAvailable = true;
+    try {
+      const skia = require('@shopify/react-native-skia');
+      if (!skia || !skia.Skia || !skia.Canvas) skiaAvailable = false;
+    } catch { skiaAvailable = false; }
+    if (skiaAvailable) {
+      return (
+        <Pressable testID={testID} onPress={onPress} disabled={disabled} accessibilityLabel={accessibilityLabel} accessibilityRole="button" style={({ pressed }) => [{ opacity: pressed ? 0.85 : 1 }, style]}>
+          <ChromaRing width={w} height={h} borderWidth={2} speed={1.0} base="#581C87" glow="#9c44dc" background={disabled ? '#6b7280' : '#9c44dc'} style={{ width: w, height: h, borderRadius: h / 2 }}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', paddingHorizontal: 16 }}>
+              {typeof children === 'string' ? (
+                <Text style={{ color: 'white', fontWeight: '700', fontSize: 16 }}>{children}</Text>
+              ) : (
+                children
+              )}
+            </View>
+          </ChromaRing>
+        </Pressable>
+      );
+    }
   }
 
   const isGlow = variant === 'glow';

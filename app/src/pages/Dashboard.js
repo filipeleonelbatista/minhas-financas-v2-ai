@@ -357,13 +357,13 @@ export default function Dashboard() {
                 </View>
               </View>
 
-              <View className="h-3 bg-gray-100 dark:bg-gray-700 rounded-full overflow-hidden" style={{ height: 12, backgroundColor: isDark ? "#3f3f46" : "#f3f4f6", borderRadius: 999, overflow: "hidden" }} testID="saude-progress-track">
+              <View className="h-3 rounded-full overflow-hidden" style={{ height: 12, backgroundColor: isDark ? "#7f1d1d" : "#dc2626", borderRadius: 999, overflow: "hidden" }} testID="saude-progress-track">
                 <View
                   testID="saude-progress-fill"
                   style={{
                     width: `${Math.min(100, Math.max(0, hero.Incomings + hero.Expenses === 0 ? 0 : (hero.Incomings / (hero.Incomings + hero.Expenses)) * 100))}%`,
                     height: 12,
-                    backgroundColor: hero.Incomings >= hero.Expenses ? "#16a34a" : "#dc2626",
+                    backgroundColor: "#16a34a",
                     borderRadius: 999,
                   }}
                 />

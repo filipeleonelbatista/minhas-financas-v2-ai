@@ -17,7 +17,10 @@ import {
   Image,
 } from "react-native";
 import * as FileSystem from "expo-file-system";
-import * as MediaLibrary from "expo-media-library";
+let MediaLibrary: any = null;
+try {
+  MediaLibrary = require("expo-media-library");
+} catch {}
 import * as DocumentPicker from "expo-document-picker";
 import {
   useFocusEffect,
@@ -447,6 +450,7 @@ export default function AboutUs() {
   }
 
   const checkPermissions = async () => {
+    if (!MediaLibrary || !MediaLibrary.getPermissionsAsync) return true;
     try {
       const result = await MediaLibrary.getPermissionsAsync();
 

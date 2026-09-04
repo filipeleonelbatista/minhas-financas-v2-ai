@@ -627,6 +627,7 @@ export default function AboutUs() {
       <ScrollView style={{flex:1}} contentContainerStyle={{paddingBottom:24}} showsVerticalScrollIndicator={false}>
         <Header
           title="Configuraçõe"
+          isShort
           isLeftIconComponent={
             <TouchableOpacity
               onPress={() => navigation.goBack()}
@@ -637,7 +638,7 @@ export default function AboutUs() {
           }
         />
 
-        <View style={{alignItems:"center", marginTop:-36, marginBottom:16}}>
+        <View style={{alignItems:"center", marginTop:-28, marginBottom:16}}>
           <View
             style={{width:128, height:128, borderRadius:999, borderWidth:6, borderColor:theme.colors.purple[900], backgroundColor:bg, alignItems:"center", justifyContent:"center"}}
           >

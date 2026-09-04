@@ -820,45 +820,12 @@ export default function AboutUs() {
           <TouchableOpacity
             testID="btn-open-tithe-settings"
             onPress={() => navigation.navigate("TitheSettings")}
-            style={{ backgroundColor: isDark ? "#27272a" : "white", borderWidth:1, borderColor: theme.colors.purple[600], borderRadius:12, paddingVertical:12, paddingHorizontal:12, flexDirection:"row", alignItems:"center", justifyContent:"center", gap:8, marginBottom:8 }}
+            style={{ backgroundColor: theme.colors.purple[600], borderRadius:12, paddingVertical:12, paddingHorizontal:12, flexDirection:"row", alignItems:"center", justifyContent:"center", gap:8, marginBottom:8 }}
           >
-            <Feather name="heart" size={18} color={theme.colors.purple[600]} />
-            <Text style={{ color: theme.colors.purple[600], fontWeight:"700", fontSize:14 }}>Configurar dízimo (percentual, base e escrituras)</Text>
-            <Feather name="chevron-right" size={18} color={theme.colors.purple[600]} />
+            <Feather name="heart" size={18} color="white" />
+            <Text style={{ color: "white", fontWeight:"700", fontSize:14 }}>Conf. Religiosidade Dizimo</Text>
+            <Feather name="chevron-right" size={18} color="white" />
           </TouchableOpacity>
-          <View style={{flexDirection:"row", justifyContent:"space-between", alignItems:"center", paddingVertical:8, paddingHorizontal:12, backgroundColor: isDark ? "#27272a" : "white", borderRadius:12, borderWidth:1, borderColor: isDark ? "#3f3f46" : "#e4e4e7", marginBottom:8}}>
-            <Text style={{color:text, fontSize:15, fontWeight:"500", flex:1, marginRight:12}} numberOfLines={2}>Remover itens com o prefixo da soma do Dízimo</Text>
-            <Switch
-              trackColor={{
-                false: theme.colors.gray[400],
-                true: theme.colors.gray[400],
-              }}
-              thumbColor={
-                willUsePrefixToRemoveTihteSum
-                  ? theme.colors.purple[600]
-                  : theme.colors.gray[600]
-              }
-              ios_backgroundColor={theme.colors.gray[600]}
-              onValueChange={handleWillRemovePrefixToRemove}
-              value={willUsePrefixToRemoveTihteSum}
-            />
-          </View>
-
-          <View style={{gap:8}}>
-            <Text style={{color:text, fontSize:15, fontWeight:"600"}}>Prefixo</Text>
-            <TextInput
-              placeholder="Prefixo"
-              placeholderTextColor="#a1a1aa"
-              onChangeText={handleSetPrefixTithe}
-              value={prefixTithe}
-              editable={willUsePrefixToRemoveTihteSum}
-              style={{borderWidth:1, borderColor: isDark ? "#3f3f46" : "#e4e4e7", borderRadius:12, padding:12, color:text, backgroundColor: isDark ? "#27272a" : "white"}}
-            />
-            <Text style={{color: subText, fontSize:13, marginTop:4}}>
-              Se o título da transação tiver este prefixo não será contado na
-              soma do dízimo
-            </Text>
-          </View>
         </View>
 
         <View style={{gap:12, paddingHorizontal:16, marginVertical:8}}>

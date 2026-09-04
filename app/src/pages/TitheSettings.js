@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
-import { ScrollView, View, Text, TextInput, TouchableOpacity, Alert } from "react-native";
+import { ScrollView, View, Text, TextInput, TouchableOpacity, Alert, Switch } from "react-native";
 import { Feather } from "@expo/vector-icons";
 import { useNavigation, useIsFocused } from "@react-navigation/native";
 import dayjs from "dayjs";
@@ -28,6 +28,8 @@ export default function TitheSettings() {
   const [history, setHistory] = useState([]);
   const [saving, setSaving] = useState(false);
   const [activeScripture, setActiveScripture] = useState(0);
+  const [willUsePrefix, setWillUsePrefix] = useState(false);
+  const [prefixTithe, setPrefixTithe] = useState("");
 
   const load = useCallback(async () => {
     try {
@@ -51,6 +53,8 @@ export default function TitheSettings() {
           setPercent(p);
           setPercentText(String(p));
         }
+        if (cfg.willUsePrefixToRemoveTihteSum !== undefined) setWillUsePrefix(!!cfg.willUsePrefixToRemoveTihteSum);
+        if (cfg.prefixTithe !== undefined) setPrefixTithe(String(cfg.prefixTithe || ""));
         if (cfg.titheCategories) {
           try {
             const parsed = typeof cfg.titheCategories === "string" ? JSON.parse(cfg.titheCategories) : cfg.titheCategories;
@@ -72,6 +76,11 @@ export default function TitheSettings() {
         tithePercent: newPercent,
         titheCategories: JSON.stringify(newCategories),
       });
+    } catch {}
+  }, []);
+  const persistPrefix = useCallback(async (willUse, prefix) => {
+    try {
+      await configRepo.upsert({ id: "config-singleton", willUsePrefixToRemoveTihteSum: willUse ? 1 : 0, prefixTithe: prefix });
     } catch {}
   }, []);
 
@@ -125,6 +134,8 @@ export default function TitheSettings() {
     persistConfig(newVal, selectedCategories);
   };
 
+  const handleTogglePrefix = (v) => { setWillUsePrefix(v); persistPrefix(v, prefixTithe); };
+  const handleChangePrefix = (text) => { setPrefixTithe(text); persistPrefix(willUsePrefix, text); };
   const toggleCategory = (cat) => {
     let next;
     if (selectedCategories.includes(cat)) {
@@ -171,6 +182,7 @@ export default function TitheSettings() {
     <View className="flex-1 bg-warmGray-50 dark:bg-gray-900" style={{ flex: 1, backgroundColor: "#f5f5f4" }}>
       <Header
         title="Dízimo JFA"
+        isShort
         isLeftIconComponent={
           <TouchableOpacity
             testID="back-button"
@@ -180,20 +192,45 @@ export default function TitheSettings() {
             <Feather name="arrow-left" size={20} color="white" />
           </TouchableOpacity>
         }
-        isRightIconComponent={
-          <View style={{ padding: 8 }}>
-            <Feather name="heart" size={20} color="white" />
-          </View>
-        }
       />
       <ScrollView className="flex-1" style={{ flex: 1 }} contentContainerStyle={{ paddingBottom: 32 }} testID="tithe-scroll">
-        {/* Intro */}
-        <View className="bg-purple-900 rounded-2xl mx-4 -mt-6 p-4" style={{ backgroundColor: "#581C87", borderRadius: 16, marginHorizontal: 16, marginTop: -16, padding: 16 }}>
-          <Text className="text-white font-bold text-lg" style={{ color: "white", fontWeight: "700", fontSize: 16 }}>Dízimo JFA</Text>
-          <Text className="text-white/80 text-sm mt-1" style={{ color: "rgba(255,255,255,0.8)", fontSize: 13, marginTop: 4 }}>
-            Configure o percentual e a base de Ganhos. Tradução João Ferreira de Almeida.
+        {/* Escrituras JFA - carrossel */}
+        <View className="mt-4" style={{ marginTop: 16 }}>
+          <Text className="text-gray-700 font-bold text-base px-4 mb-2" style={{ fontWeight: "700", color: "#374151", fontSize: 16, paddingHorizontal: 16, marginBottom: 8 }} testID="scripture-title">
+            Escrituras — JFA
           </Text>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 16, gap: 12 }} testID="scripture-carousel">
+            {TITHE_SCRIPTURES.map((s, idx) => (
+              <View
+                key={s.reference}
+                testID={`scripture-${idx}`}
+                className="bg-white rounded-2xl p-4 shadow"
+                style={{ backgroundColor: "white", borderRadius: 16, padding: 16, width: 300, marginRight: 12, elevation: 2, borderWidth: activeScripture === idx ? 2 : 1, borderColor: activeScripture === idx ? "#9c44dc" : "#f3f4f6" }}
+              >
+                <View className="flex-row items-center mb-2" style={{ flexDirection: "row", alignItems: "center", marginBottom: 8 }}>
+                  <View className="w-8 h-8 rounded-full bg-purple-100 items-center justify-center mr-2" style={{ width: 32, height: 32, borderRadius: 16, backgroundColor: "#f3e8ff", alignItems: "center", justifyContent: "center", marginRight: 8 }}>
+                    <Feather name="book-open" size={16} color="#581C87" />
+                  </View>
+                  <Text className="font-bold text-purple-900 flex-1" style={{ fontWeight: "700", color: "#581C87", flex: 1, fontSize: 13 }}>{s.reference}</Text>
+                  <Text className="text-xs text-purple-400" style={{ fontSize: 10, color: "#c4b5fd" }}>{s.translation.includes("JFA") ? "JFA" : "JFA"}</Text>
+                </View>
+                <Text className="text-sm text-gray-700 leading-5" style={{ fontSize: 13, color: "#374151", lineHeight: 20 }}>{s.text}</Text>
+                <View className="mt-3 bg-purple-50 rounded-xl p-2" style={{ marginTop: 12, backgroundColor: "#f5f3ff", borderRadius: 12, padding: 8 }}>
+                  <Text className="text-xs font-semibold text-purple-700" style={{ fontSize: 12, fontWeight: "600", color: "#6d28d9" }}>Reflexão</Text>
+                  <Text className="text-xs text-gray-600 mt-1" style={{ fontSize: 11, color: "#4b5563", marginTop: 4 }}>{s.reflection}</Text>
+                </View>
+                <Text className="text-xs text-gray-400 mt-2" style={{ fontSize: 10, color: "#9ca3af", marginTop: 8 }}>{s.translation}</Text>
+              </View>
+            ))}
+          </ScrollView>
+          <View className="flex-row justify-center mt-3" style={{ flexDirection: "row", justifyContent: "center", marginTop: 12 }}>
+            {TITHE_SCRIPTURES.map((_, idx) => (
+              <TouchableOpacity key={idx} onPress={() => setActiveScripture(idx)} testID={`dot-${idx}`} style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: activeScripture === idx ? "#9c44dc" : "#e5e7eb", marginHorizontal: 4 }} />
+            ))}
+          </View>
         </View>
+
+
 
         {/* % do dízimo */}
         <View className="bg-white rounded-2xl mx-4 mt-4 p-4 shadow" style={{ backgroundColor: "white", borderRadius: 16, marginHorizontal: 16, marginTop: 16, padding: 16, elevation: 2 }}>
@@ -294,6 +331,38 @@ export default function TitheSettings() {
           )}
         </View>
 
+        {/* Prefixo Dízimo - explicação */}
+        <View className="bg-white rounded-2xl mx-4 mt-4 p-4 shadow" style={{ backgroundColor: "white", borderRadius: 16, marginHorizontal: 16, marginTop: 16, padding: 16, elevation: 2 }} testID="card-prefix">
+          <Text className="text-gray-700 font-bold text-base" style={{ fontWeight: "700", color: "#374151", fontSize: 16 }}>Remover por prefixo</Text>
+          <Text className="text-xs text-gray-500 mt-1" style={{ fontSize: 12, color: "#6b7280", marginTop: 4 }}>
+            Quando ativado, transações cujo título começa com o prefixo não entram no cálculo do dízimo. Útil para reembolsos ou transferências internas.
+          </Text>
+          <View className="flex-row items-center justify-between mt-3" style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginTop: 12 }}>
+            <Text style={{ fontSize: 14, fontWeight: "500", color: "#374151", flex: 1, marginRight: 12 }}>Ativar remoção por prefixo</Text>
+            <Switch
+              testID="switch-prefix"
+              trackColor={{ false: "#d1d5db", true: "#d1d5db" }}
+              thumbColor={willUsePrefix ? "#9c44dc" : "#6b7280"}
+              ios_backgroundColor="#6b7280"
+              onValueChange={handleTogglePrefix}
+              value={willUsePrefix}
+            />
+          </View>
+          <View style={{ marginTop: 12 }}>
+            <Text style={{ fontSize: 13, fontWeight: "600", color: "#374151", marginBottom: 6 }}>Prefixo</Text>
+            <TextInput
+              testID="input-prefix"
+              placeholder="Ex: Reembolso"
+              placeholderTextColor="#a1a1aa"
+              value={prefixTithe}
+              onChangeText={handleChangePrefix}
+              editable={willUsePrefix}
+              style={{ borderWidth: 1, borderColor: willUsePrefix ? "#e9d5ff" : "#e5e7eb", borderRadius: 12, padding: 12, color: "#1f2937", backgroundColor: willUsePrefix ? "white" : "#f9fafb", opacity: willUsePrefix ? 1 : 0.6 }}
+            />
+            <Text style={{ fontSize: 11, color: "#6b7280", marginTop: 6 }}>Se o título da transação tiver este prefixo não será contado na soma do dízimo.</Text>
+          </View>
+        </View>
+
         {/* Card mensal preview */}
         <View className="mx-4 mt-4 rounded-2xl p-4" style={{ marginHorizontal: 16, marginTop: 16, borderRadius: 16, padding: 16, backgroundColor: selectedCategories.length === 0 ? "#fffbeb" : "#f3e8ff", borderWidth: 1, borderColor: selectedCategories.length === 0 ? "#fde68a" : "#e9d5ff", elevation: 2 }} testID="card-monthly">
           <View className="flex-row justify-between items-center" style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
@@ -350,42 +419,6 @@ export default function TitheSettings() {
             ))}
           </View>
         )}
-
-        {/* Escrituras JFA - carrossel */}
-        <View className="mt-4" style={{ marginTop: 16 }}>
-          <Text className="text-gray-700 font-bold text-base px-4 mb-2" style={{ fontWeight: "700", color: "#374151", fontSize: 16, paddingHorizontal: 16, marginBottom: 8 }} testID="scripture-title">
-            Escrituras — JFA
-          </Text>
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 16, gap: 12 }} testID="scripture-carousel">
-            {TITHE_SCRIPTURES.map((s, idx) => (
-              <View
-                key={s.reference}
-                testID={`scripture-${idx}`}
-                className="bg-white rounded-2xl p-4 shadow"
-                style={{ backgroundColor: "white", borderRadius: 16, padding: 16, width: 300, marginRight: 12, elevation: 2, borderWidth: activeScripture === idx ? 2 : 1, borderColor: activeScripture === idx ? "#9c44dc" : "#f3f4f6" }}
-              >
-                <View className="flex-row items-center mb-2" style={{ flexDirection: "row", alignItems: "center", marginBottom: 8 }}>
-                  <View className="w-8 h-8 rounded-full bg-purple-100 items-center justify-center mr-2" style={{ width: 32, height: 32, borderRadius: 16, backgroundColor: "#f3e8ff", alignItems: "center", justifyContent: "center", marginRight: 8 }}>
-                    <Feather name="book-open" size={16} color="#581C87" />
-                  </View>
-                  <Text className="font-bold text-purple-900 flex-1" style={{ fontWeight: "700", color: "#581C87", flex: 1, fontSize: 13 }}>{s.reference}</Text>
-                  <Text className="text-xs text-purple-400" style={{ fontSize: 10, color: "#c4b5fd" }}>{s.translation.includes("JFA") ? "JFA" : "JFA"}</Text>
-                </View>
-                <Text className="text-sm text-gray-700 leading-5" style={{ fontSize: 13, color: "#374151", lineHeight: 20 }}>{s.text}</Text>
-                <View className="mt-3 bg-purple-50 rounded-xl p-2" style={{ marginTop: 12, backgroundColor: "#f5f3ff", borderRadius: 12, padding: 8 }}>
-                  <Text className="text-xs font-semibold text-purple-700" style={{ fontSize: 12, fontWeight: "600", color: "#6d28d9" }}>Reflexão</Text>
-                  <Text className="text-xs text-gray-600 mt-1" style={{ fontSize: 11, color: "#4b5563", marginTop: 4 }}>{s.reflection}</Text>
-                </View>
-                <Text className="text-xs text-gray-400 mt-2" style={{ fontSize: 10, color: "#9ca3af", marginTop: 8 }}>{s.translation}</Text>
-              </View>
-            ))}
-          </ScrollView>
-          <View className="flex-row justify-center mt-3" style={{ flexDirection: "row", justifyContent: "center", marginTop: 12 }}>
-            {TITHE_SCRIPTURES.map((_, idx) => (
-              <TouchableOpacity key={idx} onPress={() => setActiveScripture(idx)} testID={`dot-${idx}`} style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: activeScripture === idx ? "#9c44dc" : "#e5e7eb", marginHorizontal: 4 }} />
-            ))}
-          </View>
-        </View>
 
         <View style={{ height: 24 }} />
       </ScrollView>

@@ -76,11 +76,6 @@
       ],
       "expo-status-bar",
       "expo-font"
-    ],
-    "extra": {
-      "eas": {
-        "projectId": "007d84b9-db5f-4e91-8537-b64bd4edafbe"
-      }
-    }
+    ]
   }
 }

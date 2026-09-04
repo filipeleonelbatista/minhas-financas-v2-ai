@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState, useCallback } from "react";
-import { View, Text, ScrollView, Pressable, TextInput, TouchableOpacity, ActivityIndicator, Modal, useWindowDimensions, KeyboardAvoidingView, BackHandler } from "react-native";
+import { View, Text, ScrollView, Pressable, TextInput, TouchableOpacity, ActivityIndicator, Modal, useWindowDimensions, KeyboardAvoidingView, BackHandler, Platform } from "react-native";
 import { Feather, MaterialCommunityIcons, Octicons } from "@expo/vector-icons";
 import { useFocusEffect, useIsFocused, useNavigation } from "@react-navigation/native";
 import LoadingDots from "react-native-loading-dots";
@@ -9,10 +9,13 @@ import { useIsKeyboardOpen } from "../hooks/useIsKeyboardOpen";
 import { useFinanceStore } from "../stores/finance";
 import { useRunsStore } from "../stores/runs";
 import { useMarketStore } from "../stores/market";
+import { useGoalsStore } from "../stores/goals";
+import { useListsStore } from "../stores/lists";
 import { useSettingsStore } from "../stores/settings";
 import { buildPrompt, canSendPrompt, registerPrompt } from "../utils/prompt";
 import { getProviderKey } from "../utils/secureStore";
 import { getActiveProvider, getFallbackOrder, getProviderModel, chatWithFallback, PROVIDER_META } from "../utils/aiProviders";
+import { useShallow } from "zustand/react/shallow";
 
 export default function IAPage() {
   const colorModeState = useSettingsStore((s) => s.colorModeState);
@@ -23,12 +26,18 @@ export default function IAPage() {
   const text = isDark ? "#e4e4e7" : "#52525b";
 
   const navigation = useNavigation();
-  const scrollViewRef = useRef();
+  const scrollViewRef = useRef(null);
 
-  const filteredList = useFinanceStore((s) => s.getFilteredList());
+  // stable selectors with shallow to avoid new array each render -> max depth
+  const filteredList = useFinanceStore(useShallow((s) => s.getFilteredList()));
   const FuelList = useRunsStore((s) => s.runsList);
-  const veicleAutonomy = useSettingsStore((s) => s.veicleAutonomy);
   const MarketList = useMarketStore((s) => s.stockList);
+  const GoalsList = useGoalsStore((s) => s.goals);
+  const ListsList = useListsStore((s) => s.lists ?? []);
+  const stockList = MarketList; // alias
+  const veicleAutonomy = useSettingsStore((s) => s.veicleAutonomy);
+  const tithePercent = useSettingsStore((s) => s.tithePercent);
+  const titheCategories = useSettingsStore((s) => s.titheCategories);
 
   const isFocused = useIsFocused();
   const isKeyboardOpen = useIsKeyboardOpen();
@@ -56,27 +65,99 @@ export default function IAPage() {
     } catch {}
   }, []);
 
-  useEffect(() => {
-    if (isFocused) loadProviderInfo();
-  }, [isFocused, loadProviderInfo]);
+  const checkIfApiKeyExists = useCallback(async () => {
+    const providers = ["openai", "gemini", "anthropic", "openrouter", "zen"];
+    for (const p of providers) {
+      const k = await getProviderKey(p);
+      if (k) return true;
+    }
+    return false;
+  }, []);
 
+  // load provider info only on focus change, not on every render
+  useEffect(() => {
+    let mounted = true;
+    if (isFocused) {
+      (async () => {
+        const existsApi = await checkIfApiKeyExists();
+        if (mounted) setOpen(!existsApi);
+        await loadProviderInfo();
+      })();
+    }
+    return () => { mounted = false; };
+  }, [isFocused, checkIfApiKeyExists, loadProviderInfo]);
+
+  useFocusEffect(
+    useCallback(() => {
+      const backHandler = BackHandler.addEventListener("hardwareBackPress", () => {
+        navigation.goBack();
+        return true;
+      });
+      return () => backHandler.remove();
+    }, [navigation])
+  );
+
+  // auto scroll to bottom when new message added
+  useEffect(() => {
+    if (data.length > 0) {
+      const t = setTimeout(() => {
+        try { scrollViewRef.current?.scrollToEnd({ animated: true }); } catch {}
+      }, 100);
+      return () => clearTimeout(t);
+    }
+  }, [data]);
+
+  // Memoized CSVs - stable slices to avoid recompute loop
   const financesList = useMemo(() => {
-    const headers = "valor;vencimento;data de vencimento;data de pagamento;descrição;categorias;pago";
-    const dataStr = filteredList.map((item) => [item.amount, new Date(item.date).toLocaleDateString("pt-BR"), new Date(item.paymentDate).toLocaleDateString("pt-BR"), item.description, item.category, item.paymentStatus ? "Pago" : "Não pago"]).join("\n").replaceAll(",", ";");
-    return headers + "\n" + dataStr;
+    const headers = "valor;vencimento;data de pagamento;descrição;categorias;pago;favorito";
+    const rows = filteredList.slice(0, 80).map((item) => [item.amount, new Date(Number(item.date)).toLocaleDateString("pt-BR"), item.paymentDate ? new Date(Number(item.paymentDate)).toLocaleDateString("pt-BR") : "", String(item.description ?? "").replace(/;/g, ","), String(item.category ?? ""), item.paymentStatus ? "Pago" : "Não pago", item.isFavorited ? "Fav" : ""].join(";"));
+    return headers + "\n" + rows.join("\n");
   }, [filteredList]);
 
   const fuelCostsList = useMemo(() => {
-    const headers = "valor pago;valor do litro do combustível;data de abastecimento;local do abastecimento;tipo de combustivel;Kilometragem do veiculo no abastecimento";
-    const dataStr = FuelList.map((item) => [item.amount, item.unityAmount, new Date(item.date).toLocaleDateString("pt-BR"), item.location, item.type, item.currentDistance]).join("\n").replaceAll(",", ";");
-    return headers + "\n" + dataStr + "\n\n" + "Autonomia do veículo: " + (veicleAutonomy ?? 0);
+    const headers = "valor pago;valor do litro;data;local;tipo;km";
+    const rows = FuelList.slice(0, 30).map((item) => [item.amount, item.unityAmount, new Date(Number(item.date)).toLocaleDateString("pt-BR"), String(item.location ?? ""), String(item.type ?? ""), item.currentDistance].join(";"));
+    return headers + "\n" + rows.join("\n") + "\n\nAutonomia: " + (veicleAutonomy ?? 0);
   }, [FuelList, veicleAutonomy]);
 
   const marketCostsList = useMemo(() => {
-    const headers = "valor unitário;quantidade;produto;categoria";
-    const dataStr = MarketList.map((item) => [item.amount, item.quantity, item.description, item.category]).join("\n").replaceAll(",", ";");
-    return headers + "\n" + dataStr;
+    const headers = "valor unitario;quantidade;produto;categoria;total";
+    const rows = MarketList.slice(0, 60).map((item) => [item.amount, item.quantity, String(item.description ?? ""), String(item.category ?? ""), Number(item.amount) * Number(item.quantity)].join(";"));
+    return headers + "\n" + rows.join("\n");
   }, [MarketList]);
+
+  const goalsList = useMemo(() => {
+    const headers = "descricao;valor meta;valor atual;percentual;categoria;data prazo";
+    const rows = GoalsList.slice(0, 30).map((g) => [String(g.description ?? ""), g.amount, g.currentAmount, Math.round((Number(g.currentAmount)/Number(g.amount||1))*100)+"%", String(g.category ?? ""), g.date ? new Date(Number(g.date)).toLocaleDateString("pt-BR") : ""].join(";"));
+    return headers + "\n" + rows.join("\n");
+  }, [GoalsList]);
+
+  const listsList = useMemo(() => {
+    if (!ListsList || ListsList.length === 0) return "sem listas";
+    const headers = "descricao;local;quantidade;valor";
+    const rows = ListsList.slice(0, 20).map((l) => [String(l.description ?? ""), String(l.location ?? ""), l.quantity, l.amount].join(";"));
+    return headers + "\n" + rows.join("\n");
+  }, [ListsList]);
+
+  // Full app context for IA
+  const appContext = useMemo(() => {
+    const hero = {
+      totalFinances: filteredList.length,
+      totalRuns: FuelList.length,
+      totalMarket: MarketList.length,
+      totalGoals: GoalsList.length,
+      totalLists: ListsList.length,
+    };
+    return {
+      hero,
+      tithe: { percent: tithePercent, categories: titheCategories },
+      finances: financesList.slice(0, 6000),
+      fuel: fuelCostsList.slice(0, 4000),
+      market: marketCostsList.slice(0, 4000),
+      goals: goalsList.slice(0, 3000),
+      lists: listsList.slice(0, 2000),
+    };
+  }, [filteredList.length, FuelList.length, MarketList.length, GoalsList.length, ListsList.length, tithePercent, titheCategories, financesList, fuelCostsList, marketCostsList, goalsList, listsList]);
 
   const openaiErrorHandler = (error) => {
     const status = error?.status ?? error?.response?.status;
@@ -90,18 +171,10 @@ export default function IAPage() {
     }
   };
 
-  const checkIfApiKeyExists = useCallback(async () => {
-    const providers = ["openai", "gemini", "anthropic", "openrouter", "zen"];
-    for (const p of providers) {
-      const k = await getProviderKey(p);
-      if (k) return true;
-    }
-    return false;
-  }, []);
-
   const sendWithFallback = async (promptData, userPrompt) => {
     if (!canSendPrompt()) throw new Error("Muitas requisições. Aguarde 60s (limite 3/min).");
     registerPrompt();
+    // promptData is array of context chunks, but we now use appContext object
     const injected = buildPrompt(promptData, userPrompt);
     if (injected.includes("Não posso processar instruções dentro dos dados")) return injected;
     const result = await chatWithFallback(injected);
@@ -114,8 +187,7 @@ export default function IAPage() {
       setInputText(userQ);
       setIsLoading(true);
       setError(null);
-      const dataSlice = filteredList.slice(0, 50);
-      const promptData = [{ type: "finances", csv: financesList, rows: dataSlice }];
+      const promptData = [{ type: "appContext", context: appContext }, { type: "question", question: userQ }, { type: "financesFocused", csv: financesList, rows: filteredList.slice(0, 50) }];
       const textRes = await sendWithFallback(promptData, userQ + " Limite-se a 1000 caracteres.");
       setData((prev) => [...prev, { type: "user", text: userQ }, { type: "assistant", text: textRes }]);
       setInputText("");
@@ -129,7 +201,7 @@ export default function IAPage() {
       setInputText(userQ);
       setIsLoading(true);
       setError(null);
-      const promptData = [{ type: "fuel", csv: fuelCostsList, rows: FuelList.slice(0, 50) }];
+      const promptData = [{ type: "appContext", context: appContext }, { type: "fuelFocused", csv: fuelCostsList, rows: FuelList.slice(0, 30) }];
       const textRes = await sendWithFallback(promptData, userQ + " Limite-se a 1000 caracteres.");
       setData((prev) => [...prev, { type: "user", text: userQ }, { type: "assistant", text: textRes }]);
       setInputText("");
@@ -141,7 +213,7 @@ export default function IAPage() {
       setInputText(userQ);
       setIsLoading(true);
       setError(null);
-      const promptData = [{ type: "market", csv: marketCostsList, rows: MarketList.slice(0, 50) }];
+      const promptData = [{ type: "appContext", context: appContext }, { type: "marketFocused", csv: marketCostsList, rows: MarketList.slice(0, 50) }];
       const textRes = await sendWithFallback(promptData, userQ + " Limite-se a 1000 caracteres.");
       setData((prev) => [...prev, { type: "user", text: userQ }, { type: "assistant", text: textRes }]);
       setInputText("");
@@ -152,38 +224,21 @@ export default function IAPage() {
       setIsLoading(true);
       setError(null);
       const userQ = inputText;
-      const promptData = [{ type: "finances", csv: financesList.slice(0, 4000) }, { type: "fuel", csv: fuelCostsList.slice(0, 2000) }, { type: "market", csv: marketCostsList.slice(0, 2000) }, { conversation: data.slice(-6) }];
+      const promptData = [{ type: "appContext", context: appContext }, { type: "conversation", messages: data.slice(-6) }];
       const textRes = await sendWithFallback(promptData, userQ);
       setData((prev) => [...prev, { type: "user", text: userQ }, { type: "assistant", text: textRes }]);
       setInputText("");
     } catch (error) { setError(openaiErrorHandler(error)); } finally { setIsLoading(false); }
   };
 
-  useEffect(() => {
-    if (isFocused) {
-      async function executeAsync() {
-        const existsApi = await checkIfApiKeyExists();
-        if (existsApi) setOpen(false); else setOpen(true);
-        await loadProviderInfo();
-      }
-      executeAsync();
-    }
-  }, [isFocused, checkIfApiKeyExists, loadProviderInfo]);
-
-  useFocusEffect(() => {
-    const backHandler = BackHandler.addEventListener("hardwareBackPress", () => { navigation.goBack(); return true; });
-    return () => backHandler.remove();
-  });
-
   const activeLabel = activeProvider ? (PROVIDER_META[activeProvider]?.label ?? activeProvider) : "Nenhum";
   const fallbackLabel = fallbackOrder.length > 0 ? fallbackOrder.map((p) => PROVIDER_META[p]?.label ?? p).join(" → ") : "—";
 
   return (
-    <KeyboardAvoidingView style={{ flex: 1 }} behavior="padding">
-      <View style={{ flex: 1, backgroundColor: bg, position: "relative" }} className="flex-1 bg-gray-50 dark:bg-gray-900">
+    <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === "ios" ? "padding" : "height"} keyboardVerticalOffset={80}>
+      <View style={{ flex: 1, backgroundColor: bg }} className="flex-1 bg-gray-50 dark:bg-gray-900">
         <Header
           isShort
-          isLeft
           title="Conversa"
           isLeftIconComponent={
             <TouchableOpacity onPress={() => navigation.goBack()} style={{ width: 40, height: 40, borderRadius: 999, alignItems: "center", justifyContent: "center" }}>
@@ -191,7 +246,7 @@ export default function IAPage() {
             </TouchableOpacity>
           }
         />
-        <View style={{ alignItems: "center", marginTop: -8, marginBottom: 8, gap: 8 }}>
+        <View style={{ alignItems: "center", marginTop: 8, marginBottom: 8, gap: 8, paddingHorizontal: 16 }}>
           <Orb size="lg" color="#9c44dc" testID="orb-header" />
           <Text style={{ color: text, fontSize: 12, textAlign: "center" }}>
             Ativo: <Text style={{ fontWeight: "700", color: "#9c44dc" }}>{activeLabel}</Text>{activeModel ? ` • ${activeModel}` : ""} {"\n"}
@@ -200,12 +255,15 @@ export default function IAPage() {
           <Pressable testID="btn-manage-providers" onPress={() => navigation.navigate("AIProviders")} style={({ pressed }) => ({ opacity: pressed ? 0.6 : 1 })}>
             <Text style={{ color: "#9c44dc", fontSize: 12, textDecorationLine: "underline" }}>Mudar provider/modelo</Text>
           </Pressable>
+          <View style={{ backgroundColor: isDark ? "#27272a" : "white", borderRadius: 12, paddingHorizontal: 12, paddingVertical: 6, borderWidth: 1, borderColor: isDark ? "#3f3f46" : "#e5e7eb", marginTop: 4 }}>
+            <Text style={{ fontSize: 11, color: subText, textAlign: "center" }}>Contexto: {filteredList.length} finanças • {FuelList.length} abastecimentos • {MarketList.length} estoque • {GoalsList.length} metas • {ListsList.length} listas</Text>
+          </View>
         </View>
         <ScrollView
           ref={scrollViewRef}
-          nestedScrollEnabled={true}
-          onContentSizeChange={(cw, ch) => { scrollViewRef.current?.scrollTo({ y: ch }); }}
-          style={{ flex: 1, width: "100%", height: "100%" }}
+          style={{ flex: 1, width: "100%" }}
+          contentContainerStyle={{ paddingBottom: 120 }}
+          keyboardShouldPersistTaps="handled"
         >
           {data.length === 0 && !isLoading ? (
             <View style={{ width: "100%", gap: 16, paddingHorizontal: 16, alignItems: "center", justifyContent: "center", flex: 1, marginTop: 16 }}>
@@ -235,10 +293,10 @@ export default function IAPage() {
               <Text style={{ color: text, fontSize: 14, lineHeight: 16, textAlign: "center", maxWidth: "80%", marginTop: 24 }}>ou digite seu texto para iniciar a conversa.</Text>
             </View>
           ) : (
-            <View style={{ alignItems: "center", justifyContent: "center", width: "100%", gap: 16 }}>
+            <View style={{ alignItems: "center", justifyContent: "center", width: "100%", gap: 16, paddingHorizontal: 16 }}>
               {data.map((mensagem, index) => (
-                <View key={index} style={{ flexDirection: mensagem.type === "user" ? "row" : "row-reverse", gap: 16, marginVertical: 8, width: "100%", paddingHorizontal: 16, justifyContent: "flex-end" }}>
-                  <View style={{ width: "75%", paddingHorizontal: 16, paddingVertical: 8, backgroundColor: mensagem.type === "user" ? "#a855f7" : bgCard, shadowColor: "#000", shadowOpacity: 0.1, elevation: 2, borderRadius: 4 }}>
+                <View key={index} style={{ flexDirection: mensagem.type === "user" ? "row" : "row-reverse", gap: 16, marginVertical: 8, width: "100%", paddingHorizontal: 0, justifyContent: "flex-end" }}>
+                  <View style={{ width: "75%", paddingHorizontal: 16, paddingVertical: 8, backgroundColor: mensagem.type === "user" ? "#a855f7" : bgCard, shadowColor: "#000", shadowOpacity: 0.1, elevation: 2, borderRadius: 12 }}>
                     <Text style={{ color: mensagem.type === "user" ? "white" : text }}>{mensagem.text}</Text>
                   </View>
                   <View style={{ width: 40, height: 40, borderRadius: 999, alignItems: "center", justifyContent: "center", elevation: 2, backgroundColor: "#d8b4fe" }}>
@@ -247,32 +305,20 @@ export default function IAPage() {
                 </View>
               ))}
               {isLoading && (
-                <>
-                  <View style={{ flexDirection: "row", gap: 16, marginVertical: 8, width: "100%", paddingHorizontal: 16, justifyContent: "flex-end" }}>
-                    <View style={{ width: "75%", paddingHorizontal: 16, paddingVertical: 8, backgroundColor: "#a855f7", shadowColor: "#000", shadowOpacity: 0.1, elevation: 2, borderRadius: 4 }}>
-                      <Text style={{ color: "white" }}>{inputText}</Text>
-                    </View>
-                    <View style={{ width: 40, height: 40, borderRadius: 999, alignItems: "center", justifyContent: "center", elevation: 2, backgroundColor: "#d8b4fe" }}>
-                      <MaterialCommunityIcons name="account" size={20} color={headerText} />
-                    </View>
+                <View style={{ flexDirection: "row", gap: 16, marginVertical: 8, width: "100%", paddingHorizontal: 0, justifyContent: "flex-end", flexDirection: "row-reverse" }}>
+                  <View style={{ paddingHorizontal: 16, paddingVertical: 12, backgroundColor: bgCard, shadowColor: "#000", shadowOpacity: 0.1, elevation: 2, borderRadius: 12 }}>
+                    <LoadingDots dots={3} colors={[text, text, text]} size={8} bounceHeight={3} />
                   </View>
-                  <View style={{ flexDirection: "row", gap: 16, marginVertical: 8, width: "100%", paddingHorizontal: 16, justifyContent: "flex-end", flexDirection: "row-reverse" }}>
-                    <View style={{ paddingHorizontal: 16, paddingVertical: 8, backgroundColor: bgCard, shadowColor: "#000", shadowOpacity: 0.1, elevation: 2, borderRadius: 4 }}>
-                      <Text style={{ color: "white" }}>
-                        <LoadingDots dots={3} colors={[text, text, text]} size={8} bounceHeight={3} />
-                      </Text>
-                    </View>
-                    <View style={{ width: 40, height: 40, borderRadius: 999, alignItems: "center", justifyContent: "center", elevation: 2, backgroundColor: "#d8b4fe" }}>
-                      <MaterialCommunityIcons name="robot-outline" size={20} color={headerText} />
-                    </View>
+                  <View style={{ width: 40, height: 40, borderRadius: 999, alignItems: "center", justifyContent: "center", elevation: 2, backgroundColor: "#d8b4fe" }}>
+                    <MaterialCommunityIcons name="robot-outline" size={20} color={headerText} />
                   </View>
-                </>
+                </View>
               )}
             </View>
           )}
-          <View style={{ width: "100%", height: 92 }} />
+          <View style={{ width: "100%", height: 24 }} />
         </ScrollView>
-        <View style={{ backgroundColor: bg, shadowColor: "#000", shadowOpacity: 0.1, elevation: 4, gap: 4, position: "absolute", bottom: 0, width: "100%", paddingHorizontal: 16, paddingVertical: 16 }}>
+        <View style={{ backgroundColor: bg, shadowColor: "#000", shadowOpacity: 0.1, elevation: 4, gap: 4, position: "absolute", bottom: 0, width: "100%", paddingHorizontal: 16, paddingVertical: 12, paddingBottom: isKeyboardOpen ? 12 : 16 }}>
           {isLoading && (
             <View style={{ flexDirection: "row", gap: 8, paddingLeft: 8 }}>
               <LoadingDots dots={3} colors={[text, text, text]} size={8} bounceHeight={3} />
@@ -285,8 +331,10 @@ export default function IAPage() {
               onChangeText={(t) => setInputText(t)}
               value={inputText}
               testID="input-ask"
-              style={{ flex: 1, borderWidth: 1, borderColor: "#d4d4d8", borderRadius: 4, padding: 8, color: text }}
+              style={{ flex: 1, borderWidth: 1, borderColor: "#d4d4d8", borderRadius: 12, paddingHorizontal: 12, paddingVertical: 10, color: text, backgroundColor: isDark ? "#27272a" : "white" }}
               placeholderTextColor="#a1a1aa"
+              editable={!isLoading}
+              onSubmitEditing={() => { if (inputText.length > 0 && !isLoading) { setError(null); handleAskToAi(); } }}
             />
             <TouchableOpacity
               testID="btn-send"
@@ -294,12 +342,13 @@ export default function IAPage() {
                 if (inputText.length === 0) setError("Digite uma mensagem para continuar");
                 else { setError(null); handleAskToAi(); }
               }}
-              style={{ width: 48, backgroundColor: "#9c44dc", alignItems: "center", justifyContent: "center", borderRadius: 4 }}
+              disabled={isLoading}
+              style={{ width: 48, backgroundColor: isLoading ? "#d1d5db" : "#9c44dc", alignItems: "center", justifyContent: "center", borderRadius: 12, opacity: isLoading ? 0.6 : 1 }}
             >
-              <Octicons name="paper-airplane" size={20} color={headerText} />
+              {isLoading ? <ActivityIndicator color="white" /> : <Octicons name="paper-airplane" size={20} color="white" />}
             </TouchableOpacity>
           </View>
-          {error && <Text style={{ color: "#ef4444" }} testID="error-text"><Feather name="alert-circle" size={14} /> {error}</Text>}
+          {error && <Text style={{ color: "#ef4444", fontSize: 12 }} testID="error-text"><Feather name="alert-circle" size={12} /> {error}</Text>}
         </View>
       </View>
 
@@ -310,14 +359,14 @@ export default function IAPage() {
               <View testID="orb-sheet"><Orb size="md" color="#9c44dc" /></View>
               <Text style={{ color: text, textAlign: "center", fontWeight: "700", fontSize: 22 }}>Chave de api necessária</Text>
               <Text style={{ color: text, textAlign: "center" }}>Configure ao menos um provedor de IA para usar o chat. Suportamos OpenAI, Gemini, Anthropic, OpenRouter e Zen. Modelos são carregados automaticamente após salvar a chave.</Text>
-              <TouchableOpacity testID="btn-go-providers" onPress={() => { setOpen(false); navigation.navigate("AIProviders"); }} style={{ backgroundColor: "#9c44dc", width: "100%", padding: 12, borderRadius: 8, alignItems: "center" }}>
+              <TouchableOpacity testID="btn-go-providers" onPress={() => { setOpen(false); navigation.navigate("AIProviders"); }} style={{ backgroundColor: "#9c44dc", width: "100%", padding: 12, borderRadius: 12, alignItems: "center" }}>
                 <Text style={{ color: "white", fontWeight: "700" }}>Configurar provedores</Text>
               </TouchableOpacity>
-              <TouchableOpacity onPress={() => { setOpen(false); navigation.goBack(); }} style={{ borderWidth: 1, borderColor: "#9c44dc", width: "100%", padding: 12, borderRadius: 8, alignItems: "center" }}>
+              <TouchableOpacity onPress={() => { setOpen(false); navigation.goBack(); }} style={{ borderWidth: 1, borderColor: "#9c44dc", width: "100%", padding: 12, borderRadius: 12, alignItems: "center" }}>
                 <Text style={{ color: "#9c44dc", fontWeight: "700" }}>Voltar</Text>
               </TouchableOpacity>
             </View>
-            <View style={{ height: 64, width: "100%" }} />
+            <View style={{ height: 32, width: "100%" }} />
           </View>
         </View>
       </Modal>

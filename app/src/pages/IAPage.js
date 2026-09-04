@@ -24,6 +24,7 @@ export default function IAPage() {
   const bgCard = isDark ? "#27272a" : "#e5e7eb";
   const headerText = isDark ? "#27272a" : "white";
   const text = isDark ? "#e4e4e7" : "#52525b";
+  const subText = isDark ? "#a1a1aa" : "#6b7280";
 
   const navigation = useNavigation();
   const scrollViewRef = useRef(null);

@@ -23,6 +23,9 @@ LogBox.ignoreLogs([
   "In React 18, SSRProvider is not necessary and is a noop. You can remove it from your app.",
   "Due to changes in Androids permission",
   "The result of getSnapshot should be cached",
+  "InteractionManager has been deprecated",
+  "Writing to `value` during component render",
+  "Reading from `value` during component render",
 ]);
 
 // BiometricGate migrated to useSettingsStore

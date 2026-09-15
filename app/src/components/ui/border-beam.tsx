@@ -53,7 +53,7 @@ export function BorderBeam({
         style,
       ]}
     >
-      <View style={{ borderRadius: Math.max(0, borderRadius - (borderWidth ?? 0)), overflow: 'hidden', flex: 1 }}>
+      <View style={{ borderRadius: Math.max(0, borderRadius - (borderWidth ?? 0)), overflow: 'hidden' }}>
         {children}
       </View>
     </View>

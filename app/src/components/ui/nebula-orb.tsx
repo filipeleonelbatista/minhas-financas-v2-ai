@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo } from 'react';
 import { View, StyleProp, ViewStyle } from 'react-native';
+import { useSharedValue, useDerivedValue, withRepeat, withTiming, Easing, cancelAnimation } from 'react-native-reanimated';
 import type { INebulaOrb } from './types';
 
 // Fallback types if not imported correctly
@@ -119,29 +120,34 @@ export function NebulaOrb({
     skiaAvailable = false;
   }
 
-  // Reanimated time driver (graceful fallback)
-  let timeVal: any = { value: 0 };
-  try {
-    const Rea = require('react-native-reanimated');
-    const { useSharedValue, withRepeat, withTiming, Easing, cancelAnimation } = Rea;
-    // Hooks must be called unconditionally if available; we attempt to use them
-    // but if hooks fail, fallback to static
-    // We call hooks directly to satisfy Rules of Hooks when reanimated exists
-    // If paused, time stays 0
-    // Note: useSharedValue etc are mocked in tests
-    if (typeof useSharedValue === 'function' && !paused) {
-      const sv = useSharedValue(0);
-      // simple animation setup inside effect would be more correct, but for test mock we just set value
-      try {
-        sv.value = withRepeat(withTiming(100, { duration: 8000 / (speed || 1), easing: Easing.linear }), -1, false);
-      } catch {}
-      timeVal = sv;
-    }
-  } catch {}
-
   const dim = typeof size === 'number' ? size : DEFAULT_SIZE;
   const colorRgb = useMemo(() => toRgb(color), [color]);
   const highlightRgb = useMemo(() => toRgb(highlightColor), [highlightColor]);
+
+  // Reanimated time driver — hooks unconditionally, animation in effect (fixes freeze + strict warnings)
+  const time = useSharedValue(0);
+  useEffect(() => {
+    if (paused) {
+      try { cancelAnimation(time); } catch {}
+      time.value = 0;
+      return;
+    }
+    try {
+      time.value = withRepeat(withTiming(100, { duration: 8000 / (speed || 1), easing: Easing.linear }), -1, false);
+    } catch {}
+    return () => { try { cancelAnimation(time); } catch {} };
+  }, [speed, paused]);
+
+  const uniformsDerived = useDerivedValue(() => ({
+    uResolution: [dim, dim],
+    uTime: time.value,
+    uScale: detail * 2.2,
+    uTurbulence: turbulence,
+    uContrast: contrast,
+    uColor: colorRgb,
+    uHighlight: highlightRgb,
+    uEdgeSoftness: edgeSoftness,
+  }));
 
   // Try to create runtime effect
   let shaderSource: any = null;
@@ -155,23 +161,15 @@ export function NebulaOrb({
 
   if (skiaAvailable && shaderSource && SkiaCanvas && SkiaShader && SkiaFill) {
     try {
+      // Prefer derived uniforms when available, fallback to static if Reanimated hook unavailable
+      const uniforms: any = (() => {
+        try { return uniformsDerived.value; } catch { return { uResolution: [dim, dim], uTime: 0, uScale: detail * 2.2, uTurbulence: turbulence, uContrast: contrast, uColor: colorRgb, uHighlight: highlightRgb, uEdgeSoftness: edgeSoftness }; }
+      })();
       return (
         <View testID={testID} style={[{ width: dim, height: dim, borderRadius: dim / 2, overflow: 'hidden' }, style]}>
           <SkiaCanvas style={{ width: dim, height: dim }}>
             <SkiaFill>
-              <SkiaShader
-                source={shaderSource}
-                uniforms={{
-                  uResolution: [dim, dim],
-                  uTime: timeVal.value,
-                  uScale: detail * 2.2,
-                  uTurbulence: turbulence,
-                  uContrast: contrast,
-                  uColor: colorRgb,
-                  uHighlight: highlightRgb,
-                  uEdgeSoftness: edgeSoftness,
-                }}
-              />
+              <SkiaShader source={shaderSource} uniforms={uniforms} />
             </SkiaFill>
           </SkiaCanvas>
         </View>

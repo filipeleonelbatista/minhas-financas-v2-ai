@@ -6,6 +6,8 @@ import LoadingDots from "react-native-loading-dots";
 import Header from "../components/Header";
 import Orb from "../components/ui/Orb";
 import { useIsKeyboardOpen } from "../hooks/useIsKeyboardOpen";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
+import Markdown from "react-native-markdown-display";
 import { useFinanceStore } from "../stores/finance";
 import { useRunsStore } from "../stores/runs";
 import { useMarketStore } from "../stores/market";
@@ -43,6 +45,7 @@ export default function IAPage() {
   const isFocused = useIsFocused();
   const isKeyboardOpen = useIsKeyboardOpen();
   const { height } = useWindowDimensions();
+  const insets = useSafeAreaInsets();
 
   const [data, setData] = useState([]);
   const [error, setError] = useState(null);
@@ -236,7 +239,7 @@ export default function IAPage() {
   const fallbackLabel = fallbackOrder.length > 0 ? fallbackOrder.map((p) => PROVIDER_META[p]?.label ?? p).join(" → ") : "—";
 
   return (
-    <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === "ios" ? "padding" : "height"} keyboardVerticalOffset={80}>
+    <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === "ios" ? "padding" : "height"} keyboardVerticalOffset={insets.top + 56}>
       <View style={{ flex: 1, backgroundColor: bg }} className="flex-1 bg-gray-50 dark:bg-gray-900">
         <Header
           isShort
@@ -263,7 +266,7 @@ export default function IAPage() {
         <ScrollView
           ref={scrollViewRef}
           style={{ flex: 1, width: "100%" }}
-          contentContainerStyle={{ paddingBottom: 120 }}
+          contentContainerStyle={{ paddingBottom: insets.bottom + 120 }}
           keyboardShouldPersistTaps="handled"
         >
           {data.length === 0 && !isLoading ? (

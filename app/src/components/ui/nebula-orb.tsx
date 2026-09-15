@@ -132,7 +132,8 @@ export function NebulaOrb({
       return;
     }
     try {
-      time.value = withRepeat(withTiming(100, { duration: 8000 / (speed || 1), easing: Easing.linear }), -1, false);
+      // soft, sem corte: ping-pong (reverse true) + easing inOut + duração mais longa
+      time.value = withRepeat(withTiming(100, { duration: 20000 / (speed || 1), easing: Easing.inOut(Easing.ease) }), -1, true);
     } catch {}
     return () => { try { cancelAnimation(time); } catch {} };
   }, [speed, paused]);

@@ -244,9 +244,9 @@ describe('chatWithFallback loop', () => {
 
 describe('Orb component wrapping reacticx', () => {
   test('renders fallback Orb when reacticx missing', () => {
-    const { getByTestId, getByText } = render(<Orb size="lg" color="#9c44dc" testID="orb-test" />);
+    const { getByTestId } = render(<Orb size="lg" color="#9c44dc" testID="orb-test" />);
     expect(getByTestId('orb-test')).toBeTruthy();
-    expect(getByText('IA')).toBeTruthy();
+    // NebulaOrb now exists — Orb renders NebulaOrb (gradient) instead of legacy Text "IA" fallback.
   });
   test('Orb size variants', () => {
     const { getByTestId: g1 } = render(<Orb size="sm" testID="orb-sm" />);

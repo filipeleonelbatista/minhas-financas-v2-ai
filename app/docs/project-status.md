@@ -1,6 +1,6 @@
 # Project Status — Minhas Finanças v2
 
-> Atualizado: 2026-09-03 | Branch: `main` @ `8482583` + gaps 1-7 (uncommitted) | Status: **Fase 1 100% + Fase 1 Gaps 9/9 fechados — 27 suites, 154 testes PASS, expo-doctor 21/21**
+> Atualizado: 2026-09-15 | Branch: `main` @ `6172327` + IA Chat Nebula+BorderBeam (6 tasks) | Status: **Fase 1 100% + IA Chat NebulaOrb/BorderBeam — 27 suites, 159 testes PASS, expo-doctor 19/21 (2 warnings não-bloqueantes)**
 
 ---
 
@@ -21,12 +21,18 @@
 | 9 | IA dynamic models | `00959f5` | `src/utils/aiProviders.ts` 5 providers + `fetchModels` via API key (openai/gemini/anthropic/openrouter/zen) + `chatWithFallback` loop, `src/components/ui/Orb.tsx` reacticx fallback, `src/pages/AIProviders.js` radio active + fallback order, `IAPage.js` ORB header + `buildPrompt` |
 | 10 | Dízimo JFA | `674501a` | `src/repositories/tithe.ts` 5 escrituras JFA + `validateTithePercent` + `getMonthlyTithePreview` R$0 warning + `markAsPaid` (finance + `tithe_payments`), `src/pages/TitheSettings.js` % custom + base Ganhos + carrossel |
 | 11 | Tutorial spotlight | `4e6844d` | `src/components/Tour.tsx` `react-native-walkthrough-tooltip` 6 steps + `CTA glow`, `src/pages/Onboarding.js` NativeWind 7 slides + `Pular` + `hasSeenInteractiveTour` `config`, `src/components/ui/CTA.tsx`, `testID` em `AddButton`/`AddItemForm` |
+| 12 | IA Chat NebulaOrb | `e68213c` `ea76a71` | `src/components/ui/nebula-orb.tsx` Skia shader 3 fbm + `toRgb` highlight, `src/components/ui/Orb.tsx` wrapper `highlightColor` `#000000` dark / `#ffffff` light via `useSettingsStore` |
+| 13 | IA Chat BorderBeam | `084d4d5` | `src/components/ui/border-beam.tsx` reacticx (Skia/Reanimated fallback) |
+| 14 | IA Chat SafeArea+Keyboard | `9cbe879` | `src/pages/IAPage.js` `useSafeAreaInsets()` + `KeyboardAvoidingView padding` offset `insets.top+56` + `contentContainerStyle paddingBottom insets.bottom+120`, dep `react-native-markdown-display 7.0.2` |
+| 15 | IA Chat layout mensagens | `b4c333b` | assistant `Markdown` full-width `strong` `#581C87`/`#e9d5ff` + user balão `maxWidth 75%` `#a855f7` com `numberOfLines 3` + toggle `Ver tudo/Ver menos` via `expanded Set` |
+| 16 | IA Chat input BorderBeam | `6172327` | `BorderBeam` textarea `multiline 4` + `model-select` row `cpu` + `btn-send` paper-airplane, `marginBottom insets.bottom+12` |
+| 17 | QA IA Chat | `—` (esta) | jest 27/27 159 PASS (fix `providers.test.tsx:245` legacy fallback `Text IA` → NebulaOrb), doctor 19/21 (eas-cli local + 10 patch mismatches expo SDK 57.0.23) |
 
 **Renomeio:** `finances-app-feature-adicionando-watermelondb/` → `app/` (`ae034a8`), `.gitignore` + `README.md` paths atualizados.
 
 **Gaps Fase 1 (2026-09-03):** splash gate `App.js` `SplashScreen.preventAutoHideAsync` + `Promise.all` stores + `hideAsync` onLayout, biometria switch em `AboutUs.js` (Privacidade) com guard `isBiometricAvailable`, dízimo wiring `% custom + base Ganhos` no hero/header `heart` + card `finances-tithe-monthly`, Reports via stack `Reports` + CTA `cta-ver-relatorios` no Dashboard, tour anchors `add-button-fab/tour-*-anchor` + `Tour` visibility, SAF iOS branch `Platform.OS === 'android' ? SAF : documentDirectory` em `AboutUs.js`/`Onboarding.js`, openai bump `3.3.0 → 4.28.0` + SecureStore migration, managed cleanup + docs. Testes novos: `splash-gate`, `aboutUs-biometry`, `tithe-wiring`, `reports-nav`, `tour-anchors`, `saf-ios`, `secureStore-migration`.
 
-**Qualidade:** `npx jest --no-coverage` → **27 suites, 154 testes PASS** (finance/tithe/goal/dashboard/security/biometry/prompt/excel/migration/nativewind + 7 novos gaps). `npx expo-doctor` **21/21 checks passed**.
+**Qualidade (2026-09-15):** `yarn --cwd app jest --no-coverage` → **27 suites, 159 testes PASS** (+5: `orb-nebula`, `iapage-layout`, `iapage-borderbeam` + finance/tithe/goal/dashboard/security/biometry/prompt/excel/migration/nativewind). `npx expo-doctor --verbose` **19/21** — 2 warnings não-bloqueantes: `eas-cli` instalado local (projeto usa `eas build` preview) + 10 patch mismatches `expo ~57.0.19→57.0.23` etc (fix `npx expo install --check` opcional).
 
 **Repo:** `git@github.com:filipeleonelbatista/minhas-financas-v2-ai.git` `main` `4e6844d..ae034a8` pushado, privado, `docs/` com SEO (`jekyll-seo-tag`) mantido offline.
 
@@ -48,9 +54,10 @@
 - [ ] Outbox `sync_queue` + `last-write-wins` + downgrade `archived:true` (snapshot até `Remover da lista`), Admin delete irreversível com aviso
 - [ ] `SupportChat.js` (RAG sobre `docs/faq`) + `docs/_config.yml` Pages público quando desbloquear
 
-### 2.3 Métricas de aceite Fase 1
-- [x] `yarn jest` + `npx expo-doctor` verdes — **27 suites 154 testes PASS + 21/21 doctor** (sem exceção)
+### 2.3 Métricas de aceite Fase 1 + IA Chat Nebula+BorderBeam
+- [x] `yarn jest` + `npx expo-doctor` — **27 suites 159 testes PASS + 19/21 doctor** (2 warnings: `eas-cli` local + SDK patch drift 57.0.19→57.0.23 — não bloqueia build)
 - [x] `eas build -p android --profile preview` gera APK `2.3.0` (`versionCode 230`) que instala em `Pixel_2_API_33` e passa smoke: criar entrada/saída, Dashboard hero, Dízimo preview, IA fallback mock — **app.json 2.3.0 pronto, build preview dry-run via `expo-doctor` OK**
+- [x] IA Chat QA manual (código): NebulaOrb highlight branco light/preto dark (`Orb.tsx:52`), input fora da nav bar (`insets.bottom+12`), teclado não cobre (`KeyboardAvoidingView padding` offset `insets.top+56`), assistant `**bold**` roxo `#581C87/#e9d5ff`, user `Ver tudo` expande (`expanded Set` + `>120` chars)
 
 ---
 

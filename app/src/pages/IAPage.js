@@ -6,6 +6,7 @@ import LoadingDots from "react-native-loading-dots";
 import Header from "../components/Header";
 import Orb from "../components/ui/Orb";
 import { BorderBeam } from "../components/ui/border-beam";
+import { ShimmerWaveText } from "../components/ui/shimmer-wave-text";
 import { useIsKeyboardOpen } from "../hooks/useIsKeyboardOpen";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import Markdown from "react-native-markdown-display";
@@ -278,19 +279,21 @@ export default function IAPage() {
             </TouchableOpacity>
           }
         />
-        <View style={{ alignItems: "center", marginTop: 8, marginBottom: 8, gap: 8, paddingHorizontal: 16 }}>
-          <Orb size="lg" color="#9c44dc" testID="orb-header" />
-          <Text style={{ color: text, fontSize: 12, textAlign: "center" }}>
-            Ativo: <Text style={{ fontWeight: "700", color: "#9c44dc" }}>{activeLabel}</Text>{activeModel ? ` • ${activeModel}` : ""} {"\n"}
-            Fallback: <Text style={{ color: text }}>{fallbackLabel}</Text>
-          </Text>
-          <Pressable testID="btn-manage-providers" onPress={() => navigation.navigate("AIProviders")} style={({ pressed }) => ({ opacity: pressed ? 0.6 : 1 })}>
-            <Text style={{ color: "#9c44dc", fontSize: 12, textDecorationLine: "underline" }}>Mudar provider/modelo</Text>
-          </Pressable>
-          <View style={{ backgroundColor: isDark ? "#27272a" : "white", borderRadius: 12, paddingHorizontal: 12, paddingVertical: 6, borderWidth: 1, borderColor: isDark ? "#3f3f46" : "#e5e7eb", marginTop: 4 }}>
-            <Text style={{ fontSize: 11, color: subText, textAlign: "center" }}>Contexto: {filteredList.length} finanças • {FuelList.length} abastecimentos • {MarketList.length} estoque • {GoalsList.length} metas • {ListsList.length} listas</Text>
+        {data.length === 0 && !isLoading && (
+          <View style={{ alignItems: "center", marginTop: 8, marginBottom: 8, gap: 8, paddingHorizontal: 16 }}>
+            <Orb size="lg" color="#9c44dc" testID="orb-header" />
+            <Text style={{ color: text, fontSize: 12, textAlign: "center" }}>
+              Ativo: <Text style={{ fontWeight: "700", color: "#9c44dc" }}>{activeLabel}</Text>{activeModel ? ` • ${activeModel}` : ""} {"\n"}
+              Fallback: <Text style={{ color: text }}>{fallbackLabel}</Text>
+            </Text>
+            <Pressable testID="btn-manage-providers" onPress={() => navigation.navigate("AIProviders")} style={({ pressed }) => ({ opacity: pressed ? 0.6 : 1 })}>
+              <Text style={{ color: "#9c44dc", fontSize: 12, textDecorationLine: "underline" }}>Mudar provider/modelo</Text>
+            </Pressable>
+            <View style={{ backgroundColor: isDark ? "#27272a" : "white", borderRadius: 12, paddingHorizontal: 12, paddingVertical: 6, borderWidth: 1, borderColor: isDark ? "#3f3f46" : "#e5e7eb", marginTop: 4 }}>
+              <Text style={{ fontSize: 11, color: subText, textAlign: "center" }}>Contexto: {filteredList.length} finanças • {FuelList.length} abastecimentos • {MarketList.length} estoque • {GoalsList.length} metas • {ListsList.length} listas</Text>
+            </View>
           </View>
-        </View>
+        )}
         <ScrollView
           ref={scrollViewRef}
           style={{ flex: 1, width: "100%" }}
@@ -328,8 +331,11 @@ export default function IAPage() {
             <View style={{ alignItems: "center", justifyContent: "center", width: "100%", gap: 16, paddingHorizontal: 16 }}>
               {data.map((m, i) =>
                 m.type === "assistant" ? (
-                  <View key={i} style={{ width: "100%", paddingHorizontal: 16, paddingVertical: 12 }}>
-                    <Markdown style={{ body: { color: text, fontSize: 15, lineHeight: 22 }, strong: { fontWeight: "700", color: isDark ? "#e9d5ff" : "#581C87" } }}>{m.text}</Markdown>
+                  <View key={i} style={{ width: "100%", paddingHorizontal: 16, paddingVertical: 12, flexDirection: "row", gap: 8, alignItems: "flex-start" }}>
+                    <Orb size={32} color="#9c44dc" testID={`orb-${i}`} />
+                    <View style={{ flex: 1 }}>
+                      <Markdown style={{ body: { color: text, fontSize: 15, lineHeight: 22 }, strong: { fontWeight: "700", color: isDark ? "#e9d5ff" : "#581C87" } }}>{m.text}</Markdown>
+                    </View>
                   </View>
                 ) : (
                   <View key={i} style={{ alignSelf: "flex-end", maxWidth: "75%", backgroundColor: "#a855f7", borderRadius: 16, padding: 12, marginRight: 16, marginVertical: 8 }}>
@@ -343,13 +349,15 @@ export default function IAPage() {
                 )
               )}
               {isLoading && (
-                <View style={{ flexDirection: "row", gap: 16, marginVertical: 8, width: "100%", paddingHorizontal: 0, justifyContent: "flex-end", flexDirection: "row-reverse" }}>
-                  <View style={{ paddingHorizontal: 16, paddingVertical: 12, backgroundColor: bgCard, shadowColor: "#000", shadowOpacity: 0.1, elevation: 2, borderRadius: 12 }}>
-                    <LoadingDots dots={3} colors={[text, text, text]} size={8} bounceHeight={3} />
-                  </View>
-                  <View style={{ width: 40, height: 40, borderRadius: 999, alignItems: "center", justifyContent: "center", elevation: 2, backgroundColor: "#d8b4fe" }}>
-                    <MaterialCommunityIcons name="robot-outline" size={20} color={headerText} />
-                  </View>
+                <View style={{ flexDirection: "row", gap: 12, alignItems: "center", width: "100%", paddingHorizontal: 16, paddingVertical: 12 }}>
+                  <Orb size={32} color="#9c44dc" testID="orb-loading" />
+                  <ShimmerWaveText
+                    text="Gerando resposta..."
+                    textColor={isDark ? "#ffffff" : "#000000"}
+                    textStyle={{ fontSize: 14, fontWeight: "600" }}
+                    shimmerConfig={{ duration: 2200, width: 0.7, colors: ["transparent","rgba(156,68,220,0.25)","rgba(156,68,220,0.85)","rgba(233,213,255,1)","rgba(156,68,220,0.5)","transparent"] }}
+                    testID="shimmer-loading"
+                  />
                 </View>
               )}
             </View>
@@ -371,12 +379,6 @@ export default function IAPage() {
             </View>
           </View>
         </BorderBeam>
-        {isLoading && (
-          <View style={{ flexDirection: "row", gap: 8, paddingLeft: 16, marginBottom: 4 }}>
-            <LoadingDots dots={3} colors={[text, text, text]} size={8} bounceHeight={3} />
-            <Text style={{ color: text, fontSize: 12 }}>Estou digitando...</Text>
-          </View>
-        )}
         {error && <Text style={{ color: "#ef4444", fontSize: 12, marginHorizontal: 16, marginBottom: 4 }} testID="error-text"><Feather name="alert-circle" size={12} /> {error}</Text>}
       </View>
 

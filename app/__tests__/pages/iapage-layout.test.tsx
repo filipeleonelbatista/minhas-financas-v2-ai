@@ -13,8 +13,8 @@ describe('IAPage layout SafeArea + Keyboard + Markdown', () => {
     expect(src).toContain('react-native-markdown-display');
   });
 
-  test('KeyboardAvoidingView uses insets.top + 56', () => {
-    expect(src).toMatch(/keyboardVerticalOffset=\{insets\.top\s*\+\s*56\}/);
+  test('KeyboardAvoidingView uses insets.top (iOS only)', () => {
+    expect(src).toMatch(/keyboardVerticalOffset=\{Platform\.OS.*insets\.top/);
   });
 
   test('ScrollView contentContainerStyle uses insets.bottom + 120', () => {

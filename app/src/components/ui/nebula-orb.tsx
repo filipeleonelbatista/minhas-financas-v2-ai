@@ -21,11 +21,11 @@ export interface NebulaOrbProps {
 const DEFAULT_SIZE = 96;
 const DEFAULT_COLOR = '#9c44dc';
 const DEFAULT_HIGHLIGHT_COLOR = '#ffffff';
-const DEFAULT_SPEED = 1;
-const DEFAULT_TURBULENCE = 1.2;
-const DEFAULT_DETAIL = 1;
-const DEFAULT_CONTRAST = 1.2;
-const DEFAULT_EDGE_SOFTNESS = 0.08;
+const DEFAULT_SPEED = 0.55;
+const DEFAULT_TURBULENCE = 1.6;
+const DEFAULT_DETAIL = 1.15;
+const DEFAULT_CONTRAST = 1.05;
+const DEFAULT_EDGE_SOFTNESS = 0.12;
 const FALLBACK_FRAME_MS = 16;
 
 function toRgb<T extends string>(color: T): [number, number, number] {
@@ -124,7 +124,7 @@ export function NebulaOrb({
   const colorRgb = useMemo(() => toRgb(color), [color]);
   const highlightRgb = useMemo(() => toRgb(highlightColor), [highlightColor]);
 
-  // Reanimated time driver — hooks unconditionally, animation in effect (fixes freeze + strict warnings)
+  // Reanimated time driver — slower + smoother (exemplo doc usa 100000/speed, nós usamos 120000 para menos repetitivo)
   const time = useSharedValue(0);
   useEffect(() => {
     if (paused) {
@@ -133,7 +133,7 @@ export function NebulaOrb({
       return;
     }
     try {
-      time.value = withRepeat(withTiming(100, { duration: 8000 / (speed || 1), easing: Easing.linear }), -1, false);
+      time.value = withRepeat(withTiming(100, { duration: 120000 / (speed || 0.55), easing: Easing.linear }), -1, false);
     } catch {}
     return () => { try { cancelAnimation(time); } catch {} };
   }, [speed, paused]);

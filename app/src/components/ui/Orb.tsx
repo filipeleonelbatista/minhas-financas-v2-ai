@@ -52,7 +52,7 @@ export default function Orb({ size = 'lg', color = '#9c44dc', style, testID = 'o
   const highlight = colorModeState === 'dark' ? '#000000' : '#ffffff';
   if (NebulaOrb) {
     try {
-      return <NebulaOrb size={dim} color={color} highlightColor={highlight} speed={1} testID={testID} style={style} />;
+      return <NebulaOrb size={dim} color={color} highlightColor={highlight} speed={0.55} turbulence={1.6} detail={1.15} contrast={1.05} edgeSoftness={0.12} testID={testID} style={style} />;
     } catch {
       // fall through to fallback
     }

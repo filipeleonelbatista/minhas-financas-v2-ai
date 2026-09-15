@@ -1,5 +1,6 @@
 import React from 'react';
 import { View, Text, ViewStyle } from 'react-native';
+import { useSettingsStore } from '../../stores/settings';
 
 let LinearGradient: any = View;
 try {
@@ -13,14 +14,12 @@ try {
   );
 }
 
-// Try to load reacticx Orb, fallback to animated gradient sphere
-let RacticxOrb: any = null;
+let NebulaOrb: any = null;
 try {
   // eslint-disable-next-line global-require
-  const reacticx = require('reacticx');
-  RacticxOrb = reacticx.Orb ?? reacticx.default?.Orb ?? null;
+  NebulaOrb = require('./nebula-orb').NebulaOrb ?? require('./nebula-orb').default;
 } catch {
-  RacticxOrb = null;
+  NebulaOrb = null;
 }
 
 // Attempt reanimated for pulse if available
@@ -49,12 +48,11 @@ function resolveSize(size?: OrbProps['size']): number {
 
 export default function Orb({ size = 'lg', color = '#9c44dc', style, testID = 'orb', pulse = true }: OrbProps) {
   const dim = resolveSize(size);
-
-  if (RacticxOrb) {
-    // Wrap reacticx Orb — preserve its props API
-    // reacticx Orb expects size prop as 'sm'|'md'|'lg'|number and color
+  const colorModeState = useSettingsStore((s) => s.colorModeState);
+  const highlight = colorModeState === 'dark' ? '#000000' : '#ffffff';
+  if (NebulaOrb) {
     try {
-      return <RacticxOrb size={size} color={color} style={style} testID={testID} />;
+      return <NebulaOrb size={dim} color={color} highlightColor={highlight} speed={1} testID={testID} style={style} />;
     } catch {
       // fall through to fallback
     }

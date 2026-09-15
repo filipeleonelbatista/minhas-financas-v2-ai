@@ -55,6 +55,7 @@ export default function IAPage() {
   const [activeProvider, setActiveProvider] = useState(null);
   const [activeModel, setActiveModel] = useState(null);
   const [fallbackOrder, setFallbackOrder] = useState([]);
+  const [expanded, setExpanded] = useState(new Set());
 
   const loadProviderInfo = useCallback(async () => {
     try {
@@ -298,16 +299,22 @@ export default function IAPage() {
             </View>
           ) : (
             <View style={{ alignItems: "center", justifyContent: "center", width: "100%", gap: 16, paddingHorizontal: 16 }}>
-              {data.map((mensagem, index) => (
-                <View key={index} style={{ flexDirection: mensagem.type === "user" ? "row" : "row-reverse", gap: 16, marginVertical: 8, width: "100%", paddingHorizontal: 0, justifyContent: "flex-end" }}>
-                  <View style={{ width: "75%", paddingHorizontal: 16, paddingVertical: 8, backgroundColor: mensagem.type === "user" ? "#a855f7" : bgCard, shadowColor: "#000", shadowOpacity: 0.1, elevation: 2, borderRadius: 12 }}>
-                    <Text style={{ color: mensagem.type === "user" ? "white" : text }}>{mensagem.text}</Text>
+              {data.map((m, i) =>
+                m.type === "assistant" ? (
+                  <View key={i} style={{ width: "100%", paddingHorizontal: 16, paddingVertical: 12 }}>
+                    <Markdown style={{ body: { color: text, fontSize: 15, lineHeight: 22 }, strong: { fontWeight: "700", color: isDark ? "#e9d5ff" : "#581C87" } }}>{m.text}</Markdown>
                   </View>
-                  <View style={{ width: 40, height: 40, borderRadius: 999, alignItems: "center", justifyContent: "center", elevation: 2, backgroundColor: "#d8b4fe" }}>
-                    <MaterialCommunityIcons name={mensagem.type === "user" ? "account" : "robot-outline"} size={20} color={headerText} />
+                ) : (
+                  <View key={i} style={{ alignSelf: "flex-end", maxWidth: "75%", backgroundColor: "#a855f7", borderRadius: 16, padding: 12, marginRight: 16, marginVertical: 8 }}>
+                    <Text numberOfLines={expanded.has(i) ? undefined : 3} style={{ color: "white" }}>{m.text}</Text>
+                    {m.text.length > 120 && (
+                      <Pressable onPress={() => { const n = new Set(expanded); n.has(i) ? n.delete(i) : n.add(i); setExpanded(n); }}>
+                        <Text style={{ color: "rgba(255,255,255,0.9)", fontSize: 12, marginTop: 6, textDecorationLine: "underline" }}>{expanded.has(i) ? "Ver menos" : "Ver tudo"}</Text>
+                      </Pressable>
+                    )}
                   </View>
-                </View>
-              ))}
+                )
+              )}
               {isLoading && (
                 <View style={{ flexDirection: "row", gap: 16, marginVertical: 8, width: "100%", paddingHorizontal: 0, justifyContent: "flex-end", flexDirection: "row-reverse" }}>
                   <View style={{ paddingHorizontal: 16, paddingVertical: 12, backgroundColor: bgCard, shadowColor: "#000", shadowOpacity: 0.1, elevation: 2, borderRadius: 12 }}>

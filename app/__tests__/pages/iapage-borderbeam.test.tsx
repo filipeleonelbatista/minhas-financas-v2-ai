@@ -14,4 +14,21 @@ describe('BorderBeam input', () => {
     const { getByTestId } = render(<IAPage />);
     expect(getByTestId('input-ask')).toBeTruthy();
   });
+
+  test('BorderBeam wraps textarea and model select', () => {
+    const IAPage = require('../../src/pages/IAPage').default;
+    const { getByTestId, getByPlaceholderText } = render(<IAPage />);
+    expect(getByPlaceholderText('Digite sua pergunta aqui...')).toBeTruthy();
+    expect(getByTestId('border-beam')).toBeTruthy();
+    expect(getByTestId('model-select')).toBeTruthy();
+    expect(getByTestId('btn-send')).toBeTruthy();
+  });
+
+  test('textarea is multiline with 4 lines', () => {
+    const IAPage = require('../../src/pages/IAPage').default;
+    const { getByTestId } = render(<IAPage />);
+    const input = getByTestId('input-ask');
+    expect(input.props.multiline).toBe(true);
+    expect(input.props.numberOfLines).toBe(4);
+  });
 });

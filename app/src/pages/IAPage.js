@@ -5,6 +5,7 @@ import { useFocusEffect, useIsFocused, useNavigation } from "@react-navigation/n
 import LoadingDots from "react-native-loading-dots";
 import Header from "../components/Header";
 import Orb from "../components/ui/Orb";
+import { BorderBeam } from "../components/ui/border-beam";
 import { useIsKeyboardOpen } from "../hooks/useIsKeyboardOpen";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import Markdown from "react-native-markdown-display";
@@ -329,38 +330,28 @@ export default function IAPage() {
           )}
           <View style={{ width: "100%", height: 24 }} />
         </ScrollView>
-        <View style={{ backgroundColor: bg, shadowColor: "#000", shadowOpacity: 0.1, elevation: 4, gap: 4, position: "absolute", bottom: 0, width: "100%", paddingHorizontal: 16, paddingVertical: 12, paddingBottom: isKeyboardOpen ? 12 : 16 }}>
-          {isLoading && (
-            <View style={{ flexDirection: "row", gap: 8, paddingLeft: 8 }}>
-              <LoadingDots dots={3} colors={[text, text, text]} size={8} bounceHeight={3} />
-              <Text style={{ color: text, fontSize: 12 }}>Estou digitando...</Text>
+        <BorderBeam testID="border-beam" borderRadius={16} borderWidth={1} colors={["#9c44dc","#581C87","#9c44dc"]} duration={3} glow={6} style={{marginHorizontal:16, marginBottom: insets.bottom + 12}}>
+          <View style={{backgroundColor: isDark?'#27272a':'white', borderRadius:16, padding:12, gap:12}}>
+            <TextInput testID="input-ask" multiline numberOfLines={4} maxHeight={120} placeholder="Digite sua pergunta aqui..." value={inputText} onChangeText={setInputText} style={{color:text, minHeight:48, textAlignVertical:'top', maxHeight:120}} placeholderTextColor="#a1a1aa" editable={!isLoading} onSubmitEditing={() => { if (inputText.length > 0 && !isLoading) { setError(null); handleAskToAi(); } }} />
+            <View style={{flexDirection:'row', alignItems:'center', gap:12}}>
+              <Pressable testID="model-select" onPress={()=>navigation.navigate("AIProviders")} style={{flexDirection:'row', alignItems:'center', gap:6, backgroundColor: isDark?'#3f3f46':'#f3e8ff', paddingHorizontal:12, paddingVertical:8, borderRadius:20}}>
+                <Feather name="cpu" size={14} color="#9c44dc" />
+                <Text style={{color:text, fontSize:12, fontWeight:'600'}}>{activeLabel}{activeModel?` • ${activeModel}`:''} ▾</Text>
+              </Pressable>
+              <View style={{flex:1}}/>
+              <TouchableOpacity testID="btn-send" disabled={isLoading || !inputText} onPress={() => { if (inputText.length === 0) setError("Digite uma mensagem para continuar"); else { setError(null); handleAskToAi(); } }} style={{width:36,height:36,borderRadius:18, backgroundColor: (isLoading || !inputText)?'#d1d5db':'#9c44dc', alignItems:'center', justifyContent:'center', opacity: (isLoading || !inputText)?0.6:1}}>
+                {isLoading ? <ActivityIndicator color="white"/> : <Octicons name="paper-airplane" size={16} color="white"/>}
+              </TouchableOpacity>
             </View>
-          )}
-          <View style={{ flexDirection: "row", gap: 8 }}>
-            <TextInput
-              placeholder="Digite sua pergunta aqui..."
-              onChangeText={(t) => setInputText(t)}
-              value={inputText}
-              testID="input-ask"
-              style={{ flex: 1, borderWidth: 1, borderColor: "#d4d4d8", borderRadius: 12, paddingHorizontal: 12, paddingVertical: 10, color: text, backgroundColor: isDark ? "#27272a" : "white" }}
-              placeholderTextColor="#a1a1aa"
-              editable={!isLoading}
-              onSubmitEditing={() => { if (inputText.length > 0 && !isLoading) { setError(null); handleAskToAi(); } }}
-            />
-            <TouchableOpacity
-              testID="btn-send"
-              onPress={() => {
-                if (inputText.length === 0) setError("Digite uma mensagem para continuar");
-                else { setError(null); handleAskToAi(); }
-              }}
-              disabled={isLoading}
-              style={{ width: 48, backgroundColor: isLoading ? "#d1d5db" : "#9c44dc", alignItems: "center", justifyContent: "center", borderRadius: 12, opacity: isLoading ? 0.6 : 1 }}
-            >
-              {isLoading ? <ActivityIndicator color="white" /> : <Octicons name="paper-airplane" size={20} color="white" />}
-            </TouchableOpacity>
           </View>
-          {error && <Text style={{ color: "#ef4444", fontSize: 12 }} testID="error-text"><Feather name="alert-circle" size={12} /> {error}</Text>}
-        </View>
+        </BorderBeam>
+        {isLoading && (
+          <View style={{ flexDirection: "row", gap: 8, paddingLeft: 16, marginBottom: 4 }}>
+            <LoadingDots dots={3} colors={[text, text, text]} size={8} bounceHeight={3} />
+            <Text style={{ color: text, fontSize: 12 }}>Estou digitando...</Text>
+          </View>
+        )}
+        {error && <Text style={{ color: "#ef4444", fontSize: 12, marginHorizontal: 16, marginBottom: 4 }} testID="error-text"><Feather name="alert-circle" size={12} /> {error}</Text>}
       </View>
 
       <Modal visible={open} animationType="slide" onRequestClose={() => setOpen(false)} transparent>

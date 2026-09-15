@@ -161,15 +161,12 @@ export function NebulaOrb({
 
   if (skiaAvailable && shaderSource && SkiaCanvas && SkiaShader && SkiaFill) {
     try {
-      // Prefer derived uniforms when available, fallback to static if Reanimated hook unavailable
-      const uniforms: any = (() => {
-        try { return uniformsDerived.value; } catch { return { uResolution: [dim, dim], uTime: 0, uScale: detail * 2.2, uTurbulence: turbulence, uContrast: contrast, uColor: colorRgb, uHighlight: highlightRgb, uEdgeSoftness: edgeSoftness }; }
-      })();
+      // Pass derived value directly to Skia Shader for continuous animation (avoids reading .value during render)
       return (
         <View testID={testID} style={[{ width: dim, height: dim, borderRadius: dim / 2, overflow: 'hidden' }, style]}>
           <SkiaCanvas style={{ width: dim, height: dim }}>
             <SkiaFill>
-              <SkiaShader source={shaderSource} uniforms={uniforms} />
+              <SkiaShader source={shaderSource} uniforms={uniformsDerived} />
             </SkiaFill>
           </SkiaCanvas>
         </View>

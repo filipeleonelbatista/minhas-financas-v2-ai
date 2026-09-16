@@ -358,12 +358,13 @@ export default function IAPage() {
                 );
               })}
               {isLoading && (
-                <View style={{ flexDirection: "row", gap: 12, alignItems: "center", width: "100%", paddingHorizontal: 0, paddingVertical: 12 }}>
+                <View style={{ flexDirection: "row", gap: 4, alignItems: "center", width: "100%", paddingHorizontal: 0, paddingVertical: 12 }}>
                   <Orb size={32} color="#9c44dc" testID="orb-loading" />
                   <ShimmerWaveText
                     text="Pensando na sua solicitação..."
                     textColor={isDark ? "#ffffff" : "#000000"}
                     textStyle={{ fontSize: 13, fontWeight: "600" }}
+                    containerStyle={{ marginLeft: -24, marginTop: -10 }}
                     shimmerConfig={{ duration: 2600, width: 0.8, colors: ["transparent","rgba(156,68,220,0.25)","rgba(156,68,220,0.85)","rgba(233,213,255,1)","rgba(156,68,220,0.5)","transparent"] }}
                     floatConfig={{ distance: 6, scaleAmount: 0.15 }}
                     testID="shimmer-loading"

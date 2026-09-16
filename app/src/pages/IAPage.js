@@ -223,6 +223,7 @@ export default function IAPage() {
       const now = Date.now();
       setData((prev) => [...prev, { type: "user", text: userQ, ts: now, tokens: Math.ceil(userQ.length/4) }]);
       setInputText("");
+      setSelectedTool(null);
       setIsLoading(true);
       setError(null);
       const promptData = [{ type: "appContext", context: appContext }, { type: "question", question: userQ }, { type: "financesFocused", csv: financesList, rows: filteredList.slice(0, 50) }];
@@ -238,6 +239,7 @@ export default function IAPage() {
       const now = Date.now();
       setData((prev) => [...prev, { type: "user", text: userQ, ts: now, tokens: Math.ceil(userQ.length/4) }]);
       setInputText("");
+      setSelectedTool(null);
       setIsLoading(true);
       setError(null);
       const promptData = [{ type: "appContext", context: appContext }, { type: "fuelFocused", csv: fuelCostsList, rows: FuelList.slice(0, 30) }];
@@ -251,6 +253,7 @@ export default function IAPage() {
       const now = Date.now();
       setData((prev) => [...prev, { type: "user", text: userQ, ts: now, tokens: Math.ceil(userQ.length/4) }]);
       setInputText("");
+      setSelectedTool(null);
       setIsLoading(true);
       setError(null);
       const promptData = [{ type: "appContext", context: appContext }, { type: "marketFocused", csv: marketCostsList, rows: MarketList.slice(0, 50) }];
@@ -264,6 +267,7 @@ export default function IAPage() {
       const now = Date.now();
       setData((prev) => [...prev, { type: "user", text: userQ, ts: now, tokens: Math.ceil(userQ.length/4) }]);
       setInputText("");
+      setSelectedTool(null);
       setIsLoading(true);
       setError(null);
       const promptData = [{ type: "appContext", context: appContext }, { type: "conversation", messages: data.slice(-6) }];

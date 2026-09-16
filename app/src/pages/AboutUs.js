@@ -8,6 +8,7 @@ import {
   Linking,
   Platform,
   Switch,
+  Pressable,
   ToastAndroid,
   View,
   Text,
@@ -666,7 +667,7 @@ export default function AboutUs() {
           </View>
         </View>
         <View style={{gap:8, paddingHorizontal:16, marginTop:4}}>
-          <View style={{flexDirection:"row", justifyContent:"space-between", alignItems:"center", paddingVertical:8, paddingHorizontal:12, backgroundColor: isDark ? "#27272a" : "white", borderRadius:12, borderWidth:1, borderColor: isDark ? "#3f3f46" : "#e4e4e7", marginBottom:8}}>
+          <Pressable onPress={(e)=>handleToggleTheme(e)} style={{flexDirection:"row", justifyContent:"space-between", alignItems:"center", paddingVertical:8, paddingHorizontal:12, backgroundColor: isDark ? "#27272a" : "white", borderRadius:12, borderWidth:1, borderColor: isDark ? "#3f3f46" : "#e4e4e7", marginBottom:8}}>
             <Text style={{color:text, fontSize:15, fontWeight:"500", flex:1, marginRight:12}} numberOfLines={2}>Habilitar Tema Escuro</Text>
             <Switch
               trackColor={{
@@ -681,8 +682,9 @@ export default function AboutUs() {
               ios_backgroundColor={theme.colors.gray[600]}
               onValueChange={handleToggleTheme}
               value={colorMode === "dark"}
+              pointerEvents="none"
             />
-          </View>
+          </Pressable>
 
           <View style={{flexDirection:"row", justifyContent:"space-between", alignItems:"center", paddingVertical:8, paddingHorizontal:12, backgroundColor: isDark ? "#27272a" : "white", borderRadius:12, borderWidth:1, borderColor: isDark ? "#3f3f46" : "#e4e4e7", marginBottom:8}}>
             <Text style={{color:text, fontSize:15, fontWeight:"500", flex:1, marginRight:12}} numberOfLines={2}>Habilitar Inteligência artificial (Beta)</Text>

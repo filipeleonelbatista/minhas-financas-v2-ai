@@ -361,7 +361,7 @@ export default function IAPage() {
                 <View style={{ flexDirection: "row", gap: 12, alignItems: "center", width: "100%", paddingHorizontal: 0, paddingVertical: 12 }}>
                   <Orb size={32} color="#9c44dc" testID="orb-loading" />
                   <ShimmerWaveText
-                    text="Pensando melhores formas de ajudar com sua solicitação..."
+                    text="Pensando na sua solicitação..."
                     textColor={isDark ? "#ffffff" : "#000000"}
                     textStyle={{ fontSize: 13, fontWeight: "600" }}
                     shimmerConfig={{ duration: 2600, width: 0.8, colors: ["transparent","rgba(156,68,220,0.25)","rgba(156,68,220,0.85)","rgba(233,213,255,1)","rgba(156,68,220,0.5)","transparent"] }}

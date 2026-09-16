@@ -1,5 +1,6 @@
 {
-  "extends": ["expo"],
+  "extends": ["expo", "plugin:@typescript-eslint/recommended", "prettier"],
+  "parser": "@typescript-eslint/parser",
   "rules": {
     "no-console": "off",
     "no-unused-vars": "off"

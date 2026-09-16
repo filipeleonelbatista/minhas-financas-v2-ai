@@ -5,9 +5,11 @@
     "jsx": "react-jsx",
     "esModuleInterop": true,
     "skipLibCheck": true,
-    "strict": false
+    "strict": false,
+    "noImplicitAny": false,
+    "types": ["jest", "node"]
   },
   "extends": "expo/tsconfig.base",
-  "include": ["src/**/*.ts", "src/**/*.tsx", "src/db/**/*.ts"],
+  "include": ["src/**/*.ts", "src/**/*.tsx", "App.tsx", "nativewind-env.d.ts"],
   "exclude": ["node_modules", "src/**/*.js"]
 }

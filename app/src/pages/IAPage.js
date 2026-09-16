@@ -309,8 +309,8 @@ export default function IAPage() {
 
               <Pressable onPress={handleAskForFinancialTips} testID="btn-financial-tips" style={({ pressed }) => ({ backgroundColor: pressed ? "#e9d5ff" : bgCard, borderWidth: 1, borderColor: pressed ? "#9c44dc" : isDark ? "#3f3f46" : "#e5e7eb", shadowColor: "#9c44dc", shadowOpacity: pressed ? 0.2 : 0.08, elevation: 3, borderRadius: 12, width: "90%", paddingHorizontal: 16, paddingVertical: 12 })}>
                 <View style={{ flexDirection: "row", alignItems: "center", gap: 12 }}>
-                  <View style={{ width: 36, height: 36, borderRadius: 18, backgroundColor: "#9c44dc", alignItems: "center", justifyContent: "center" }}>
-                    <Feather name="dollar-sign" size={18} color="white" />
+                  <View style={{ width: 36, height: 36, borderRadius: 18, backgroundColor: isDark ? "#3f3f46" : "#f3e8ff", alignItems: "center", justifyContent: "center" }}>
+                    <Feather name="dollar-sign" size={18} color="#9c44dc" />
                   </View>
                   <Text style={{ color: text, fontWeight: "600", flex: 1, flexShrink: 1 }}>Analise meus gastos e sugira pontos onde eu posso melhorar.</Text>
                   <Feather name="chevron-right" size={16} color={subText} />
@@ -319,8 +319,8 @@ export default function IAPage() {
 
               <Pressable onPress={handleAskForFuelCostsTips} testID="btn-fuel-tips" style={({ pressed }) => ({ backgroundColor: pressed ? "#e9d5ff" : bgCard, borderWidth: 1, borderColor: pressed ? "#9c44dc" : isDark ? "#3f3f46" : "#e5e7eb", shadowColor: "#9c44dc", shadowOpacity: pressed ? 0.2 : 0.08, elevation: 3, borderRadius: 12, width: "90%", paddingHorizontal: 16, paddingVertical: 12 })}>
                 <View style={{ flexDirection: "row", alignItems: "center", gap: 12 }}>
-                  <View style={{ width: 36, height: 36, borderRadius: 18, backgroundColor: "#0ea5e9", alignItems: "center", justifyContent: "center" }}>
-                    <Feather name="droplet" size={18} color="white" />
+                  <View style={{ width: 36, height: 36, borderRadius: 18, backgroundColor: isDark ? "#3f3f46" : "#f3e8ff", alignItems: "center", justifyContent: "center" }}>
+                    <Feather name="droplet" size={18} color="#9c44dc" />
                   </View>
                   <Text style={{ color: text, fontWeight: "600", flex: 1, flexShrink: 1 }}>Analise como posso melhorar meus gastos com combustível.</Text>
                   <Feather name="chevron-right" size={16} color={subText} />
@@ -329,8 +329,8 @@ export default function IAPage() {
 
               <Pressable onPress={handleAskForMarketCostsTips} testID="btn-market-tips" style={({ pressed }) => ({ backgroundColor: pressed ? "#e9d5ff" : bgCard, borderWidth: 1, borderColor: pressed ? "#9c44dc" : isDark ? "#3f3f46" : "#e5e7eb", shadowColor: "#9c44dc", shadowOpacity: pressed ? 0.2 : 0.08, elevation: 3, borderRadius: 12, width: "90%", paddingHorizontal: 16, paddingVertical: 12 })}>
                 <View style={{ flexDirection: "row", alignItems: "center", gap: 12 }}>
-                  <View style={{ width: 36, height: 36, borderRadius: 18, backgroundColor: "#22c55e", alignItems: "center", justifyContent: "center" }}>
-                    <Feather name="shopping-cart" size={18} color="white" />
+                  <View style={{ width: 36, height: 36, borderRadius: 18, backgroundColor: isDark ? "#3f3f46" : "#f3e8ff", alignItems: "center", justifyContent: "center" }}>
+                    <Feather name="shopping-cart" size={18} color="#9c44dc" />
                   </View>
                   <Text style={{ color: text, fontWeight: "600", flex: 1, flexShrink: 1 }}>Analise meus gastos com mercado e sugira pontos onde eu posso melhorar a alimentação.</Text>
                   <Feather name="chevron-right" size={16} color={subText} />
@@ -386,21 +386,21 @@ export default function IAPage() {
           <SolidAlert variant="danger" message={String(error)} onClose={() => setError(null)} style={{ marginHorizontal: 16, marginBottom: 8 }} testID="error-alert" />
         )}
         <View style={{ position: 'absolute', left: 28, bottom: insets.bottom + 22, zIndex: 10 }}>
-          <MorphFab.Root direction="up" align="start" spacing={10} triggerColor={isDark?"#27272a":"white"} color={isDark?"#3f3f46":"white"} style={{}}>
+          <MorphFab.Root direction="up" align="start" spacing={10} triggerColor={"#9c44dc"} color={"#9c44dc"} style={{}}>
             <MorphFab.Trigger size={36} >
-              <Feather name="plus" size={16} color={isDark?"#e4e4e7":"#52525b"} />
+              <Feather name="plus" size={16} color="white" />
             </MorphFab.Trigger>
             <MorphFab.Item value="gastos" onSelect={()=>setInputText("Analise meus gastos e sugira pontos onde eu posso melhorar.")}>
-              <MorphFab.ItemIcon><Feather name="dollar-sign" size={14} color="#9c44dc" /></MorphFab.ItemIcon>
-              <MorphFab.ItemLabel><Text style={{ fontSize: 11, fontWeight: "600", color: isDark ? "#e4e4e7" : "#52525b" }}>Gastos</Text></MorphFab.ItemLabel>
+              <MorphFab.ItemIcon><Feather name="dollar-sign" size={14} color="white" /></MorphFab.ItemIcon>
+              <MorphFab.ItemLabel><Text style={{ fontSize: 11, fontWeight: "600", color: "white" }}>Gastos</Text></MorphFab.ItemLabel>
             </MorphFab.Item>
             <MorphFab.Item value="combustivel" onSelect={()=>setInputText("Analise como posso melhorar meus gastos com combustível.")}>
-              <MorphFab.ItemIcon><Feather name="droplet" size={14} color="#0ea5e9" /></MorphFab.ItemIcon>
-              <MorphFab.ItemLabel><Text style={{ fontSize: 11, fontWeight: "600", color: isDark ? "#e4e4e7" : "#52525b" }}>Combustível</Text></MorphFab.ItemLabel>
+              <MorphFab.ItemIcon><Feather name="droplet" size={14} color="white" /></MorphFab.ItemIcon>
+              <MorphFab.ItemLabel><Text style={{ fontSize: 11, fontWeight: "600", color: "white" }}>Combustível</Text></MorphFab.ItemLabel>
             </MorphFab.Item>
             <MorphFab.Item value="mercado" onSelect={()=>setInputText("Analise meus gastos com mercado e sugira pontos onde eu posso melhorar a alimentação.")}>
-              <MorphFab.ItemIcon><Feather name="shopping-cart" size={14} color="#22c55e" /></MorphFab.ItemIcon>
-              <MorphFab.ItemLabel><Text style={{ fontSize: 11, fontWeight: "600", color: isDark ? "#e4e4e7" : "#52525b" }}>Mercado</Text></MorphFab.ItemLabel>
+              <MorphFab.ItemIcon><Feather name="shopping-cart" size={14} color="white" /></MorphFab.ItemIcon>
+              <MorphFab.ItemLabel><Text style={{ fontSize: 11, fontWeight: "600", color: "white" }}>Mercado</Text></MorphFab.ItemLabel>
             </MorphFab.Item>
           </MorphFab.Root>
         </View>

@@ -254,7 +254,7 @@ export default function Runs() {
                 paddingHorizontal={0}
                 paddingVertical={0}
                 style={{ width: fabSize, height: fabSize, borderRadius: fabSize / 2 }}
-                theme={{ background: "#9333ea", backgroundSubtle: "#581C87", foreground: "#ffffff", highlight: "#f3e8ff", highlightSubtle: "#a78bfa" }}
+                theme={{ background: "#9c44dc", backgroundSubtle: "#581C87", foreground: "#ffffff", highlight: "#e9d5ff", highlightSubtle: "#c084fc" }}
               >
                 <View style={{ width: fabSize, height: fabSize, alignItems: 'center', justifyContent: 'center' }}>
                   <Ionicons name="car-sport-outline" size={28} color="white" />

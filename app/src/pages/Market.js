@@ -283,7 +283,7 @@ export default function Market() {
           const FabContent = <View style={{ width: fabSize, height: fabSize, alignItems: 'center', justifyContent: 'center' }}>{icon1}</View>;
           if (RadiantButton) return (
             <View style={{ position: "absolute", bottom: fabBottomSecond, right: 16, zIndex: 10 }} testID="market-add-list-button-wrapper">
-              <RadiantButton testID="market-add-list-button" onPress={onPress1} borderRadius={fabSize/2} borderWidth={2} duration={2800} showDots={false} showShimmer={true} showGlow={true} glowBlur={18} glowWidth={0.7} breathingEnabled={true} paddingHorizontal={0} paddingVertical={0} style={{ width: fabSize, height: fabSize, borderRadius: fabSize/2 }} theme={{ background: "#9333ea", backgroundSubtle: "#581C87", foreground: "#ffffff", highlight: "#f3e8ff", highlightSubtle: "#a78bfa" }}>
+              <RadiantButton testID="market-add-list-button" onPress={onPress1} borderRadius={fabSize/2} borderWidth={2} duration={2800} showDots={false} showShimmer={true} showGlow={true} glowBlur={18} glowWidth={0.7} breathingEnabled={true} paddingHorizontal={0} paddingVertical={0} style={{ width: fabSize, height: fabSize, borderRadius: fabSize/2 }} theme={{ background: "#9c44dc", backgroundSubtle: "#581C87", foreground: "#ffffff", highlight: "#e9d5ff", highlightSubtle: "#c084fc" }}>
                 <View style={{ width: fabSize, height: fabSize, alignItems: 'center', justifyContent: 'center' }}>{icon1}</View>
               </RadiantButton>
             </View>
@@ -299,7 +299,7 @@ export default function Market() {
           const FabContent = <View style={{ width: fabSize, height: fabSize, alignItems: 'center', justifyContent: 'center' }}>{icon2}</View>;
           if (RadiantButton) return (
             <View style={{ position: "absolute", bottom: fabBottom, right: 16, zIndex: 10 }} testID="market-lists-button-wrapper">
-              <RadiantButton testID="market-lists-button" onPress={onPress2} borderRadius={fabSize/2} borderWidth={2} duration={2800} showDots={false} showShimmer={true} showGlow={true} glowBlur={18} glowWidth={0.7} breathingEnabled={true} paddingHorizontal={0} paddingVertical={0} style={{ width: fabSize, height: fabSize, borderRadius: fabSize/2 }} theme={{ background: "#9333ea", backgroundSubtle: "#581C87", foreground: "#ffffff", highlight: "#f3e8ff", highlightSubtle: "#a78bfa" }}>
+              <RadiantButton testID="market-lists-button" onPress={onPress2} borderRadius={fabSize/2} borderWidth={2} duration={2800} showDots={false} showShimmer={true} showGlow={true} glowBlur={18} glowWidth={0.7} breathingEnabled={true} paddingHorizontal={0} paddingVertical={0} style={{ width: fabSize, height: fabSize, borderRadius: fabSize/2 }} theme={{ background: "#9c44dc", backgroundSubtle: "#581C87", foreground: "#ffffff", highlight: "#e9d5ff", highlightSubtle: "#c084fc" }}>
                 <View style={{ width: fabSize, height: fabSize, alignItems: 'center', justifyContent: 'center' }}>{icon2}</View>
               </RadiantButton>
             </View>

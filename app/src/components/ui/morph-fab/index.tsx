@@ -31,6 +31,7 @@ import Animated, {
   useSharedValue,
   withSpring,
 } from "react-native-reanimated";
+import type { DefaultStyle } from "react-native-reanimated/lib/typescript/hook/commonTypes";
 function createCompoundComponent<T extends React.ComponentType<any>, TCompound extends Record<string, unknown> = {}>(name: string, component: T, compound: TCompound = {} as TCompound): T & TCompound { (component as any).displayName = name; return Object.assign(component, compound) as T & TCompound; }
 
 import {
@@ -418,7 +419,7 @@ const MorphFabItem = memo<IMorphFabItem>(
               interpolate(pressed.value, [0, 1], [1, pressScale]),
           },
         ],
-      };
+      } as unknown as DefaultStyle;
     }, [geo, index, count, stagger, pressScale]);
 
     const handlePress = useCallback(

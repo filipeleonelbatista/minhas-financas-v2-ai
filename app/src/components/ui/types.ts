@@ -33,4 +33,18 @@ interface IRadiantButton {
   readonly glowBandWidth?: number;
 }
 
-export type { IRadiantButton, IAnimatedRadianButtonTheme };
+interface INebulaOrb {
+  readonly size?: number;
+  readonly color?: string;
+  readonly highlightColor?: string;
+  readonly speed?: number;
+  readonly turbulence?: number;
+  readonly detail?: number;
+  readonly contrast?: number;
+  readonly edgeSoftness?: number;
+  readonly paused?: boolean;
+  readonly style?: StyleProp<ViewStyle>;
+  readonly testID?: string;
+}
+
+export type { IRadiantButton, IAnimatedRadianButtonTheme, INebulaOrb };

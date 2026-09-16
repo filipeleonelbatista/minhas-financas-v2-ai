@@ -79,7 +79,7 @@ const AnimatedCharacter = memo<ISyncedAnimatedCharacter>(
       return {
         transform: [{ translateY }, { scale }],
       };
-    }, [floatConfig.distance, floatConfig.scaleAmount]);
+    }, [floatConfig.distance, floatConfig.scaleAmount]) as unknown as StyleProp<TextStyle>;
 
     return (
       <Animated.Text style={[style, { color: textColor }, animatedStyle]}>
@@ -296,7 +296,7 @@ export const ShimmerWaveText: React.FC<ShimmerWaveTextProps> =
           return {
             transform: [{ translateX }],
           };
-        }, [dimensions.width, mergedShimmerConfig.width]);
+        }, [dimensions.width, mergedShimmerConfig.width]) as unknown as StyleProp<ViewStyle>;
 
       const handleLayout = useCallback((event: LayoutChangeEvent): void => {
         const { width, height } = event.nativeEvent.layout;

@@ -351,7 +351,8 @@ export async function seedSeptember2026(): Promise<SeedResult> {
 }
 
 // Execução direta via `npx ts-node src/db/seed.ts` (fora do Expo)
-if (require.main === module) {
+// @ts-ignore - NodeRequire types available via @types/node with types: ["node"] in tsconfig
+if (typeof require !== 'undefined' && require.main === module) {
   seedDatabase()
     .then((r) => {
       console.log('Seed concluído:', {

@@ -386,9 +386,9 @@ export default function IAPage() {
           <SolidAlert variant="danger" message={String(error)} onClose={() => setError(null)} style={{ marginHorizontal: 16, marginBottom: 8 }} testID="error-alert" />
         )}
         <View style={{ position: 'absolute', left: 28, bottom: insets.bottom + 22, zIndex: 10 }}>
-          <MorphFab.Root direction="up" align="start" spacing={10} triggerColor={"#9c44dc"} color={"#9c44dc"} style={{}}>
-            <MorphFab.Trigger size={36} >
-              <Feather name="plus" size={16} color="white" />
+          <MorphFab.Root direction="up" align="start" spacing={16} gooStrength={8} triggerColor={"#9c44dc"} color={"#9c44dc"} style={{}}>
+            <MorphFab.Trigger size={48} >
+              <Feather name="plus" size={18} color="white" />
             </MorphFab.Trigger>
             <MorphFab.Item value="gastos" onSelect={()=>setInputText("Analise meus gastos e sugira pontos onde eu posso melhorar.")}>
               <MorphFab.ItemIcon><Feather name="dollar-sign" size={14} color="white" /></MorphFab.ItemIcon>

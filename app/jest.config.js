@@ -8,5 +8,6 @@ module.exports = {
     "\\.(css|png|jpg|jpeg|gif|webp|svg)$": "<rootDir>/__mocks__/cssMock.js",
     "^@expo/vector-icons$": "<rootDir>/__mocks__/vectorIconsMock.js",
     "^@expo/vector-icons/(.*)$": "<rootDir>/__mocks__/vectorIconsMock.js",
+    "^.*/components/ui/shimmer-wave-text.*$": "<rootDir>/__mocks__/shimmerMock.js",
   },
 };

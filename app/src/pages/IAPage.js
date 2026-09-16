@@ -6,7 +6,7 @@ import LoadingDots from "react-native-loading-dots";
 import Header from "../components/Header";
 import Orb from "../components/ui/Orb";
 import { BorderBeam } from "../components/ui/border-beam";
-import { ShimmerWaveText } from "../components/ui/shimmer-wave-text";
+import { ShimmerWaveText } from "../components/ui/shimmer-wave-text/index";
 import { useIsKeyboardOpen } from "../hooks/useIsKeyboardOpen";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import Markdown from "react-native-markdown-display";
@@ -112,7 +112,7 @@ export default function IAPage() {
         const userQ = `Continue a conversa considerando o histórico anterior.`;
         const promptData = [{ type: "appContext", context: appContext }, { type: "conversation", messages: data }];
         const textRes = await sendWithFallback(promptData, userQ);
-        if (!cancelled) setData((prevD) => [...prevD, { type: "assistant", text: `🔄 Modelo alterado para ${activeLabel}${activeModel?` • ${activeModel}`:''}\n\n${textRes}` }]);
+        if (!cancelled) setData((prevD) => [...prevD, { type: "assistant", text: `🔄 Modelo alterado para ${activeLabel}${activeModel?` • ${activeModel}`:''}\n\n${textRes}`, ts: Date.now(), tokens: Math.ceil(textRes.length/4) }]);
       } catch (e) {
         if (!cancelled) setError(openaiErrorHandler(e));
       } finally { if (!cancelled) setIsLoading(false); }
@@ -217,13 +217,14 @@ export default function IAPage() {
   const handleAskForFinancialTips = async () => {
     try {
       const userQ = "De acordo com os gastos que tive esse mês, quais gastos poderiam ser melhorados?";
-      setData((prev) => [...prev, { type: "user", text: userQ }]);
+      const now = Date.now();
+      setData((prev) => [...prev, { type: "user", text: userQ, ts: now, tokens: Math.ceil(userQ.length/4) }]);
       setInputText("");
       setIsLoading(true);
       setError(null);
       const promptData = [{ type: "appContext", context: appContext }, { type: "question", question: userQ }, { type: "financesFocused", csv: financesList, rows: filteredList.slice(0, 50) }];
       const textRes = await sendWithFallback(promptData, userQ + " Limite-se a 1000 caracteres.");
-      setData((prev) => [...prev, { type: "assistant", text: textRes }]);
+      setData((prev) => [...prev, { type: "assistant", text: textRes, ts: Date.now(), tokens: Math.ceil(textRes.length/4) }]);
     } catch (error) {
       setError(openaiErrorHandler(error));
     } finally { setIsLoading(false); }
@@ -231,37 +232,40 @@ export default function IAPage() {
   const handleAskForFuelCostsTips = async () => {
     try {
       const userQ = "De acordo com os abastecimentos que tive esse mês, o que posso melhorar para evitar gastos?";
-      setData((prev) => [...prev, { type: "user", text: userQ }]);
+      const now = Date.now();
+      setData((prev) => [...prev, { type: "user", text: userQ, ts: now, tokens: Math.ceil(userQ.length/4) }]);
       setInputText("");
       setIsLoading(true);
       setError(null);
       const promptData = [{ type: "appContext", context: appContext }, { type: "fuelFocused", csv: fuelCostsList, rows: FuelList.slice(0, 30) }];
       const textRes = await sendWithFallback(promptData, userQ + " Limite-se a 1000 caracteres.");
-      setData((prev) => [...prev, { type: "assistant", text: textRes }]);
+      setData((prev) => [...prev, { type: "assistant", text: textRes, ts: Date.now(), tokens: Math.ceil(textRes.length/4) }]);
     } catch (error) { setError(openaiErrorHandler(error)); } finally { setIsLoading(false); }
   };
   const handleAskForMarketCostsTips = async () => {
     try {
       const userQ = "De acordo com as compras de mercado que tive esse mês, quais gastos poderiam ser melhorados?";
-      setData((prev) => [...prev, { type: "user", text: userQ }]);
+      const now = Date.now();
+      setData((prev) => [...prev, { type: "user", text: userQ, ts: now, tokens: Math.ceil(userQ.length/4) }]);
       setInputText("");
       setIsLoading(true);
       setError(null);
       const promptData = [{ type: "appContext", context: appContext }, { type: "marketFocused", csv: marketCostsList, rows: MarketList.slice(0, 50) }];
       const textRes = await sendWithFallback(promptData, userQ + " Limite-se a 1000 caracteres.");
-      setData((prev) => [...prev, { type: "assistant", text: textRes }]);
+      setData((prev) => [...prev, { type: "assistant", text: textRes, ts: Date.now(), tokens: Math.ceil(textRes.length/4) }]);
     } catch (error) { setError(openaiErrorHandler(error)); } finally { setIsLoading(false); }
   };
   const handleAskToAi = async () => {
     try {
       const userQ = inputText;
-      setData((prev) => [...prev, { type: "user", text: userQ }]);
+      const now = Date.now();
+      setData((prev) => [...prev, { type: "user", text: userQ, ts: now, tokens: Math.ceil(userQ.length/4) }]);
       setInputText("");
       setIsLoading(true);
       setError(null);
       const promptData = [{ type: "appContext", context: appContext }, { type: "conversation", messages: data.slice(-6) }];
       const textRes = await sendWithFallback(promptData, userQ);
-      setData((prev) => [...prev, { type: "assistant", text: textRes }]);
+      setData((prev) => [...prev, { type: "assistant", text: textRes, ts: Date.now(), tokens: Math.ceil(textRes.length/4) }]);
     } catch (error) { setError(openaiErrorHandler(error)); } finally { setIsLoading(false); }
   };
 
@@ -330,33 +334,38 @@ export default function IAPage() {
             </View>
           ) : (
             <View style={{ alignItems: "center", justifyContent: "center", width: "100%", gap: 16, paddingHorizontal: 16 }}>
-              {data.map((m, i) =>
-                m.type === "assistant" ? (
+              {data.map((m, i) => {
+                const ts = m.ts ? new Date(m.ts).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }) : '';
+                const tokens = m.tokens ?? Math.ceil(String(m.text).length / 4);
+                return m.type === "assistant" ? (
                   <View key={i} style={{ width: "100%", paddingHorizontal: 0, paddingVertical: 12, flexDirection: "row", gap: 8, alignItems: "flex-start" }}>
                     <Orb size={32} color="#9c44dc" testID={`orb-${i}`} />
                     <View style={{ flex: 1 }}>
                       <Markdown style={{ body: { color: text, fontSize: 15, lineHeight: 22 }, strong: { fontWeight: "700", color: isDark ? "#e9d5ff" : "#581C87" } }}>{m.text}</Markdown>
+                      <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginTop: 8 }}>
+                        <Text style={{ color: subText, fontSize: 11 }}>{ts} • {tokens} tokens</Text>
+                      </View>
+                      <View style={{ height: 1, backgroundColor: isDark ? "#3f3f46" : "#e5e7eb", marginTop: 8 }} />
                     </View>
                   </View>
                 ) : (
                   <View key={i} style={{ alignSelf: "flex-end", maxWidth: "75%", backgroundColor: "#a855f7", borderRadius: 16, padding: 12, marginVertical: 8, marginRight: 0 }}>
-                    <Text numberOfLines={expanded.has(i) ? undefined : 3} style={{ color: "white" }}>{m.text}</Text>
-                    {m.text.length > 120 && (
-                      <Pressable onPress={() => { const n = new Set(expanded); n.has(i) ? n.delete(i) : n.add(i); setExpanded(n); }}>
-                        <Text style={{ color: "rgba(255,255,255,0.9)", fontSize: 12, marginTop: 6, textDecorationLine: "underline" }}>{expanded.has(i) ? "Ver menos" : "Ver tudo"}</Text>
-                      </Pressable>
-                    )}
+                    <Text style={{ color: "white" }}>{m.text}</Text>
+                    <View style={{ flexDirection: "row", justifyContent: "flex-end", marginTop: 6 }}>
+                      <Text style={{ color: "rgba(255,255,255,0.8)", fontSize: 10 }}>{ts} • {tokens} tokens</Text>
+                    </View>
                   </View>
-                )
-              )}
+                );
+              })}
               {isLoading && (
                 <View style={{ flexDirection: "row", gap: 12, alignItems: "center", width: "100%", paddingHorizontal: 0, paddingVertical: 12 }}>
                   <Orb size={32} color="#9c44dc" testID="orb-loading" />
                   <ShimmerWaveText
-                    text="Gerando resposta..."
+                    text="Pensando melhores formas de ajudar com sua solicitação..."
                     textColor={isDark ? "#ffffff" : "#000000"}
-                    textStyle={{ fontSize: 14, fontWeight: "600" }}
-                    shimmerConfig={{ duration: 900, width: 0.7, colors: ["transparent","rgba(156,68,220,0.25)","rgba(156,68,220,0.85)","rgba(233,213,255,1)","rgba(156,68,220,0.5)","transparent"] }}
+                    textStyle={{ fontSize: 13, fontWeight: "600" }}
+                    shimmerConfig={{ duration: 2600, width: 0.8, colors: ["transparent","rgba(156,68,220,0.25)","rgba(156,68,220,0.85)","rgba(233,213,255,1)","rgba(156,68,220,0.5)","transparent"] }}
+                    floatConfig={{ distance: 6, scaleAmount: 0.15 }}
                     testID="shimmer-loading"
                   />
                 </View>

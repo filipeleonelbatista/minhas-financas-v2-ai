@@ -40,21 +40,21 @@ describe('IAPage chat layout mensagens (Task 5)', () => {
     expect(src2).toMatch(/#581C87|#e9d5ff/);
   });
 
-  test('user balloon collapsed with Ver tudo toggle', () => {
-    expect(src2).toContain('Ver tudo');
-    expect(src2).toContain('Ver menos');
+  test('user balloon without limit (sem Ver tudo)', () => {
     expect(src2).toMatch(/maxWidth:\s*["']75%["']/);
-    expect(src2).toMatch(/numberOfLines/);
-    expect(src2).toMatch(/expanded\.has/);
-  });
-
-  test('expanded is Set state', () => {
-    expect(src2).toMatch(/useState\(new Set\(\)\)/);
-    expect(src2).toContain('setExpanded');
-  });
-
-  test('user balloon bg #a855f7 and toggle length >120', () => {
     expect(src2).toContain('#a855f7');
-    expect(src2).toMatch(/m\.text\.length\s*>\s*120/);
+    expect(src2).not.toMatch(/numberOfLines=\{expanded/);
+    expect(src2).not.toContain('Ver tudo');
+  });
+
+  test('mensagem exibe hora e tokens com divider', () => {
+    expect(src2).toMatch(/ts.*tokens|tokens.*ts/);
+    expect(src2).toMatch(/height:\s*1.*backgroundColor/);
+    expect(src2).toMatch(/toLocaleTimeString/);
+  });
+
+  test('shimmer soft com texto Pensando', () => {
+    expect(src2).toContain('Pensando melhores formas');
+    expect(src2).toMatch(/duration:\s*2600/);
   });
 });

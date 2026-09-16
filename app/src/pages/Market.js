@@ -24,16 +24,8 @@ import { Sheet, useSheetRef } from "../components/nativewindui/Sheet";
 import { BottomSheetScrollView } from "@gorhom/bottom-sheet";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-let RadiantButton = null;
-try {
-  RadiantButton = require("../components/ui").RadiantButton ?? require("../components/ui/index").RadiantButton ?? null;
-} catch {
-  try { RadiantButton = require("reacticx").RadiantButton ?? null; } catch {}
-}
-let ChromaRing = null;
-try {
-  ChromaRing = require("../components/ui/ChromaRing").ChromaRing ?? require("reacticx").ChromaRing ?? null;
-} catch {}
+let BorderBeam: any = null;
+try { BorderBeam = require("../components/ui/border-beam").BorderBeam || require("../components/ui/border-beam/index").BorderBeam || require("../components/ui/border-beam/index").default || null; } catch {}
 
 const PURPLE_600 = "#9c44dc";
 
@@ -280,34 +272,22 @@ export default function Market() {
         const onPress1 = () => handleAddItensOnBuyList(() => navigation.navigate("Lists"));
         const onPress2 = () => navigation.navigate("Lists");
         const Fab1 = (() => {
-          const FabContent = <View style={{ width: fabSize, height: fabSize, alignItems: 'center', justifyContent: 'center' }}>{icon1}</View>;
-          if (RadiantButton) return (
+          if (BorderBeam) return (
             <View style={{ position: "absolute", bottom: fabBottomSecond, right: 16, zIndex: 10 }} testID="market-add-list-button-wrapper">
-              <RadiantButton testID="market-add-list-button" onPress={onPress1} borderRadius={fabSize/2} borderWidth={2} duration={2800} showDots={false} showShimmer={true} showGlow={true} glowBlur={18} glowWidth={0.7} breathingEnabled={true} paddingHorizontal={0} paddingVertical={0} style={{ width: fabSize, height: fabSize, borderRadius: fabSize/2 }} theme={{ background: "#9c44dc", backgroundSubtle: "#581C87", foreground: "#ffffff", highlight: "#e9d5ff", highlightSubtle: "#c084fc" }}>
-                <View style={{ width: fabSize, height: fabSize, alignItems: 'center', justifyContent: 'center' }}>{icon1}</View>
-              </RadiantButton>
+              <BorderBeam borderRadius={fabSize/2} borderWidth={2} colors={["#9c44dc","#581C87","#9c44dc"]} duration={3} glow={6} style={{ width: fabSize, height: fabSize, borderRadius: fabSize/2 }}>
+                <TouchableOpacity testID="market-add-list-button" onPress={onPress1} style={{ width: fabSize, height: fabSize, borderRadius: fabSize/2, backgroundColor: PURPLE_600, alignItems: "center", justifyContent: "center" }}>{icon1}</TouchableOpacity>
+              </BorderBeam>
             </View>
-          );
-          if (ChromaRing) return (
-            <Pressable testID="market-add-list-button" onPress={onPress1} style={{ position: "absolute", bottom: fabBottomSecond, right: 16, zIndex: 10 }}>
-              <ChromaRing width={fabSize} height={fabSize} borderWidth={2} speed={1.0} base="#581C87" glow={PURPLE_600} background={PURPLE_600} style={{ width: fabSize, height: fabSize, borderRadius: fabSize/2 }}>{FabContent}</ChromaRing>
-            </Pressable>
           );
           return <TouchableOpacity testID="market-add-list-button" onPress={onPress1} style={{ position: "absolute", bottom: fabBottomSecond, right: 16, width: 56, height: 56, backgroundColor: PURPLE_600, borderRadius: 28, alignItems: "center", justifyContent: "center", elevation: 6, zIndex: 10 }}>{icon1}</TouchableOpacity>;
         })();
         const Fab2 = (() => {
-          const FabContent = <View style={{ width: fabSize, height: fabSize, alignItems: 'center', justifyContent: 'center' }}>{icon2}</View>;
-          if (RadiantButton) return (
+          if (BorderBeam) return (
             <View style={{ position: "absolute", bottom: fabBottom, right: 16, zIndex: 10 }} testID="market-lists-button-wrapper">
-              <RadiantButton testID="market-lists-button" onPress={onPress2} borderRadius={fabSize/2} borderWidth={2} duration={2800} showDots={false} showShimmer={true} showGlow={true} glowBlur={18} glowWidth={0.7} breathingEnabled={true} paddingHorizontal={0} paddingVertical={0} style={{ width: fabSize, height: fabSize, borderRadius: fabSize/2 }} theme={{ background: "#9c44dc", backgroundSubtle: "#581C87", foreground: "#ffffff", highlight: "#e9d5ff", highlightSubtle: "#c084fc" }}>
-                <View style={{ width: fabSize, height: fabSize, alignItems: 'center', justifyContent: 'center' }}>{icon2}</View>
-              </RadiantButton>
+              <BorderBeam borderRadius={fabSize/2} borderWidth={2} colors={["#9c44dc","#581C87","#9c44dc"]} duration={3} glow={6} style={{ width: fabSize, height: fabSize, borderRadius: fabSize/2 }}>
+                <TouchableOpacity testID="market-lists-button" onPress={onPress2} style={{ width: fabSize, height: fabSize, borderRadius: fabSize/2, backgroundColor: PURPLE_600, alignItems: "center", justifyContent: "center" }}>{icon2}</TouchableOpacity>
+              </BorderBeam>
             </View>
-          );
-          if (ChromaRing) return (
-            <Pressable testID="market-lists-button" onPress={onPress2} style={{ position: "absolute", bottom: fabBottom, right: 16, zIndex: 10 }}>
-              <ChromaRing width={fabSize} height={fabSize} borderWidth={2} speed={1.0} base="#581C87" glow={PURPLE_600} background={PURPLE_600} style={{ width: fabSize, height: fabSize, borderRadius: fabSize/2 }}>{FabContent}</ChromaRing>
-            </Pressable>
           );
           return <TouchableOpacity testID="market-lists-button" onPress={onPress2} style={{ position: "absolute", bottom: fabBottom, right: 16, width: 56, height: 56, backgroundColor: PURPLE_600, borderRadius: 28, alignItems: "center", justifyContent: "center", elevation: 6, zIndex: 10 }}>{icon2}</TouchableOpacity>;
         })();

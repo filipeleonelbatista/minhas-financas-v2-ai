@@ -12,10 +12,8 @@ import { goalRepo } from "../repositories/goal";
 import { runRepo } from "../repositories/run";
 import { marketRepo } from "../repositories/market";
 import { useSettingsStore } from "../stores/settings";
-let RadiantButton = null;
-try { RadiantButton = require("../components/ui").RadiantButton || require("../components/ui/index").RadiantButton || null; } catch { try { RadiantButton = require("reacticx").RadiantButton || null; } catch {} }
-let ChromaRing = null;
-try { ChromaRing = require("../components/ui/ChromaRing").ChromaRing || null; } catch { try { ChromaRing = require("reacticx").ChromaRing || null; } catch {} }
+let BorderBeam: any = null;
+try { BorderBeam = require("../components/ui/border-beam").BorderBeam || require("../components/ui/border-beam/index").BorderBeam || require("../components/ui/border-beam/index").default || null; } catch {}
 
 // Charts fallback (jest without native svg may fail)
 let PieChartComp = null;
@@ -1026,17 +1024,13 @@ export default function Dashboard() {
       {(() => {
         const fabSize = 56;
         const onPress = () => navigation.navigate("IAPage");
-        const FabContent = <View style={{ width: fabSize, height: fabSize, alignItems: 'center', justifyContent: 'center' }}><Feather name="cpu" size={24} color="white" /></View>;
-        if (RadiantButton) return (
+        if (BorderBeam) return (
           <View style={{ position: "absolute", bottom: tabBarHeight + 16, right: 16, zIndex: 10 }} testID="dashboard-ia-fab-wrapper">
-            <RadiantButton testID="dashboard-ia-fab" onPress={onPress} borderRadius={fabSize/2} borderWidth={2} duration={2800} showDots={false} showShimmer={true} showGlow={true} glowBlur={18} glowWidth={0.7} breathingEnabled={true} paddingHorizontal={0} paddingVertical={0} style={{ width: fabSize, height: fabSize, borderRadius: fabSize/2 }} theme={{ background: PURPLE_600, backgroundSubtle: "#581C87", foreground: "#ffffff", highlight: "#e9d5ff", highlightSubtle: "#c084fc" }}>
-              {FabContent}
-            </RadiantButton>
-          </View>
-        );
-        if (ChromaRing) return (
-          <View style={{ position: "absolute", bottom: tabBarHeight + 16, right: 16, zIndex: 10 }} testID="dashboard-ia-fab-wrapper">
-            <ChromaRing width={fabSize} height={fabSize} borderWidth={2} speed={1.0} base="#581C87" glow={PURPLE_600} background={PURPLE_600} style={{ width: fabSize, height: fabSize, borderRadius: fabSize/2 }}>{FabContent}</ChromaRing>
+            <BorderBeam borderRadius={fabSize/2} borderWidth={2} colors={["#9c44dc","#581C87","#9c44dc"]} duration={3} glow={6} style={{ width: fabSize, height: fabSize, borderRadius: fabSize/2 }}>
+              <TouchableOpacity testID="dashboard-ia-fab" onPress={onPress} style={{ width: fabSize, height: fabSize, borderRadius: fabSize/2, backgroundColor: PURPLE_600, alignItems: "center", justifyContent: "center" }}>
+                <Feather name="cpu" size={24} color="white" />
+              </TouchableOpacity>
+            </BorderBeam>
           </View>
         );
         return (

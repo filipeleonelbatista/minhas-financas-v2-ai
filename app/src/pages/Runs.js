@@ -24,16 +24,8 @@ import { Sheet, useSheetRef } from "../components/nativewindui/Sheet";
 import { BottomSheetScrollView } from "@gorhom/bottom-sheet";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-let RadiantButton = null;
-try {
-  RadiantButton = require("../components/ui").RadiantButton ?? require("../components/ui/index").RadiantButton ?? null;
-} catch {
-  try { RadiantButton = require("reacticx").RadiantButton ?? null; } catch {}
-}
-let ChromaRing = null;
-try {
-  ChromaRing = require("../components/ui/ChromaRing").ChromaRing ?? require("reacticx").ChromaRing ?? null;
-} catch {}
+let BorderBeam: any = null;
+try { BorderBeam = require("../components/ui/border-beam").BorderBeam || require("../components/ui/border-beam/index").BorderBeam || require("../components/ui/border-beam/index").default || null; } catch {}
 
 const PURPLE_600 = "#9c44dc";
 
@@ -230,46 +222,16 @@ export default function Runs() {
       {(() => {
         const fabSize = 64;
         const fabBottom = tabBarHeight + 16;
-        const FabContent = (
-          <View style={{ width: fabSize, height: fabSize, alignItems: 'center', justifyContent: 'center' }}>
-            <Ionicons name="car-sport-outline" size={28} color="white" />
-          </View>
-        );
         const onPressVehicle = () => { setSelectedSheetOpen("veicle"); onOpen(); };
-        if (RadiantButton) {
+        if (BorderBeam) {
           return (
             <View style={{ position: "absolute", bottom: fabBottom, right: 16, zIndex: 10 }} testID="vehicle-info-button-wrapper">
-              <RadiantButton
-                testID="vehicle-info-button"
-                onPress={onPressVehicle}
-                borderRadius={fabSize / 2}
-                borderWidth={2}
-                duration={2800}
-                showDots={false}
-                showShimmer={true}
-                showGlow={true}
-                glowBlur={18}
-                glowWidth={0.7}
-                breathingEnabled={true}
-                paddingHorizontal={0}
-                paddingVertical={0}
-                style={{ width: fabSize, height: fabSize, borderRadius: fabSize / 2 }}
-                theme={{ background: "#9c44dc", backgroundSubtle: "#581C87", foreground: "#ffffff", highlight: "#e9d5ff", highlightSubtle: "#c084fc" }}
-              >
-                <View style={{ width: fabSize, height: fabSize, alignItems: 'center', justifyContent: 'center' }}>
+              <BorderBeam borderRadius={fabSize/2} borderWidth={2} colors={["#9c44dc","#581C87","#9c44dc"]} duration={3} glow={6} style={{ width: fabSize, height: fabSize, borderRadius: fabSize/2 }}>
+                <TouchableOpacity testID="vehicle-info-button" onPress={onPressVehicle} style={{ width: fabSize, height: fabSize, borderRadius: fabSize/2, backgroundColor: PURPLE_600, alignItems: "center", justifyContent: "center" }}>
                   <Ionicons name="car-sport-outline" size={28} color="white" />
-                </View>
-              </RadiantButton>
+                </TouchableOpacity>
+              </BorderBeam>
             </View>
-          );
-        }
-        if (ChromaRing) {
-          return (
-            <Pressable testID="vehicle-info-button" accessibilityLabel="Informações do veículo" onPress={onPressVehicle} style={{ position: "absolute", bottom: fabBottom, right: 16, zIndex: 10, marginTop: -24 }}>
-              <ChromaRing width={fabSize} height={fabSize} borderWidth={2} speed={1.0} base="#581C87" glow={PURPLE_600} background={PURPLE_600} style={{ width: fabSize, height: fabSize, borderRadius: fabSize / 2 }}>
-                {FabContent}
-              </ChromaRing>
-            </Pressable>
           );
         }
         return (

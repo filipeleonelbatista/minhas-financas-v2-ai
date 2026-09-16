@@ -15,25 +15,14 @@ import AddListForm from "./AddListForm";
 import AddShoppingCartItem from "./AddShoppingCartItem";
 import ErrorSheet from "./ErrorSheet";
 
-let RadiantButton: any = null;
+let BorderBeam: any = null;
 try {
   // eslint-disable-next-line global-require
-  RadiantButton = require('./ui').RadiantButton ?? require('./ui/index').RadiantButton ?? require('./ui/index').default ?? null;
+  BorderBeam = require('./ui/border-beam').BorderBeam ?? require('./ui/border-beam/index').BorderBeam ?? require('./ui/border-beam/index').default ?? null;
 } catch {
   try {
     // eslint-disable-next-line global-require
-    RadiantButton = require('./ui/index.tsx').RadiantButton ?? null;
-  } catch {}
-}
-// Fallback keep ChromaRing for legacy if RadiantButton unavailable
-let ChromaRing: any = null;
-try {
-  // eslint-disable-next-line global-require
-  ChromaRing = require('./ui/ChromaRing').ChromaRing ?? require('./ui/ChromaRing').default ?? null;
-} catch {
-  try {
-    // eslint-disable-next-line global-require
-    ChromaRing = require('reacticx').ChromaRing ?? null;
+    BorderBeam = require('../components/ui/border-beam').BorderBeam ?? null;
   } catch {}
 }
 
@@ -101,41 +90,14 @@ export default function AddButton() {
 
   return (
     <>
-      {RadiantButton ? (
+      {BorderBeam ? (
         <View testID="add-button-fab" accessibilityLabel="Adicionar" style={{ marginTop: -24 }}>
-          <RadiantButton
-            onPress={onOpen}
-            borderRadius={fabSize / 2}
-            borderWidth={2}
-            duration={2800}
-            showDots={false}
-            showShimmer={true}
-            showGlow={true}
-            glowBlur={18}
-            glowWidth={0.7}
-            breathingEnabled={true}
-            paddingHorizontal={0}
-            paddingVertical={0}
-            style={{ width: fabSize, height: fabSize, borderRadius: fabSize / 2 }}
-            theme={{
-              background: PURPLE_600,
-              backgroundSubtle: PURPLE_900,
-              foreground: "#ffffff",
-              highlight: "#e9d5ff",
-              highlightSubtle: "#c084fc",
-            }}
-          >
-            <View style={{ width: fabSize, height: fabSize, alignItems: 'center', justifyContent: 'center' }}>
+          <BorderBeam borderRadius={fabSize/2} borderWidth={2} colors={["#9c44dc","#581C87","#9c44dc"]} duration={3} glow={6} style={{ width: fabSize, height: fabSize, borderRadius: fabSize/2 }}>
+            <Pressable onPress={onOpen} style={{ width: fabSize, height: fabSize, borderRadius: fabSize/2, backgroundColor: PURPLE_600, alignItems: 'center', justifyContent: 'center' }}>
               <Feather name="plus" size={26} color="white" />
-            </View>
-          </RadiantButton>
+            </Pressable>
+          </BorderBeam>
         </View>
-      ) : ChromaRing ? (
-        <Pressable testID="add-button-fab" accessibilityLabel="Adicionar" onPress={onOpen} style={{ marginTop: -24 }}>
-          <ChromaRing width={fabSize} height={fabSize} borderWidth={2} speed={1.0} base={PURPLE_900} glow={PURPLE_600} background={PURPLE_600} style={{ width: fabSize, height: fabSize, borderRadius: fabSize / 2 }}>
-            {FabContent}
-          </ChromaRing>
-        </Pressable>
       ) : (
         <Pressable
           testID="add-button-fab"

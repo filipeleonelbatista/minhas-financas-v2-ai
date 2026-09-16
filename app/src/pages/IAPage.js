@@ -312,7 +312,7 @@ export default function IAPage() {
                   <View style={{ width: 36, height: 36, borderRadius: 18, backgroundColor: isDark ? "#3f3f46" : "#f3e8ff", alignItems: "center", justifyContent: "center" }}>
                     <Feather name="dollar-sign" size={18} color="#9c44dc" />
                   </View>
-                  <Text numberOfLines={2} style={{ color: text, fontWeight: "600", flex: 1 }}>Analise meus gastos e sugira pontos onde eu posso melhorar.</Text>
+                  <Text numberOfLines={2} style={{ color: text, fontWeight: "600", flexShrink: 1, maxWidth: "70%" }}>Analise meus gastos e sugira pontos onde eu posso melhorar.</Text>
                   <Feather name="chevron-right" size={16} color={subText} />
                 </View>
               </Pressable>
@@ -322,7 +322,7 @@ export default function IAPage() {
                   <View style={{ width: 36, height: 36, borderRadius: 18, backgroundColor: isDark ? "#3f3f46" : "#f3e8ff", alignItems: "center", justifyContent: "center" }}>
                     <Feather name="droplet" size={18} color="#9c44dc" />
                   </View>
-                  <Text numberOfLines={2} style={{ color: text, fontWeight: "600", flex: 1 }}>Analise como posso melhorar meus gastos com combustível.</Text>
+                  <Text numberOfLines={2} style={{ color: text, fontWeight: "600", flexShrink: 1, maxWidth: "70%" }}>Analise como posso melhorar meus gastos com combustível.</Text>
                   <Feather name="chevron-right" size={16} color={subText} />
                 </View>
               </Pressable>
@@ -332,7 +332,7 @@ export default function IAPage() {
                   <View style={{ width: 36, height: 36, borderRadius: 18, backgroundColor: isDark ? "#3f3f46" : "#f3e8ff", alignItems: "center", justifyContent: "center" }}>
                     <Feather name="shopping-cart" size={18} color="#9c44dc" />
                   </View>
-                  <Text numberOfLines={2} style={{ color: text, fontWeight: "600", flex: 1 }}>Analise meus gastos com mercado e sugira pontos onde eu posso melhorar a alimentação.</Text>
+                  <Text numberOfLines={2} style={{ color: text, fontWeight: "600", flexShrink: 1, maxWidth: "70%" }}>Analise meus gastos com mercado e sugira pontos onde eu posso melhorar a alimentação.</Text>
                   <Feather name="chevron-right" size={16} color={subText} />
                 </View>
               </Pressable>

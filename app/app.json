@@ -24,18 +24,7 @@
       }
     },
     "android": {
-      "permissions": [
-        "READ_EXTERNAL_STORAGE",
-        "WRITE_EXTERNAL_STORAGE",
-        "ACCESS_MEDIA_LOCATION",
-        "android.permission.READ_EXTERNAL_STORAGE",
-        "android.permission.WRITE_EXTERNAL_STORAGE",
-        "android.permission.READ_MEDIA_VISUAL_USER_SELECTED",
-        "android.permission.ACCESS_MEDIA_LOCATION",
-        "android.permission.READ_MEDIA_IMAGES",
-        "android.permission.READ_MEDIA_VIDEO",
-        "android.permission.READ_MEDIA_AUDIO"
-      ],
+      "permissions": [],
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#581C87"
@@ -55,14 +44,6 @@
             "targetSdkVersion": 36,
             "kotlinVersion": "2.1.20"
           }
-        }
-      ],
-      [
-        "expo-media-library",
-        {
-          "photosPermission": "Permitir que $(PRODUCT_NAME) acesse suas fotos.",
-          "savePhotosPermission": "Permitir que $(PRODUCT_NAME) salve fotos.",
-          "isAccessMediaLocationEnabled": true
         }
       ],
       [

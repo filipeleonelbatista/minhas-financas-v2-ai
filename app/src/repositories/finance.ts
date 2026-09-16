@@ -8,6 +8,9 @@ dayjs.extend(isSameOrBefore);
 
 import { finances } from '../db/schema';
 import { eq } from 'drizzle-orm';
+import { sanitizeDescription, sanitizeAmount, sanitizeCategory } from '../utils/sanitize';
+
+const FINANCE_CATEGORIES = ["Outros","Bares e Restaurantes","Beleza","Cartão","Emergência","Estudos","Ganhos","Investimentos","Mercado","Moradia","Saúde","Streaming","TV/Internet/Telefone","Transporte","Vestuário"];
 
 // Lazy db access to keep jest without native module working
 let _db: any = null;
@@ -239,14 +242,14 @@ export const financeRepo = {
     const id = dto.id ?? generateId();
     const row: FinanceRow = {
       id,
-      description: dto.description,
-      amount: Number(dto.amount),
-      category: dto.category,
+      description: sanitizeDescription(dto.description) || 'Sem descrição',
+      amount: sanitizeAmount(dto.amount),
+      category: sanitizeCategory(dto.category, FINANCE_CATEGORIES),
       date: Number(dto.date),
       paymentDate: dto.paymentDate ?? null,
-      paymentStatus: Number(dto.paymentStatus),
-      isEnabled: Number(dto.isEnabled),
-      isFavorited: Number(dto.isFavorited),
+      paymentStatus: Number(dto.paymentStatus) ? 1 : 0,
+      isEnabled: Number(dto.isEnabled) ? 1 : 0,
+      isFavorited: Number(dto.isFavorited) ? 1 : 0,
     };
     const db = getDb();
     if (db) {
@@ -267,14 +270,14 @@ export const financeRepo = {
   async update(id: string, dto: Partial<FinanceDTO>): Promise<FinanceRow | null> {
     const db = getDb();
     const updates: any = {};
-    if (dto.description !== undefined) updates.description = dto.description;
-    if (dto.amount !== undefined) updates.amount = Number(dto.amount);
-    if (dto.category !== undefined) updates.category = dto.category;
+    if (dto.description !== undefined) updates.description = sanitizeDescription(dto.description) || 'Sem descrição';
+    if (dto.amount !== undefined) updates.amount = sanitizeAmount(dto.amount);
+    if (dto.category !== undefined) updates.category = sanitizeCategory(dto.category, FINANCE_CATEGORIES);
     if (dto.date !== undefined) updates.date = Number(dto.date);
     if (dto.paymentDate !== undefined) updates.paymentDate = dto.paymentDate;
-    if (dto.paymentStatus !== undefined) updates.paymentStatus = Number(dto.paymentStatus);
-    if (dto.isEnabled !== undefined) updates.isEnabled = Number(dto.isEnabled);
-    if (dto.isFavorited !== undefined) updates.isFavorited = Number(dto.isFavorited);
+    if (dto.paymentStatus !== undefined) updates.paymentStatus = Number(dto.paymentStatus) ? 1 : 0;
+    if (dto.isEnabled !== undefined) updates.isEnabled = Number(dto.isEnabled) ? 1 : 0;
+    if (dto.isFavorited !== undefined) updates.isFavorited = Number(dto.isFavorited) ? 1 : 0;
 
     if (db) {
       try {

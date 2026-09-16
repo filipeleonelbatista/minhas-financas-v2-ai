@@ -31,11 +31,6 @@ jest.mock('expo-file-system', () => ({
   writeAsStringAsync: jest.fn().mockResolvedValue(undefined),
   documentDirectory: 'file://doc/',
 }));
-jest.mock('expo-media-library', () => ({
-  getPermissionsAsync: jest.fn().mockResolvedValue(true),
-  requestPermissionsAsync: jest.fn().mockResolvedValue('granted'),
-  PermissionStatus: { GRANTED: 'granted' },
-}));
 jest.mock('expo-document-picker', () => ({
   getDocumentAsync: jest.fn().mockResolvedValue({ canceled: true }),
 }));

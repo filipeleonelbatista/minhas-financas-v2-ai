@@ -20,5 +20,6 @@ package-lock.json
 .package-lock.json
 .yarn.lock
 
-# Expo managed — android/ gerado por prebuild, ignorado (ver ../.gitignore app/android/)
+# Expo managed — android/ios gerados por prebuild, ignorados
 android/
+ios/

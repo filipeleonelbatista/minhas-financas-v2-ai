@@ -175,7 +175,7 @@ export default function AddItemForm({ onClose }) {
 
       <Text style={{ fontSize: 14, fontWeight: "600", color: text, marginBottom: 4 }}>Descrição</Text>
       <TextInput
-        testID="tour-input-description"
+        testID="input-description"
         accessibilityLabel="Descrição"
         placeholder="Descrição"
         placeholderTextColor="#a1a1aa"
@@ -189,7 +189,7 @@ export default function AddItemForm({ onClose }) {
       )}
       <Text style={{ fontSize: 14, fontWeight: "600", color: text, marginBottom: 4 }}>Valor</Text>
       <TextInput
-        testID="tour-input-amount"
+        testID="input-amount"
         accessibilityLabel="Valor"
         keyboardType="decimal-pad"
         placeholder="Valor"

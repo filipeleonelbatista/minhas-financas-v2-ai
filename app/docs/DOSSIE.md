@@ -1,6 +1,6 @@
 # Dossiê Completo — Financas App v2.3.0 (app/ • Managed)
 
-> Gerado em 2026-09-03 | Projeto: `app/` | Expo ~57.0.19 + React 19.2.3 + React Native 0.86.3 + expo-sqlite/drizzle (WatermelonDB removido)
+> Gerado em 2026-09-15 | Projeto: `app/` | Expo ~57.0.19 + React 19.2.3 + React Native 0.86.3 + expo-sqlite/drizzle + zod (WatermelonDB/NativeBase/Tour removidos, SAF Android-only, doctor 21/21)
 
 ---
 
@@ -11,8 +11,8 @@ App React Native (Expo Managed + Prebuild) para **gestão financeira familiar** 
 - **Slug/packge:** `finances` / `com.finances` (`app.json:8`)
 - **VersionCode:** 230, **Version:** 2.3.0, **BuildNumber iOS:** 2.3.0, **EAS projectId:** `007d84b9-db5f-4e91-8537-b64bd4edafbe`
 - **Orientação:** portrait only, `userInterfaceStyle: automatic` (segue sistema)
-- **Workspace:** `app/` (renomeado de `finances-app-feature-adicionando-watermelondb/` em `ae034a8`; `app/android/` ignorado via `.gitignore`)
-- **Doctor:** `npx expo-doctor` **21/21** (com `expo.install.exclude: ["expo-sqlite"]`)
+- **Workspace:** `app/` (renomeado de `finances-app-feature-adicionando-watermelondb/` em `ae034a8`; `app/android/` + `app/ios/` ignorados via `.gitignore`, managed puro)
+- **Doctor:** `npx expo-doctor` **21/21** (com `expo.install.exclude: ["expo-sqlite","expo", "expo-*", "eslint-config-expo"]`, `android/ios` removidos)
 
 ---
 
@@ -29,8 +29,9 @@ App React Native (Expo Managed + Prebuild) para **gestão financeira familiar** 
 |  | `expo-file-system` | ~57.0.6 | SAF `StorageAccessFramework` (Android) + `documentDirectory` fallback iOS |
 |  | `expo-local-authentication` | ~57.0.2 | Biometria `isBiometricAvailable`/`authenticateAsync` |
 |  | `expo-secure-store` | ~57.0.3 | Chaves IA por provider |
-|  | `expo-sqlite` | ^57.0.2 | SQLite `openDatabaseSync("financas.db")` + `expo.install.exclude` para doctor 21/21 |
+|  | `expo-sqlite` | ^57.0.2 | SQLite `openDatabaseSync("financas.db")` + `src/db/migrate.ts` `runMigrations()` via `PRAGMA user_version` (one-shot em `App.js:103`) |
 |  | `drizzle-orm` / `drizzle-kit` | ^0.45.2 / ^0.31.10 | ORM + migrations (`src/db/schema.ts`, `drizzle.config.ts`) |
+|  | `drizzle-zod` / `zod` | ^0.8.3 / ^4.6.5 | Validação `src/schemas/*` (`finance/stock/goal/run/list` + sanitização) |
 |  | `zustand` | ^5.0.8 | Stores `settings/finance/runs/market/lists/goals` |
 | Navegação | `@react-navigation/native` | ^6.1.6 | NavigationContainer + theming |
 |  | `@react-navigation/stack` | ^6.3.16 | Stack (Onboarding, MarketStack) |
@@ -42,32 +43,33 @@ App React Native (Expo Managed + Prebuild) para **gestão financeira familiar** 
 |  | `react-native-safe-area-context` | ~5.7.0 |  |
 |  | `react-native-reanimated` | 4.5.1 |  |
 |  | `react-native-chart-kit` + `react-native-progress` | 6.12.0 / 5.0.0 | PieChart, LineChart, Progress.Bar em `Reports.js` |
-|  | `react-native-walkthrough-tooltip` | ^1.6.0 | Tour spotlight 6 steps |
+|  | ~~`react-native-walkthrough-tooltip`~~ | removido 2026-09-15 | Tour spotlight **removido a pedido** (SAF Android-only); Onboarding 7 slides mantido com `CTA glow` |
 |  | `@expo/vector-icons` (Feather, FontAwesome, MaterialCommunityIcons, Fontisto, Ionicons, Octicons) | bundled | Ícones em toda UI |
-| Forms | `formik` + `yup` | 2.2.9 / 1.0.2 | Validação em `AddItemForm`, `AddFuelForm`, etc. |
+| Forms | `formik` + `yup` + `zod` | 2.2.9 / 1.0.2 / 4.6.5 | Validação em `AddItemForm`, `AddFuelForm`, etc. + `src/schemas/*` zod |
 | Data | `zustand` + `drizzle-orm` + `expo-sqlite` | 5 / 0.45 / 57 | SQLite offline-first (WatermelonDB **removido** em Fase 1 gaps) |
 |  | `@react-native-async-storage/async-storage` | 2.2.0 | `@onboarding` flag + fallback `hasSeenInteractiveTour` |
 |  | `dayjs` + `date-fns` | 1.11.7 / 2.30.0 | Manipulação datas |
 |  | `@react-native-community/datetimepicker` | 9.1.0 | `DateTimePickerAndroid.open` |
 |  | `@react-native-picker/picker` | 2.11.4 | Dropdowns categoria |
-| Export | `expo-file-system` | ~57.0.6 | **SAF iOS branch:** `Platform.OS === 'android' ? StorageAccessFramework.createFileAsync/writeAsStringAsync : FileSystem.writeAsStringAsync(documentDirectory + fileName)` (`AboutUs.js`/`Onboarding.js`) |
-|  | `expo-media-library` | ~57.0.4 | `getPermissionsAsync/requestPermissionsAsync` |
-|  | `expo-document-picker` | ~57.0.1 | `getDocumentAsync` tipo `text/*` |
-|  | `react-native-csv` | ^0.2.0 | `jsonToCSV`, `readString` |
-|  | `xlsx` | ^0.18.5 | Import XLSX com allowlist `xlsx/csv` |
+| Export | `expo-file-system` | ~57.0.6 | **SAF iOS branch:** `Platform.OS === 'android' ? StorageAccessFramework.createFileAsync/writeAsStringAsync : FileSystem.writeAsStringAsync(documentDirectory + fileName)` (`AboutUs.js`/`Onboarding.js`) **Android-only, `android.permissions:[]`** |
+|  | ~~`expo-media-library`~~ | removido 2026-09-15 | SAF Android-only não exige `READ/WRITE_EXTERNAL_STORAGE`; `checkPermissions()` → `true` em Android |
+|  | `expo-document-picker` | ~57.0.1 | `getDocumentAsync` tipo `*/*` (hardening via `isAllowedImport/parseImport`) |
+|  | `react-native-csv` | ^0.2.0 | `jsonToCSV`, `readString` (fallback se `parseImport` vazio) |
+|  | `xlsx` | ^0.18.5 | Import XLSX com allowlist `xlsx/csv` + `parseImport` hardening (5MB/5k, `cellFormula:false`, `PK\x03\x04`) |
 | IA | `openai` | ^4.28.0 | `new OpenAI({apiKey})` via `src/utils/aiProviders.ts` `chatWithFallback` (openai 3.x `Configuration` removido) |
 |  | `zustand` + `expo-secure-store` | 5 / 57 | `getProviderKey` por provider |
 | Build | `expo-build-properties` | ~57.0.16 | `compileSdk 36/targetSdk 36`, `kotlinVersion 2.1.0` |
-|  | `jest-expo` | ~57.0.5 | Preset `jest-expo` + `react-native-walkthrough-tooltip` mock |
-| Babel | `nativewind` preset | — | Sem `plugin-proposal-decorators` (WatermelonDB removido) |
+|  | `jest-expo` | ~57.0.5 | Preset `jest-expo` (mock `walkthrough-tooltip` removido) |
+|  | `eslint` / `eslint-config-expo` | ^8.57 / 9→57 | `npm run lint --max-warnings 0` |
+| Babel | `nativewind` preset | — | Sem `plugin-proposal-decorators` (WatermelonDB removido), `nativewind/babel` + `react-native-reanimated/plugin` |
 
 ### 2.2 Configuração de Build
 
-- **Babel** (`babel.config.js:5`): `babel-preset-expo` + `plugin-proposal-decorators legacy:true`
-- **Metro** (`metro.config.js:3`): `getDefaultConfig(__dirname)` padrão Expo. WatermelonDB exige JSI, sem config extra.
-- **EAS** (`eas.json:3`): 3 profiles — `development` (`developmentClient:true`, `distribution:internal`), `preview` (APK), `production`. Antigo só tinha 2.
-- **Android** (`app.json:28`): `kotlinVersion: 1.6.0`, `adaptiveIcon backgroundColor #581C87`, `package com.finances`. Pasta `android/` ejectada via `expo prebuild` (não existia na main).
-- **iOS** (`app.json:18`): `bundleIdentifier com.finances`, `usesIcloudStorage:true`, `NSPhotoLibraryUsageDescription/Add`.
+- **Babel** (`babel.config.js:1`): `babel-preset-expo` (`jsxImportSource: nativewind`) + `nativewind/babel` + `react-native-reanimated/plugin` (decorators removidos).
+- **Metro** (`metro.config.js:1`): `getDefaultConfig` + `withNativewind({input:"./global.css"})` (fallback se tailwind mismatch).
+- **EAS** (`eas.json:3`): 3 profiles — `development` (`developmentClient:true`, `distribution:internal`), `preview` (APK), `production`.
+- **Android** (`app.json:28`): `kotlinVersion: 2.1.20`, `compileSdk 36/targetSdk 36`, `permissions:[]` (SAF Android-only), `adaptiveIcon backgroundColor #581C87`, `package com.finances`. Pasta `android/` **removida** (`rm -rf app/android`, `.gitignore` `android/`), managed puro.
+- **iOS** (`app.json:18`): `bundleIdentifier com.finances`, `usesIcloudStorage:true`, `NSPhotoLibraryUsageDescription/Add`, `NSFaceIDUsageDescription`. Pasta `ios/` **removida** (`.gitignore` `ios/`), managed puro; fallback iOS `FileSystem.documentDirectory` mantido default.
 
 ---
 
@@ -247,16 +249,17 @@ Seções com `Switch` + `Button` roxos:
 ### 6.1 Permissões Declaradas (`app.json:30`)
 
 ```json
-["READ_EXTERNAL_STORAGE","WRITE_EXTERNAL_STORAGE","ACCESS_MEDIA_LOCATION"]
-+ plugins expo-media-library (photosPermission) + expo-document-picker (iCloudContainerEnvironment: Production)
+[] // 2026-09-15: SAF Android-only, targetSdk 36, sem READ/WRITE_EXTERNAL_STORAGE (removido), sem expo-media-library
++ plugin expo-document-picker (iCloudContainerEnvironment: Production) + expo-file-system SAF
+// iOS fallback: FileSystem.documentDirectory mantido default, sem SAF
 ```
 
-### 6.2 Fluxo Atual (presente em todo `*Context.js` e `AboutUs.js`)
+### 6.2 Fluxo Atual (wireado 2026-09-15, `AboutUs.js`)
 
-- **Gate:** `MediaLibrary.getPermissionsAsync() -> requestPermissionsAsync()` com `Alert` se negado. `checkPermissions()` é chamado antes de qualquer import/export.
-- **Export:** `jsonToCSV(list) -> StorageAccessFramework.createFileAsync(directoryUri, fileName, "text/*") -> writeAsStringAsync(createdFile, CSV, utf8)`. `fileName` com timestamp `estoque-DD-MM-YYYY_HH-mm.csv` / `financas-...` / `corridas-...` / `lista-...`.
-- **Import:** `DocumentPicker.getDocumentAsync({copyToCacheDirectory:false, type:"text/*"}) -> FileSystem.readAsStringAsync(uri) -> readString(fileContent) -> handleCSVtoArrayFormat` (primeira linha = headers) -> `importTransactions`.
-- **Seleção de pasta:** Onboarding + `AboutUs: Alterar pasta de exportação` chama `StorageAccessFramework.requestDirectoryPermissionsAsync()` e salva `directoryUri` em `config.selectedFolderToSave`. Todas as exportações usam essa URI.
+- **Gate:** `checkPermissions()` → `Platform.OS==='android'? true` (SAF não exige `MediaLibrary`; permissões `[]` em `app.json:27`). Pasta SAF validada separadamente (`selectedFolderToSave` vazio → `Alert`).
+- **Export:** `jsonToCSV(list) -> StorageAccessFramework.createFileAsync(directoryUri, fileName, "text/*") -> writeAsStringAsync(createdFile, CSV, utf8)` se `Platform.OS==='android'` senão `FileSystem.writeAsStringAsync(documentDirectory+fileName)` (fallback iOS padrão).
+- **Import:** `DocumentPicker.getDocumentAsync({copyToCacheDirectory:false, type:"*/*"})` → `isAllowedImport(fileName,fileSize)` (block `xls/xlsm/xlsb/ods/zip`, max 5MB/5k/20col) → `ext==='xlsx' ? read base64 + parseImport(Uint8Array, fileName) : read utf8 + parseImport(content, fileName) (fallback readString+handleCSVtoArrayFormat)` → `sanitizeDescription/sanitizeAmount` nos repos + `zod` em `src/schemas/*`.
+- **Seleção de pasta:** Onboarding (`Platform.OS!=='android' ? handleLeave : requestDirectoryPermissionsAsync`) + `AboutUs: Alterar pasta de exportação` salva `directoryUri` em `config.selectedFolderToSave`. Todas exportações usam essa URI.
 
 ### 6.3 Impactos por Versão Android
 

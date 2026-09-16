@@ -18,11 +18,9 @@ import {
   Image,
 } from "react-native";
 import * as FileSystem from "expo-file-system";
-let MediaLibrary: any = null;
-try {
-  MediaLibrary = require("expo-media-library");
-} catch {}
 import * as DocumentPicker from "expo-document-picker";
+import { isAllowedImport, parseImport } from "../utils/excel";
+import { sanitizeDescription } from "../utils/sanitize";
 import {
   useFocusEffect,
   useIsFocused,
@@ -121,13 +119,55 @@ export default function AboutUs() {
     try {
       const ok = await checkPermissions();
       if (!ok) return;
-      const res = await DocumentPicker.getDocumentAsync({ copyToCacheDirectory: false, type: "text/*" });
+      const res = await DocumentPicker.getDocumentAsync({ copyToCacheDirectory: false, type: "*/*" });
       if (res.canceled || res.type === "cancel") return;
       const uri = res.assets?.[0]?.uri ?? res.uri;
+      const fileName = res.assets?.[0]?.name ?? res.name ?? 'import.csv';
+      const fileSize = res.assets?.[0]?.size ?? 0;
+      if (!isAllowedImport(fileName, fileSize)) {
+        const lower = String(fileName).toLowerCase();
+        const isBlocked = lower.includes('.xlsm') || lower.includes('.xlsb') || lower.includes('.ods') || lower.includes('.zip') || lower.endsWith('.xls');
+        if (isBlocked) {
+          ToastAndroid.show("Tipo de arquivo não permitido (xls/xlsm bloqueado)", ToastAndroid.SHORT);
+        } else {
+          ToastAndroid.show("Arquivo não permitido ou muito grande (máx 5MB)", ToastAndroid.SHORT);
+        }
+        return;
+      }
       if (!uri) return;
-      const content = await FileSystem.readAsStringAsync(uri, { encoding: "utf8" });
-      const parsed = readString(content);
-      const rows = await handleCSVtoArrayFormat(parsed.data);
+      // Excel hardening: usa parseImport para sanitização + magic bytes + limites
+      let rows = [];
+      const ext = String(fileName).split('.').pop()?.toLowerCase() ?? 'csv';
+      if (ext === 'xlsx') {
+        const b64 = await FileSystem.readAsStringAsync(uri, { encoding: "base64" });
+        // Converte base64 -> Uint8Array para parseImport
+        const binary = global.Buffer ? global.Buffer.from(b64, 'base64') : (() => { const s = atob(b64); const a = new Uint8Array(s.length); for(let i=0;i<s.length;i++) a[i]=s.charCodeAt(i); return a; })();
+        const arr = binary instanceof Uint8Array ? binary : new Uint8Array(binary);
+        rows = parseImport(arr, fileName);
+        // parseImport já sanitiza e stripa fórmulas; mapeia para shape de runs
+        // se parseImport retornou objetos com headers, usa direto; senão tenta fallback CSV
+        if (rows.length === 0) {
+          ToastAndroid.show("Arquivo vazio ou bloqueado", ToastAndroid.SHORT);
+          return;
+        }
+      } else {
+        const content = await FileSystem.readAsStringAsync(uri, { encoding: "utf8" });
+        if (content.length > 5 * 1024 * 1024) {
+          ToastAndroid.show("Arquivo muito grande: max 5MB", ToastAndroid.SHORT);
+          return;
+        }
+        // Tenta parseImport primeiro (sanitiza), fallback para readString legacy
+        try {
+          rows = parseImport(content, fileName);
+          if (!rows || rows.length === 0) {
+            const parsed = readString(content);
+            rows = await handleCSVtoArrayFormat(parsed.data);
+          }
+        } catch {
+          const parsed = readString(content);
+          rows = await handleCSVtoArrayFormat(parsed.data);
+        }
+      }
       for (const item of rows) {
         try {
           const dto = { currentDistance: Number(item.currentDistance ?? item.current_distance ?? 0), unityAmount: Number(item.unityAmount ?? 0), amount: Number(item.amount ?? 0), type: String(item.type ?? "gasolina"), date: Number(item.date ?? Date.now()), location: String(item.location ?? "") };
@@ -155,13 +195,34 @@ export default function AboutUs() {
     try {
       const ok = await checkPermissions();
       if (!ok) return;
-      const res = await DocumentPicker.getDocumentAsync({ copyToCacheDirectory: false, type: "text/*" });
+      const res = await DocumentPicker.getDocumentAsync({ copyToCacheDirectory: false, type: "*/*" });
       if (res.canceled || res.type === "cancel") return;
       const uri = res.assets?.[0]?.uri ?? res.uri;
+      const fileName = res.assets?.[0]?.name ?? res.name ?? 'import.csv';
+      const fileSize = res.assets?.[0]?.size ?? 0;
+      if (!isAllowedImport(fileName, fileSize)) {
+        const lower = String(fileName).toLowerCase();
+        const isBlocked = lower.includes('.xlsm') || lower.includes('.xlsb') || lower.includes('.ods') || lower.includes('.zip') || lower.endsWith('.xls');
+        ToastAndroid.show(isBlocked ? "Tipo de arquivo não permitido (xls/xlsm bloqueado)" : "Arquivo não permitido ou muito grande (máx 5MB)", ToastAndroid.SHORT);
+        return;
+      }
       if (!uri) return;
-      const content = await FileSystem.readAsStringAsync(uri, { encoding: "utf8" });
-      const parsed = readString(content);
-      const rows = await handleCSVtoArrayFormat(parsed.data);
+      let rows = [];
+      const ext = String(fileName).split('.').pop()?.toLowerCase() ?? 'csv';
+      if (ext === 'xlsx') {
+        const b64 = await FileSystem.readAsStringAsync(uri, { encoding: "base64" });
+        const binary = global.Buffer ? global.Buffer.from(b64, 'base64') : (() => { const s = atob(b64); const a = new Uint8Array(s.length); for(let i=0;i<s.length;i++) a[i]=s.charCodeAt(i); return a; })();
+        const arr = binary instanceof Uint8Array ? binary : new Uint8Array(binary);
+        rows = parseImport(arr, fileName);
+        if (rows.length === 0) { ToastAndroid.show("Arquivo vazio ou bloqueado", ToastAndroid.SHORT); return; }
+      } else {
+        const content = await FileSystem.readAsStringAsync(uri, { encoding: "utf8" });
+        if (content.length > 5 * 1024 * 1024) { ToastAndroid.show("Arquivo muito grande: max 5MB", ToastAndroid.SHORT); return; }
+        try {
+          rows = parseImport(content, fileName);
+          if (!rows || rows.length === 0) { const parsed = readString(content); rows = await handleCSVtoArrayFormat(parsed.data); }
+        } catch { const parsed = readString(content); rows = await handleCSVtoArrayFormat(parsed.data); }
+      }
       for (const item of rows) {
         const dto = { description: String(item.description ?? ""), category: String(item.category ?? "Outros"), amount: Number(item.amount ?? 0), quantity: Number(item.quantity ?? 0), quantityDesired: Number(item.quantityDesired ?? item.desiredQuantity ?? 1) };
         if (!dto.description) continue;
@@ -187,13 +248,31 @@ export default function AboutUs() {
     try {
       const ok = await checkPermissions();
       if (!ok) return;
-      const res = await DocumentPicker.getDocumentAsync({ copyToCacheDirectory: false, type: "text/*" });
+      const res = await DocumentPicker.getDocumentAsync({ copyToCacheDirectory: false, type: "*/*" });
       if (res.canceled || res.type === "cancel") return;
       const uri = res.assets?.[0]?.uri ?? res.uri;
+      const fileName = res.assets?.[0]?.name ?? res.name ?? 'import.csv';
+      const fileSize = res.assets?.[0]?.size ?? 0;
+      if (!isAllowedImport(fileName, fileSize)) {
+        const lower = String(fileName).toLowerCase();
+        const isBlocked = lower.includes('.xlsm') || lower.includes('.xlsb') || lower.includes('.ods') || lower.includes('.zip') || lower.endsWith('.xls');
+        ToastAndroid.show(isBlocked ? "Tipo de arquivo não permitido (xls/xlsm bloqueado)" : "Arquivo não permitido ou muito grande (máx 5MB)", ToastAndroid.SHORT);
+        return;
+      }
       if (!uri) return;
-      const content = await FileSystem.readAsStringAsync(uri, { encoding: "utf8" });
-      const parsed = readString(content);
-      const rows = await handleCSVtoArrayFormat(parsed.data);
+      let rows = [];
+      const ext = String(fileName).split('.').pop()?.toLowerCase() ?? 'csv';
+      if (ext === 'xlsx') {
+        const b64 = await FileSystem.readAsStringAsync(uri, { encoding: "base64" });
+        const binary = global.Buffer ? global.Buffer.from(b64, 'base64') : (() => { const s = atob(b64); const a = new Uint8Array(s.length); for(let i=0;i<s.length;i++) a[i]=s.charCodeAt(i); return a; })();
+        const arr = binary instanceof Uint8Array ? binary : new Uint8Array(binary);
+        rows = parseImport(arr, fileName);
+        if (rows.length === 0) { ToastAndroid.show("Arquivo vazio ou bloqueado", ToastAndroid.SHORT); return; }
+      } else {
+        const content = await FileSystem.readAsStringAsync(uri, { encoding: "utf8" });
+        if (content.length > 5 * 1024 * 1024) { ToastAndroid.show("Arquivo muito grande: max 5MB", ToastAndroid.SHORT); return; }
+        try { rows = parseImport(content, fileName); if (!rows || rows.length === 0) { const parsed = readString(content); rows = await handleCSVtoArrayFormat(parsed.data); } } catch { const parsed = readString(content); rows = await handleCSVtoArrayFormat(parsed.data); }
+      }
       if (rows.length === 0) { ToastAndroid.show("Arquivo vazio", ToastAndroid.SHORT); return; }
       // Heuristic: if rows contain list header (description+location) treat as lists export, else as generic
       for (const item of rows) {
@@ -467,32 +546,12 @@ export default function AboutUs() {
   }
 
   const checkPermissions = async () => {
-    if (!MediaLibrary || !MediaLibrary.getPermissionsAsync) return true;
-    try {
-      const result = await MediaLibrary.getPermissionsAsync();
-
-      if (!result) {
-        console.log("Vamo lá");
-        const granted = await MediaLibrary.requestPermissionsAsync();
-
-        console.log("checkPermissions", granted);
-
-        if (granted === MediaLibrary.PermissionStatus.GRANTED) {
-          console.log("Você pode usar a camera");
-          return true;
-        } else {
-          Alert.alert("Error", "As permissões não foram concedidas");
-
-          console.log("Camera permission denied");
-          return false;
-        }
-      } else {
-        return true;
-      }
-    } catch (err) {
-      console.warn(err);
-      return false;
-    }
+    // SAF alinhado: StorageAccessFramework + DocumentPicker não exigem READ/WRITE_EXTERNAL_STORAGE.
+    // Em Android (targetSdk 36) SAF é via picker de diretório; em iOS usa documentDirectory.
+    // Mantém fallback iOS mas sem bloquear: sempre true, diretório SAF é validado separadamente.
+    if (Platform.OS === 'android') return true;
+    // iOS branch padrão mantido (FileSystem.documentDirectory) - sem permissão extra
+    return true;
   };
 
   async function handleGenerateCSV() {
@@ -565,25 +624,52 @@ export default function AboutUs() {
 
   async function handleImportCSV() {
     try {
-      const result = await checkPermissions();
-      if (result) {
-        const result = await DocumentPicker.getDocumentAsync({
+      const resultPerm = await checkPermissions();
+      if (resultPerm) {
+        const picked = await DocumentPicker.getDocumentAsync({
           copyToCacheDirectory: false,
-          type: "text/*",
+          type: "*/*",
         });
-        if (result.type === "success") {
-          let fileContent = await FileSystem.readAsStringAsync(result.uri, {
-            encoding: "utf8",
-          });
-          const dataFromCSV = readString(fileContent);
-          const csvFormated = await handleCSVtoArrayFormat(dataFromCSV.data);
+        // legacy + new API
+        const uri = picked.assets?.[0]?.uri ?? picked.uri;
+        const fileName = picked.assets?.[0]?.name ?? picked.name ?? 'import.csv';
+        const fileSize = picked.assets?.[0]?.size ?? 0;
+        if (!isAllowedImport(fileName, fileSize)) {
+          const lower = String(fileName).toLowerCase();
+          const isBlocked = lower.includes('.xlsm') || lower.includes('.xlsb') || lower.includes('.ods') || lower.includes('.zip') || lower.endsWith('.xls');
+          ToastAndroid.show(isBlocked ? "Tipo de arquivo não permitido" : "Arquivo não permitido ou muito grande", ToastAndroid.SHORT);
+          return;
+        }
+        const isSuccess = picked.type === "success" || !picked.canceled;
+        if (isSuccess && uri) {
+          let csvFormated = [];
+          const ext = String(fileName).split('.').pop()?.toLowerCase() ?? 'csv';
+          if (ext === 'xlsx') {
+            const b64 = await FileSystem.readAsStringAsync(uri, { encoding: "base64" });
+            const binary = global.Buffer ? global.Buffer.from(b64, 'base64') : (() => { const s = atob(b64); const a = new Uint8Array(s.length); for(let i=0;i<s.length;i++) a[i]=s.charCodeAt(i); return a; })();
+            const arr = binary instanceof Uint8Array ? binary : new Uint8Array(binary);
+            csvFormated = parseImport(arr, fileName);
+          } else {
+            let fileContent = await FileSystem.readAsStringAsync(uri, { encoding: "utf8" });
+            if (fileContent.length > 5 * 1024 * 1024) { ToastAndroid.show("Arquivo muito grande: max 5MB", ToastAndroid.SHORT); return; }
+            try {
+              csvFormated = parseImport(fileContent, fileName);
+              if (!csvFormated || csvFormated.length === 0) {
+                const dataFromCSV = readString(fileContent);
+                csvFormated = await handleCSVtoArrayFormat(dataFromCSV.data);
+              }
+            } catch {
+              const dataFromCSV = readString(fileContent);
+              csvFormated = await handleCSVtoArrayFormat(dataFromCSV.data);
+            }
+          }
           if (csvFormated) {
             const importedTransactions = csvFormated.map((item) => {
               const row = {
                 amount: Number(item.amount),
                 date: item.date !== "" ? Number(item.date) : "",
                 paymentDate: item.paymentDate !== "" ? Number(item.date) : "",
-                description: item.description,
+                description: sanitizeDescription(item.description),
                 category: item.category,
                 paymentStatus: item.paymentStatus,
                 isEnabled: item.isEnabled,

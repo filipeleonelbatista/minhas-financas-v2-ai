@@ -31,21 +31,29 @@ LogBox.ignoreLogs([
   "Reading from `value` during component render",
 ]);
 
-// BiometricGate migrated to useSettingsStore
-function BiometricGate({ children }) {
-  const isBiometricEnabled = useSettingsStore((s) => !!s.isBiometricEnabled);
+export default function App() {
+  let [fontsLoaded] = useFonts({
+    Poppins_400Regular,
+    Poppins_600SemiBold,
+  });
 
-  const [locked, setLocked] = useState(!!isBiometricEnabled);
-  const [checking, setChecking] = useState(!!isBiometricEnabled);
+  const loadSettings = useSettingsStore((s) => s.load);
+  const isBiometricEnabled = useSettingsStore((s) => !!s.isBiometricEnabled);
+  const [appIsReady, setAppIsReady] = useState(false);
+
+  // Biometric state lifted to App to coordinate splash hiding
+  const [biometricLocked, setBiometricLocked] = useState(null); // null = not checked yet, true = locked, false = unlocked
+  const [biometricChecking, setBiometricChecking] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
 
   const authenticate = useCallback(async () => {
     if (!isBiometricEnabled) {
-      setLocked(false);
-      setChecking(false);
+      setBiometricLocked(false);
+      setBiometricChecking(false);
+      setErrorMsg("");
       return;
     }
-    setChecking(true);
+    setBiometricChecking(true);
     setErrorMsg("");
     try {
       let LocalAuth;
@@ -54,15 +62,16 @@ function BiometricGate({ children }) {
       } catch {
         const { authenticateAsync } = require("./src/utils/biometry");
         const res = await authenticateAsync("Desbloquear Finanças");
-        setLocked(!res.success);
-        setChecking(false);
+        setBiometricLocked(!res.success);
+        if (!res.success) setErrorMsg(res.error || "Falha");
+        setBiometricChecking(false);
         return;
       }
       const hasHardware = await LocalAuth.hasHardwareAsync();
       const isEnrolled = await LocalAuth.isEnrolledAsync();
       if (!hasHardware || !isEnrolled) {
-        setLocked(false);
-        setChecking(false);
+        setBiometricLocked(false);
+        setBiometricChecking(false);
         return;
       }
       const result = await LocalAuth.authenticateAsync({
@@ -72,78 +81,32 @@ function BiometricGate({ children }) {
         cancelLabel: "Cancelar",
       });
       if (result.success) {
-        setLocked(false);
+        setBiometricLocked(false);
       } else {
-        setLocked(true);
+        setBiometricLocked(true);
         setErrorMsg(result.error || "Autenticação falhou");
       }
     } catch (e) {
       try {
         const { authenticateAsync } = require("./src/utils/biometry");
         const res = await authenticateAsync("Desbloquear Finanças");
-        setLocked(!res.success);
+        setBiometricLocked(!res.success);
         if (!res.success) setErrorMsg(res.error || "Falha");
       } catch {
-        setLocked(false);
+        setBiometricLocked(false);
       }
     }
-    setChecking(false);
+    setBiometricChecking(false);
   }, [isBiometricEnabled]);
-
-  useEffect(() => {
-    authenticate();
-  }, [authenticate]);
-
-  useEffect(() => {
-    if (!isBiometricEnabled) return;
-    const sub = AppState.addEventListener("change", (state) => {
-      if (state === "active") {
-        authenticate();
-      }
-    });
-    return () => sub.remove();
-  }, [isBiometricEnabled, authenticate]);
-
-  if (!isBiometricEnabled) return children;
-
-  if (checking) {
-    return <Loading />;
-  }
-
-  if (locked) {
-    return (
-      <View style={{ flex: 1, justifyContent: "center", alignItems: "center", backgroundColor: "#581c87", padding: 24 }}>
-        <Text style={{ color: "white", fontSize: 22, fontWeight: "600", marginBottom: 12, textAlign: "center" }}>
-          Finanças bloqueado
-        </Text>
-        <Text style={{ color: "white", opacity: 0.8, marginBottom: 24, textAlign: "center" }}>
-          {errorMsg ? `Falha: ${errorMsg}. Tente novamente.` : "Autenticação necessária para continuar."}
-        </Text>
-        <TouchableOpacity
-          onPress={authenticate}
-          style={{ backgroundColor: "#9c44dc", paddingHorizontal: 32, paddingVertical: 14, borderRadius: 999 }}
-        >
-          <Text style={{ color: "white", fontWeight: "600", fontSize: 16 }}>Desbloquear Finanças</Text>
-        </TouchableOpacity>
-      </View>
-    );
-  }
-
-  return children;
-}
-
-export default function App() {
-  let [fontsLoaded] = useFonts({
-    Poppins_400Regular,
-    Poppins_600SemiBold,
-  });
-
-  const loadSettings = useSettingsStore((s) => s.load);
-  const [appIsReady, setAppIsReady] = useState(false);
 
   useEffect(() => {
     (async () => {
       try {
+        // 0) migrations drizzle one-shot (Crítico 1) - cria 8 tables + alter config antes de qualquer read
+        try {
+          const { runMigrations } = await import('./src/db/migrate');
+          await runMigrations();
+        } catch {}
         // 1) load settings first (has isBiometricEnabled etc)
         await loadSettings();
         // 2) seed if needed (already there)
@@ -188,15 +151,86 @@ export default function App() {
     })();
   }, []);
 
+  // Trigger biometric check after app is ready; also handle toggle on/off
+  const prevBioEnabledRef = React.useRef(isBiometricEnabled);
+  useEffect(() => {
+    if (!appIsReady) return;
+    if (isBiometricEnabled) {
+      // Cold start: locked === null -> need auth
+      if (biometricLocked === null) {
+        authenticate();
+      } else if (!prevBioEnabledRef.current && biometricLocked === false) {
+        // Toggle from disabled (was false) to enabled -> require auth
+        authenticate();
+      }
+      // If already locked true, keep locked screen – user must tap retry or resume via AppState
+    } else {
+      setBiometricLocked(false);
+      setBiometricChecking(false);
+      setErrorMsg("");
+    }
+    prevBioEnabledRef.current = isBiometricEnabled;
+  }, [appIsReady, isBiometricEnabled, authenticate, biometricLocked]);
+
+  useEffect(() => {
+    if (!isBiometricEnabled) return;
+    const sub = AppState.addEventListener("change", (state) => {
+      if (state === "active") {
+        authenticate();
+      }
+    });
+    return () => sub.remove();
+  }, [isBiometricEnabled, authenticate]);
+
+  const biometricReady = !isBiometricEnabled || (biometricLocked !== null && !biometricChecking);
+
   const onLayoutRootView = useCallback(async () => {
-    if (appIsReady && fontsLoaded) {
+    if (appIsReady && fontsLoaded && biometricReady) {
       try { await SplashScreen.hideAsync(); } catch {}
     }
-  }, [appIsReady, fontsLoaded]);
+  }, [appIsReady, fontsLoaded, biometricReady]);
+
+  // Ensure splash hides even if onLayout already fired before biometric finished (cold start)
+  useEffect(() => {
+    if (appIsReady && fontsLoaded && biometricReady) {
+      SplashScreen.hideAsync().catch(() => {});
+    }
+  }, [appIsReady, fontsLoaded, biometricReady]);
 
   if (!appIsReady || !fontsLoaded) {
     return <Loading />;
   }
+
+  // While biometric is checking on cold start or after toggle, keep splash visible
+  // Show Loading behind splash to avoid flashing Routes
+  if (isBiometricEnabled && biometricChecking) {
+    return <Loading />;
+  }
+
+  // Initial state before first check completes (null) -> keep splash, show Loading
+  if (isBiometricEnabled && biometricLocked === null) {
+    return <Loading />;
+  }
+
+  if (isBiometricEnabled && biometricLocked) {
+    return (
+      <View style={{ flex: 1, justifyContent: "center", alignItems: "center", backgroundColor: "#581c87", padding: 24 }}>
+        <Text style={{ color: "white", fontSize: 22, fontWeight: "600", marginBottom: 12, textAlign: "center" }}>
+          Finanças bloqueado
+        </Text>
+        <Text style={{ color: "white", opacity: 0.8, marginBottom: 24, textAlign: "center" }}>
+          {errorMsg ? `Falha: ${errorMsg}. Tente novamente.` : "Autenticação necessária para continuar."}
+        </Text>
+        <TouchableOpacity
+          onPress={authenticate}
+          style={{ backgroundColor: "#9c44dc", paddingHorizontal: 32, paddingVertical: 14, borderRadius: 999 }}
+        >
+          <Text style={{ color: "white", fontWeight: "600", fontSize: 16 }}>Desbloquear Finanças</Text>
+        </TouchableOpacity>
+      </View>
+    );
+  }
+
   const initialTheme = useSettingsStore.getState().colorModeState === "dark" ? ThemeMode.Dark : ThemeMode.Light;
   return (
     <GestureHandlerRootView style={{ flex: 1 }} onLayout={onLayoutRootView}>
@@ -218,9 +252,7 @@ export default function App() {
           >
             <StatusBar style="light" />
           </View>
-          <BiometricGate>
-            <Routes />
-          </BiometricGate>
+          <Routes />
         </ThemeProvider>
       </SafeAreaProvider>
     </GestureHandlerRootView>

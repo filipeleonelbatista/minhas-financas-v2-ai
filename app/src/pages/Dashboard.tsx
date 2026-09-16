@@ -8,16 +8,20 @@ import { differenceInCalendarDays } from "date-fns";
 import Header from "../components/Header";
 import InteractivePieChart from "../components/InteractivePieChart";
 import { financeRepo, calcTithePure } from "../repositories/finance";
+import type { FinanceRow } from "../repositories/finance";
 import { goalRepo } from "../repositories/goal";
 import { runRepo } from "../repositories/run";
 import { marketRepo } from "../repositories/market";
-import { useSettingsStore } from "../stores/settings";
+import type { StockRow } from "../repositories/market";
+import { useSettingsStore, type SettingsState } from "../stores/settings";
+import { useShallow } from "zustand/react/shallow";
+
 let BorderBeam: any = null;
 try { BorderBeam = require("../components/ui/border-beam").BorderBeam || require("../components/ui/border-beam/index").BorderBeam || require("../components/ui/border-beam/index").default || null; } catch {}
 
 // Charts fallback (jest without native svg may fail)
-let PieChartComp = null;
-let LineChartComp = null;
+let PieChartComp: any = null;
+let LineChartComp: any = null;
 try {
   // eslint-disable-next-line global-require
   const chartKit = require("react-native-chart-kit");
@@ -35,7 +39,56 @@ const PURPLE_900 = "#581c87";
 const GREEN_500 = "#22c55e";
 const RED_500 = "#ef4444";
 
-function formatCurrency(value) {
+export type GoalRow = {
+  id: string;
+  description: string;
+  amount: number;
+  currentAmount: number;
+  date: number;
+  icon?: string;
+  category?: string;
+};
+
+export type RunRow = {
+  id: string;
+  currentDistance: number;
+  unityAmount: number;
+  amount: number;
+  type: string;
+  date: number;
+  location: string;
+};
+
+export type PieDatum = {
+  name: string;
+  population: number;
+  color: string;
+  legendFontColor: string;
+  legendFontSize: number;
+};
+
+export type LineData = {
+  labels: string[];
+  incomings: number[];
+  expenses: number[];
+  net: number[];
+};
+
+export type RunsChartData = {
+  labels: string[];
+  data: number[];
+  fullList: RunRow[];
+};
+
+export type HeroValues = {
+  Saldo: number;
+  Incomings: number;
+  Expenses: number;
+  Tithe: number;
+  Total: number;
+};
+
+function formatCurrency(value: number): string {
   const n = Number(value) || 0;
   return n.toLocaleString("pt-BR", {
     style: "currency",
@@ -48,7 +101,7 @@ function formatCurrency(value) {
 
 // Pure helpers exported for tests
 
-export function calcHeroValues(list = []) {
+export function calcHeroValues(list: FinanceRow[] = []): HeroValues {
   let Saldo = 0;
   let Incomings = 0;
   let Expenses = 0;
@@ -68,9 +121,9 @@ export function calcHeroValues(list = []) {
   return { Saldo, Incomings, Expenses, Tithe, Total: Saldo };
 }
 
-export function getExpensesByCategory(list = []) {
-  const palette = ["#581C87", "#7D24BC", "#9C44DC", "#AA5DE0", "#C693EA", "#D4AEF0", "#2D0D45", "#391056", "#4F1778", "#661D9A", "#9231D8", "#9C44DC"];
-  const cats = [
+export function getExpensesByCategory(list: FinanceRow[] = []): PieDatum[] {
+  const palette: string[] = ["#581C87", "#7D24BC", "#9C44DC", "#AA5DE0", "#C693EA", "#D4AEF0", "#2D0D45", "#391056", "#4F1778", "#661D9A", "#9231D8", "#9C44DC"];
+  const cats: string[] = [
     "Cartão",
     "Moradia",
     "Vestuário",
@@ -85,7 +138,7 @@ export function getExpensesByCategory(list = []) {
     "Saúde",
     "Bares e Restaurantes",
   ];
-  const map = {};
+  const map: Record<string, number> = {};
   for (const cat of cats) map[cat] = 0;
   for (const item of list) {
     if (item.isEnabled) {
@@ -94,7 +147,7 @@ export function getExpensesByCategory(list = []) {
       map[cat] += Number(item.amount) || 0;
     }
   }
-  const data = Object.entries(map)
+  const data: PieDatum[] = Object.entries(map)
     .filter(([, v]) => v > 0)
     .map(([name, population], idx) => ({
       name,
@@ -107,33 +160,33 @@ export function getExpensesByCategory(list = []) {
   return data;
 }
 
-export function getLast6MonthsLineData(list = []) {
+export function getLast6MonthsLineData(list: FinanceRow[] = []): LineData {
   const now = dayjs();
-  const months = [];
+  const months: dayjs.Dayjs[] = [];
   for (let i = 5; i >= 0; i--) {
     const d = now.subtract(i, "month");
     months.push(d);
   }
-  const labels = months.map((m) => m.locale("pt-br").format("MMM YY").toLowerCase());
-  const incomings = months.map((m) => {
+  const labels: string[] = months.map((m) => m.locale("pt-br").format("MMM YY").toLowerCase());
+  const incomings: number[] = months.map((m) => {
     const start = m.startOf("month").valueOf();
     const end = m.endOf("month").valueOf();
     return list
       .filter((it) => !it.isEnabled && it.date >= start && it.date <= end)
       .reduce((acc, it) => acc + (Number(it.amount) || 0), 0);
   });
-  const expenses = months.map((m) => {
+  const expenses: number[] = months.map((m) => {
     const start = m.startOf("month").valueOf();
     const end = m.endOf("month").valueOf();
     return list
       .filter((it) => it.isEnabled && it.date >= start && it.date <= end)
       .reduce((acc, it) => acc + (Number(it.amount) || 0), 0);
   });
-  const net = months.map((_, idx) => incomings[idx] - expenses[idx]);
+  const net: number[] = months.map((_, idx) => incomings[idx] - expenses[idx]);
   return { labels, incomings, expenses, net };
 }
 
-export function getUrgentGoals(goals = []) {
+export function getUrgentGoals(goals: GoalRow[] = []): GoalRow[] {
   const now = Date.now();
   return goals
     .filter((g) => {
@@ -144,17 +197,17 @@ export function getUrgentGoals(goals = []) {
     .slice(0, 5);
 }
 
-export function calcGoalProgress(goal) {
+export function calcGoalProgress(goal: GoalRow | null | undefined): number {
   if (!goal || !goal.amount) return 0;
   const p = (Number(goal.currentAmount) / Number(goal.amount));
   return p >= 1 ? 1 : p < 0 ? 0 : p;
 }
 
-export function getStockMissing(stock = []) {
+export function getStockMissing(stock: StockRow[] = []): StockRow[] {
   return stock.filter((it) => Number(it.quantity) < Number(it.quantityDesired));
 }
 
-export function getStockNearMissing(stock = []) {
+export function getStockNearMissing(stock: StockRow[] = []): StockRow[] {
   // Próximos de faltar: em estoque mas no limite (quantity == quantityDesired ou +1)
   return stock.filter((it) => {
     const q = Number(it.quantity);
@@ -163,62 +216,68 @@ export function getStockNearMissing(stock = []) {
   });
 }
 
-export function getLast7RunsChartData(runs = [], filter = "litro") {
-  const sorted = [...runs].sort((a, b) => Number(a.date) - Number(b.date)).slice(-7);
-  const labels = sorted.map((item) => {
+export function getLast7RunsChartData(runs: RunRow[] = [], filter: string = "litro"): RunsChartData {
+  const sorted: RunRow[] = [...runs].sort((a, b) => Number(a.date) - Number(b.date)).slice(-7);
+  const labels: string[] = sorted.map((item) => {
     const d = new Date(Number(item.date));
     const dia = String(d.getUTCDate()).padStart(2, "0");
     const mes = String(d.getUTCMonth() + 1).padStart(2, "0");
     return `${dia}/${mes}`;
   });
-  const data = sorted.map((item) => (filter === "litro" ? Number(item.unityAmount) || 0 : Number(item.amount) || 0));
+  const data: number[] = sorted.map((item) => (filter === "litro" ? Number(item.unityAmount) || 0 : Number(item.amount) || 0));
   return { labels, data, fullList: sorted };
 }
 
-export default function Dashboard() {
-  const navigation = useNavigation();
-  const isFocused = useIsFocused();
+export default function Dashboard(): React.JSX.Element {
+  const navigation: any = useNavigation();
+  const isFocused: boolean = useIsFocused();
 
-  const colorModeState = useSettingsStore((s) => s.colorModeState);
-  const isDark = colorModeState === "dark";
-  const bg = isDark ? "#1c1e21" : "#f5f5f4";
-  const bgCard = isDark ? "#27272a" : "#f5f5f4";
-  const cardBgWhite = isDark ? "#27272a" : "white";
-  const text = isDark ? "#e4e4e7" : "#52525b";
-  const subText = isDark ? "#a1a1aa" : "#6b7280";
-  const titleText = isDark ? "#e4e4e7" : "#374151";
-  const headerText = isDark ? "#27272a" : "white";
-  const isEnableTotalHistoryCard = useSettingsStore((s) => !!s.isEnableTotalHistoryCard);
-  const isEnableTitheCard = useSettingsStore((s) => !!s.isEnableTitheCard);
-  const tithePercent = useSettingsStore((s) => s.tithePercent ?? 10);
-  const titheCategoriesRaw = useSettingsStore((s) => s.titheCategories);
-  const titheCategories = useMemo(() => {
+  const colorModeState: string = useSettingsStore((s: SettingsState) => s.colorModeState);
+  const isDark: boolean = colorModeState === "dark";
+  const bg: string = isDark ? "#1c1e21" : "#f5f5f4";
+  const bgCard: string = isDark ? "#27272a" : "#f5f5f4";
+  const cardBgWhite: string = isDark ? "#27272a" : "white";
+  const text: string = isDark ? "#e4e4e7" : "#52525b";
+  const subText: string = isDark ? "#a1a1aa" : "#6b7280";
+  const titleText: string = isDark ? "#e4e4e7" : "#374151";
+  const headerText: string = isDark ? "#27272a" : "white";
+  const settingsSlice = useSettingsStore(useShallow((s: SettingsState) => ({
+    isEnableTotalHistoryCard: !!s.isEnableTotalHistoryCard,
+    isEnableTitheCard: !!s.isEnableTitheCard,
+    tithePercent: s.tithePercent ?? 10,
+    titheCategoriesRaw: s.titheCategories,
+  })));
+  const isEnableTotalHistoryCard: boolean = settingsSlice.isEnableTotalHistoryCard;
+  const isEnableTitheCard: boolean = settingsSlice.isEnableTitheCard;
+  const tithePercent: number = settingsSlice.tithePercent;
+  const titheCategoriesRaw: string = settingsSlice.titheCategoriesRaw;
+  const titheCategories: string[] = useMemo(() => {
     try {
       const parsed = typeof titheCategoriesRaw === 'string' ? JSON.parse(titheCategoriesRaw) : titheCategoriesRaw;
-      if (Array.isArray(parsed) && parsed.length) return parsed;
+      if (Array.isArray(parsed) && parsed.length) return parsed as string[];
     } catch {}
     return ['Ganhos'];
   }, [titheCategoriesRaw]);
 
-  const [finances, setFinances] = useState([]);
-  const [goals, setGoals] = useState([]);
-  const [runs, setRuns] = useState([]);
-  const [stock, setStock] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [selectedPieIndex, setSelectedPieIndex] = useState(null);
-  const [selectedLineIndex, setSelectedLineIndex] = useState(null);
-  const [selectedRunsFilter, setSelectedRunsFilter] = useState("litro");
-  const [selectedRunsIndex, setSelectedRunsIndex] = useState(null);
-  const tabBarHeight = (() => { try { const { useBottomTabBarHeight } = require("@react-navigation/bottom-tabs"); return useBottomTabBarHeight(); } catch { return 80; } })();
+  const [finances, setFinances] = useState<FinanceRow[]>([]);
+  const [goals, setGoals] = useState<GoalRow[]>([]);
+  const [runs, setRuns] = useState<RunRow[]>([]);
+  const [stock, setStock] = useState<StockRow[]>([]);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [selectedPieIndex, setSelectedPieIndex] = useState<number | null>(null);
+  const [selectedLineIndex, setSelectedLineIndex] = useState<number | null>(null);
+  const [selectedRunsFilter, setSelectedRunsFilter] = useState<string>("litro");
+  const [selectedRunsIndex, setSelectedRunsIndex] = useState<number | null>(null);
+  const tabBarHeight: number = (() => { try { const { useBottomTabBarHeight } = require("@react-navigation/bottom-tabs"); return useBottomTabBarHeight(); } catch { return 80; } })();
 
   const load = useCallback(async () => {
     setLoading(true);
     try {
       const [f, g, r, s] = await Promise.all([financeRepo.getAll(), goalRepo.getAll(), runRepo.getAll().catch(() => []), marketRepo.getAll().catch(() => [])]);
-      setFinances(f || []);
-      setGoals(g || []);
-      setRuns(r || []);
-      setStock(s || []);
+      setFinances((f as FinanceRow[]) || []);
+      setGoals((g as GoalRow[]) || []);
+      setRuns((r as RunRow[]) || []);
+      setStock((s as StockRow[]) || []);
     } catch {
       setFinances([]);
       setGoals([]);
@@ -233,20 +292,20 @@ export default function Dashboard() {
     else load();
   }, [isFocused, load]);
 
-  const hero = useMemo(() => {
+  const hero: HeroValues = useMemo(() => {
     const base = calcHeroValues(finances);
     const titheAmount = calcTithePure(finances, { percent: tithePercent, categories: titheCategories });
     return { ...base, Tithe: titheAmount };
   }, [finances, tithePercent, titheCategories]);
-  const pieData = useMemo(() => getExpensesByCategory(finances), [finances]);
-  const pieTotal = useMemo(() => pieData.reduce((acc, cur) => acc + (Number(cur.population) || 0), 0), [pieData]);
-  const lineData = useMemo(() => getLast6MonthsLineData(finances), [finances]);
-  const urgentGoals = useMemo(() => getUrgentGoals(goals), [goals]);
-  const runsChartData = useMemo(() => getLast7RunsChartData(runs, selectedRunsFilter), [runs, selectedRunsFilter]);
-  const hasRuns = runs.length > 0;
-  const stockMissing = useMemo(() => getStockMissing(stock), [stock]);
-  const stockNearMissing = useMemo(() => getStockNearMissing(stock), [stock]);
-  const hasStock = stock.length > 0;
+  const pieData: PieDatum[] = useMemo(() => getExpensesByCategory(finances), [finances]);
+  const pieTotal: number = useMemo(() => pieData.reduce((acc, cur) => acc + (Number(cur.population) || 0), 0), [pieData]);
+  const lineData: LineData = useMemo(() => getLast6MonthsLineData(finances), [finances]);
+  const urgentGoals: GoalRow[] = useMemo(() => getUrgentGoals(goals), [goals]);
+  const runsChartData: RunsChartData = useMemo(() => getLast7RunsChartData(runs, selectedRunsFilter), [runs, selectedRunsFilter]);
+  const hasRuns: boolean = runs.length > 0;
+  const stockMissing: StockRow[] = useMemo(() => getStockMissing(stock), [stock]);
+  const stockNearMissing: StockRow[] = useMemo(() => getStockNearMissing(stock), [stock]);
+  const hasStock: boolean = stock.length > 0;
 
   useEffect(() => {
     if (selectedPieIndex !== null && selectedPieIndex >= pieData.length) {
@@ -266,10 +325,10 @@ export default function Dashboard() {
     }
   }, [runsChartData.labels.length, selectedRunsIndex]);
 
-  const hasFinances = finances.length > 0;
-  const chartWidth = width * 0.92;
-  const chartInnerWidth = Math.min(chartWidth - 32, width - 64);
-  const pieSize = Math.min(160, Math.round(chartWidth * 0.48));
+  const hasFinances: boolean = finances.length > 0;
+  const chartWidth: number = width * 0.92;
+  const chartInnerWidth: number = Math.min(chartWidth - 32, width - 64);
+  const pieSize: number = Math.min(160, Math.round(chartWidth * 0.48));
 
   return (
     <View style={{ flex: 1, backgroundColor: bg }}>
@@ -419,7 +478,7 @@ export default function Dashboard() {
                   backgroundColor="transparent"
                   paddingLeft={0}
                   selectedIndex={selectedPieIndex}
-                  onSelect={(idx) => setSelectedPieIndex((prev) => (prev === idx ? null : idx))}
+                  onSelect={(idx: number) => setSelectedPieIndex((prev) => (prev === idx ? null : idx))}
                   chartConfig={{ color: (opacity = 1) => `rgba(0,0,0,${opacity})` }}
                   testID="interactive-pie"
                 />
@@ -661,7 +720,7 @@ export default function Dashboard() {
                       yAxisLabel=""
                       yAxisSuffix=""
                       yLabelsOffset={8}
-                      formatYLabel={(yLabel) => {
+                      formatYLabel={(yLabel: string) => {
                         const num = Number(String(yLabel).replace(",", "."));
                         if (Number.isNaN(num)) return String(yLabel);
                         return num.toLocaleString("pt-BR", {
@@ -672,7 +731,7 @@ export default function Dashboard() {
                           useGrouping: true,
                         });
                       }}
-                      formatXLabel={(xLabel) => String(xLabel)}
+                      formatXLabel={(xLabel: string) => String(xLabel)}
                       chartConfig={{
                         backgroundColor: cardBgWhite,
                         backgroundGradientFrom: cardBgWhite,
@@ -684,7 +743,7 @@ export default function Dashboard() {
                         propsForHorizontalLabels: { fontSize: 9 },
                         propsForVerticalLabels: { fontSize: 11 },
                       }}
-                      getDotProps={(value, index) => {
+                      getDotProps={(value: any, index: number) => {
                         const isSelected = index === selectedLineIndex;
                         return {
                           r: isSelected ? "7" : "5",
@@ -700,8 +759,8 @@ export default function Dashboard() {
                     withVerticalLines
                     withHorizontalLabels
                     withVerticalLabels={false}
-                    onDataPointClick={({ index }) => setSelectedLineIndex((prev) => (prev === index ? null : index))}
-                      decorator={({ width: w, height: h, paddingTop, paddingRight, data }) => {
+                    onDataPointClick={({ index }: any) => setSelectedLineIndex((prev: any) => (prev === index ? null : index))}
+                      decorator={({ width: w, height: h, paddingTop, paddingRight, data }: any) => {
                         if (selectedLineIndex === null || !data || !data[0] || selectedLineIndex < 0 || selectedLineIndex >= data[0].data.length) return null;
                         try {
                           const { G, Line } = require("react-native-svg");
@@ -733,7 +792,7 @@ export default function Dashboard() {
                       {lineData.labels.map((_, idx) => (
                         <TouchableOpacity
                           key={`hit-${idx}`}
-                          onPress={() => setSelectedLineIndex((prev) => (prev === idx ? null : idx))}
+                          onPress={() => setSelectedLineIndex((prev: any) => (prev === idx ? null : idx))}
                           testID={`dot-hit-${idx}`}
                           hitSlop={{ top: 20, bottom: 20, left: 12, right: 12 }}
                           style={{ flex: 1, marginHorizontal: 1 }}
@@ -821,7 +880,7 @@ export default function Dashboard() {
                       return (
                         <TouchableOpacity
                           key={`x-${label}-${idx}`}
-                          onPress={() => setSelectedLineIndex((prev) => (prev === idx ? null : idx))}
+                          onPress={() => setSelectedLineIndex((prev: any) => (prev === idx ? null : idx))}
                           testID={`line-point-${idx}`}
                           accessibilityLabel={`Ponto ${label}`}
                           hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
@@ -948,11 +1007,11 @@ export default function Dashboard() {
                     </View>
                   </View>
                   <View className="bg-red-50 dark:bg-red-900/20 px-2 py-1 rounded-full" style={{ backgroundColor: isDark ? "rgba(239,68,68,0.12)" : "#fef2f2", paddingHorizontal: 8, paddingVertical: 4, borderRadius: 999 }}>
-                    <Text className="text-xs font-bold text-red-600 dark:text-red-300" style={{ fontSize: 11, fontWeight: "700", color: "#dc2626" }}>{stockMissing.reduce((acc: number, it: any) => acc + (Number(it.quantityDesired) - Number(it.quantity)), 0)} un.</Text>
+                    <Text className="text-xs font-bold text-red-600 dark:text-red-300" style={{ fontSize: 11, fontWeight: "700", color: "#dc2626" }}>{stockMissing.reduce((acc: number, it: StockRow) => acc + (Number(it.quantityDesired) - Number(it.quantity)), 0)} un.</Text>
                   </View>
                 </View>
                 <View style={{ marginTop: 12, gap: 8 }}>
-                  {stockMissing.slice(0, 5).map((it: any) => {
+                  {stockMissing.slice(0, 5).map((it: StockRow) => {
                     const falta = Number(it.quantityDesired) - Number(it.quantity);
                     return (
                       <View key={it.id} testID={`stock-missing-${it.id}`} className="flex-row items-center justify-between bg-gray-50 dark:bg-gray-700/50 rounded-xl px-3 py-2" style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", backgroundColor: isDark ? "#3f3f46" : "#f9fafb", borderRadius: 12, paddingHorizontal: 12, paddingVertical: 8, borderWidth: 1, borderColor: isDark ? "#52525b" : "#f3f4f6" }}>
@@ -995,7 +1054,7 @@ export default function Dashboard() {
                   </View>
                 </View>
                 <View style={{ marginTop: 12, gap: 8 }}>
-                  {stockNearMissing.slice(0, 5).map((it: any) => (
+                  {stockNearMissing.slice(0, 5).map((it: StockRow) => (
                     <View key={it.id} testID={`stock-near-${it.id}`} className="flex-row items-center justify-between bg-gray-50 dark:bg-gray-700/50 rounded-xl px-3 py-2" style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", backgroundColor: isDark ? "#3f3f46" : "#f9fafb", borderRadius: 12, paddingHorizontal: 12, paddingVertical: 8, borderWidth: 1, borderColor: isDark ? "#52525b" : "#f3f4f6" }}>
                       <View style={{ flex: 1, marginRight: 8 }}>
                         <Text className="text-sm font-semibold text-gray-800 dark:text-gray-100" style={{ fontSize: 13, fontWeight: "600", color: titleText }} numberOfLines={1}>{it.description}</Text>

@@ -227,7 +227,7 @@ export const ThemeSwitcher = forwardRef<ThemeSwitcherRef, ThemeSwitcherProps>(
         {snapshot && (
           <>
             <Canvas
-              style={StyleSheet.absoluteFillObject}
+              style={StyleSheet.absoluteFill}
               pointerEvents="none"
             >
               <Mask mode="luminance" mask={<ThemeMask {...snapshot} progress={progress} />}>
@@ -245,7 +245,7 @@ export const ThemeSwitcher = forwardRef<ThemeSwitcherRef, ThemeSwitcherProps>(
                 on controls the user cannot currently see are never intentional,
                 and this stops a queue of them building up behind the guard. */}
             <View
-              style={StyleSheet.absoluteFillObject}
+              style={StyleSheet.absoluteFill}
               onStartShouldSetResponder={returnTrue}
             />
           </>

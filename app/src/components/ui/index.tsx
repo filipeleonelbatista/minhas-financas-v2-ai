@@ -155,6 +155,8 @@ export const RadiantButton: React.FC<IRadiantButton> &
     };
 
     const { width, height } = layout;
+    const effectiveWidth = width || initialW || 56;
+    const effectiveHeight = height || initialH || 56;
     const cx = (width || effectiveWidth) / 2;
     const cy = (height || effectiveHeight) / 2;
 
@@ -243,8 +245,6 @@ export const RadiantButton: React.FC<IRadiantButton> &
 
     const fallbackBackground = disabled ? "#6b7280" : theme.background;
     const shaderReady = !!borderGlowShader && !!Skia;
-    const effectiveWidth = width || initialW || 56;
-    const effectiveHeight = height || initialH || 56;
     const hasEffectiveLayout = hasLayout || !!effectiveWidth;
 
     return (
@@ -270,7 +270,7 @@ export const RadiantButton: React.FC<IRadiantButton> &
           {hasEffectiveLayout && innerClip && (
             <Canvas
               style={{
-                ...StyleSheet.absoluteFillObject,
+                ...StyleSheet.absoluteFill,
               }}
             >
               {borderGlowShader && (

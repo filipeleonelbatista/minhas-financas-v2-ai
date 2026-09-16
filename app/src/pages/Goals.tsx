@@ -19,11 +19,22 @@ import GoalCard from "../components/ui/GoalCard";
 import SwipeableGoalRow from "../components/SwipeableGoalRow";
 import ThemedAlert from "../components/ui/ThemedAlert";
 import Header from "../components/Header";
-import { useSettingsStore } from "../stores/settings";
+import { useSettingsStore, type SettingsState } from "../stores/settings";
+import { useShallow } from "zustand/react/shallow";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Sheet, useSheetRef } from "../components/nativewindui/Sheet";
 import { BottomSheetScrollView } from "@gorhom/bottom-sheet";
 import { useIsKeyboardOpen } from "../hooks/useIsKeyboardOpen";
+
+export type GoalRow = {
+  id: string;
+  description: string;
+  amount: number;
+  currentAmount: number;
+  date: number;
+  icon?: string;
+  category?: string;
+};
 
 let RadiantButton = null;
 try {
@@ -38,9 +49,9 @@ try {
 
 // Re-export for tests
 export { DEFAULT_GOAL_CATEGORIES };
-export function getCategoryOptions(existingGoals = []) {
-  const custom = [...new Set(existingGoals.map(g => (g.category||'').toLowerCase()).filter(c => c && !DEFAULT_GOAL_CATEGORIES.includes(c) && c !== 'outros'))];
-  return [...DEFAULT_GOAL_CATEGORIES, ...custom];
+export function getCategoryOptions(existingGoals: GoalRow[] = []): string[] {
+  const custom: string[] = [...new Set(existingGoals.map(g => (g.category||'').toLowerCase()).filter((c: string) => c && !(DEFAULT_GOAL_CATEGORIES as readonly string[]).includes(c) && c !== 'outros'))];
+  return [...(DEFAULT_GOAL_CATEGORIES as readonly string[]), ...custom] as string[];
 }
 
 const PURPLE_600 = "#9c44dc";
@@ -49,21 +60,21 @@ const GREEN_500 = "#22c55e";
 const GREEN_600 = "#16a34a";
 const RED_500 = "#ef4444";
 
-function moeda(value) {
+function moeda(value: string): string {
   let v = String(value).replace(/\D/g, "");
   v = v.replace(/(\d)(\d{2})$/, "$1,$2");
   v = v.replace(/(?=(\d{3})+(\D))\B/g, ".");
   return v;
 }
-function parseMoeda(str) {
+function parseMoeda(str: string): number {
   if (!str) return 0;
   return parseFloat(String(str).replace(/\./g, "").replace(",", ".")) || 0;
 }
-function formatDateInput(d) {
+function formatDateInput(d: number | string): string {
   if (!d) return "";
   return new Date(Number(d)).toLocaleDateString("pt-BR");
 }
-function parseDateInput(str) {
+function parseDateInput(str: string): number {
   if (!str) return Date.now() + 30*86400000;
   const parts = str.split("/");
   if (parts.length !== 3) return Date.now() + 30*86400000;
@@ -72,12 +83,22 @@ function parseDateInput(str) {
   return isNaN(t) ? Date.now() + 30*86400000 : t;
 }
 
-function CategoryPicker({ selected, onSelect, customValue, onCustomChange, showCustom, setShowCustom, testIDPrefix="category" }) {
+type CategoryPickerProps = {
+  selected: string;
+  onSelect: (v: string) => void;
+  customValue: string;
+  onCustomChange: (v: string) => void;
+  showCustom: boolean;
+  setShowCustom: (v: boolean) => void;
+  testIDPrefix?: string;
+};
+
+function CategoryPicker({ selected, onSelect, customValue, onCustomChange, showCustom, setShowCustom, testIDPrefix="category" }: CategoryPickerProps): React.JSX.Element {
   const colorModeState = useSettingsStore((s) => s.colorModeState);
   const isDark = colorModeState === "dark";
   const text = isDark ? "#e4e4e7" : "#52525b";
-  const allOptions = [...DEFAULT_GOAL_CATEGORIES];
-  if (selected && !allOptions.includes(selected) && !showCustom) {
+  const allOptions: string[] = [...(DEFAULT_GOAL_CATEGORIES as readonly string[])];
+  if (selected && !(allOptions as string[]).includes(selected) && !showCustom) {
     allOptions.push(selected);
   }
   return (
@@ -133,46 +154,46 @@ function CategoryPicker({ selected, onSelect, customValue, onCustomChange, showC
   );
 }
 
-export default function Goals() {
-  const isFocused = useIsFocused ? useIsFocused() : true;
-  let navigation = { canGoBack: () => false, goBack: () => {}, navigate: () => {}, setParams: () => {} };
-  let route = { params: {} };
+export default function Goals(): React.JSX.Element {
+  const isFocused: boolean = useIsFocused ? useIsFocused() : true;
+  let navigation: any = { canGoBack: () => false, goBack: () => {}, navigate: () => {}, setParams: () => {} };
+  let route: any = { params: {} };
   try { const n = useNavigation(); if (n) navigation = n; } catch {}
   try { const r = useRoute(); if (r) route = r; } catch {}
 
-  const colorModeState = useSettingsStore((s) => s.colorModeState);
-  const isDark = colorModeState === "dark";
-  const bg = isDark ? "#1c1e21" : "#f5f5f4";
-  const bgCard = isDark ? "#27272a" : "#f5f5f4";
-  const bgCardPressed = isDark ? "#3f3f46" : "#e7e5e4";
-  const headerText = isDark ? "#27272a" : "white";
-  const text = isDark ? "#e4e4e7" : "#52525b";
-  const subText = isDark ? "#a1a1aa" : "#6b7280";
-  const isKeyboardOpen = useIsKeyboardOpen();
+  const colorModeState: string = useSettingsStore(useShallow((s: SettingsState) => s.colorModeState));
+  const isDark: boolean = colorModeState === "dark";
+  const bg: string = isDark ? "#1c1e21" : "#f5f5f4";
+  const bgCard: string = isDark ? "#27272a" : "#f5f5f4";
+  const bgCardPressed: string = isDark ? "#3f3f46" : "#e7e5e4";
+  const headerText: string = isDark ? "#27272a" : "white";
+  const text: string = isDark ? "#e4e4e7" : "#52525b";
+  const subText: string = isDark ? "#a1a1aa" : "#6b7280";
+  const isKeyboardOpen: boolean = useIsKeyboardOpen();
   const { height } = useWindowDimensions();
-  let insets = { bottom: 0, top: 0, left: 0, right: 0 };
-  try { const v = useSafeAreaInsets(); if (v) insets = v; } catch {}
-  const filterSheetRef = useSheetRef();
-  const tabBarHeight = (() => { try { const { useBottomTabBarHeight } = require("@react-navigation/bottom-tabs"); return useBottomTabBarHeight(); } catch { return 80; } })();
+  let insets: { bottom: number; top: number; left: number; right: number } = { bottom: 0, top: 0, left: 0, right: 0 };
+  try { const v: any = useSafeAreaInsets(); if (v) insets = v; } catch {}
+  const filterSheetRef: any = useSheetRef();
+  const tabBarHeight: number = (() => { try { const { useBottomTabBarHeight } = require("@react-navigation/bottom-tabs"); return useBottomTabBarHeight(); } catch { return 80; } })();
 
-  const [goals, setGoals] = useState([]);
-  const [filterStatus, setFilterStatus] = useState('Todas');
-  const [filterCategory, setFilterCategory] = useState('Todas');
-  const [search, setSearch] = useState("");
-  const [showForm, setShowForm] = useState(false);
-  const [editing, setEditing] = useState(null);
-  const [depositGoal, setDepositGoal] = useState(null);
-  const [depositAmount, setDepositAmount] = useState("");
+  const [goals, setGoals] = useState<GoalRow[]>([]);
+  const [filterStatus, setFilterStatus] = useState<string>('Todas');
+  const [filterCategory, setFilterCategory] = useState<string>('Todas');
+  const [search, setSearch] = useState<string>("");
+  const [showForm, setShowForm] = useState<boolean>(false);
+  const [editing, setEditing] = useState<GoalRow | null>(null);
+  const [depositGoal, setDepositGoal] = useState<GoalRow | null>(null);
+  const [depositAmount, setDepositAmount] = useState<string>("");
 
-  const [description, setDescription] = useState("");
-  const [amount, setAmount] = useState("");
-  const [currentAmount, setCurrentAmount] = useState("");
-  const [date, setDate] = useState("");
-  const [selectedCategory, setSelectedCategory] = useState(DEFAULT_GOAL_CATEGORIES[0]);
-  const [showCustomCat, setShowCustomCat] = useState(false);
-  const [customCategory, setCustomCategory] = useState("");
-  const [confirmDeleteGoal, setConfirmDeleteGoal] = useState(null);
-  const [errorAlert, setErrorAlert] = useState(null); // {title, message}
+  const [description, setDescription] = useState<string>("");
+  const [amount, setAmount] = useState<string>("");
+  const [currentAmount, setCurrentAmount] = useState<string>("");
+  const [date, setDate] = useState<string>("");
+  const [selectedCategory, setSelectedCategory] = useState<string>(DEFAULT_GOAL_CATEGORIES[0]);
+  const [showCustomCat, setShowCustomCat] = useState<boolean>(false);
+  const [customCategory, setCustomCategory] = useState<string>("");
+  const [confirmDeleteGoal, setConfirmDeleteGoal] = useState<GoalRow | null>(null);
+  const [errorAlert, setErrorAlert] = useState<{title: string; message: string} | null>(null);
 
   const load = useCallback(async () => {
     const list = await goalRepo.getAll();
@@ -207,7 +228,7 @@ export default function Goals() {
   }, [isFocused, goals, route.params]);
 
   const filtered = useMemo(() => {
-    let list = filterGoalsByStatus(goals, filterStatus);
+    let list = filterGoalsByStatus(goals, filterStatus as any);
     if (filterCategory !== 'Todas') {
       const norm = filterCategory.toLowerCase();
       list = list.filter(g => (g.category||'').toLowerCase() === norm);

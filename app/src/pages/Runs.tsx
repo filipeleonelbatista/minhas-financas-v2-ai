@@ -15,9 +15,10 @@ import SwipeableRunRow from "../components/SwipeableRunRow";
 import ThemedAlert from "../components/ui/ThemedAlert";
 import EditFuelForm from "../components/EditFuelForm";
 import { useIsKeyboardOpen } from "../hooks/useIsKeyboardOpen";
-import { useRunsStore } from "../stores/runs";
-import { useSettingsStore } from "../stores/settings";
+import { useRunsStore, type RunRow } from "../stores/runs";
+import { useSettingsStore, type SettingsState } from "../stores/settings";
 import { usePagesStore } from "../stores/pages";
+import { useShallow } from "zustand/react/shallow";
 import ErrorSheet from "../components/ErrorSheet";
 import EditVeicleForm from "../components/EditVeicleForm";
 import { Sheet, useSheetRef } from "../components/nativewindui/Sheet";
@@ -32,73 +33,73 @@ const PURPLE_600 = "#9c44dc";
 dayjs.extend(isSameOrAfter);
 dayjs.extend(isSameOrBefore);
 
-export default function Runs() {
-  const colorModeState = useSettingsStore((s) => s.colorModeState);
-  const isDark = colorModeState === "dark";
-  const bg = isDark ? "#1c1e21" : "#f5f5f4";
-  const bgCard = isDark ? "#27272a" : "white";
-  const headerText = isDark ? "#27272a" : "white";
-  const text = isDark ? "#e4e4e7" : "#52525b";
-  const bgCardPressed = isDark ? "#3f3f46" : "#f5f5f4";
-  const isAiEnabled = useSettingsStore((s) => !!s.isAiEnabled);
-  const veicleAutonomy = useSettingsStore((s) => s.veicleAutonomy);
+export default function Runs(): React.JSX.Element {
+  const colorModeState = useSettingsStore((s: SettingsState) => s.colorModeState);
+  const isDark: boolean = colorModeState === "dark";
+  const bg: string = isDark ? "#1c1e21" : "#f5f5f4";
+  const bgCard: string = isDark ? "#27272a" : "white";
+  const headerText: string = isDark ? "#27272a" : "white";
+  const text: string = isDark ? "#e4e4e7" : "#52525b";
+  const bgCardPressed: string = isDark ? "#3f3f46" : "#f5f5f4";
+  const isAiEnabled: boolean = useSettingsStore((s: SettingsState) => !!s.isAiEnabled);
+  const veicleAutonomy: number = useSettingsStore((s: SettingsState) => s.veicleAutonomy ?? 0);
 
   const { setSelectedSheet } = usePagesStore();
-  const isFocused = useIsFocused();
+  const isFocused: boolean = useIsFocused();
   useEffect(() => {
     if (isFocused) setSelectedSheet("Combustível");
   }, [isFocused]);
 
-  const isKeyboardOpen = useIsKeyboardOpen();
-  const tabBarHeight = (() => { try { const { useBottomTabBarHeight } = require("@react-navigation/bottom-tabs"); return useBottomTabBarHeight(); } catch { return 80; } })();
-  const [isOpen, setIsOpen] = useState(false);
-  const onOpen = () => setIsOpen(true);
-  const onClose = () => setIsOpen(false);
-  const [selectedRun, setSelectedRun] = useState(null);
-  const [isRunModalOpen, setIsRunModalOpen] = useState(false);
-  const [isRunEditMode, setIsRunEditMode] = useState(false);
-  const [confirmDeleteRun, setConfirmDeleteRun] = useState(null);
-  const navigation = useNavigation();
+  const isKeyboardOpen: boolean = useIsKeyboardOpen();
+  const tabBarHeight: number = (() => { try { const { useBottomTabBarHeight } = require("@react-navigation/bottom-tabs"); return useBottomTabBarHeight(); } catch { return 80; } })();
+  const [isOpen, setIsOpen] = useState<boolean>(false);
+  const onOpen = (): void => setIsOpen(true);
+  const onClose = (): void => setIsOpen(false);
+  const [selectedRun, setSelectedRun] = useState<RunRow | null>(null);
+  const [isRunModalOpen, setIsRunModalOpen] = useState<boolean>(false);
+  const [isRunEditMode, setIsRunEditMode] = useState<boolean>(false);
+  const [confirmDeleteRun, setConfirmDeleteRun] = useState<RunRow | null>(null);
+  const navigation: any = useNavigation();
   const { height } = useWindowDimensions();
   const insets = useSafeAreaInsets();
   const filterSheetRef = useSheetRef();
 
-  const [startDate, setStartDate] = useState(dayjs().subtract(5, "month").startOf("month").format("DD/MM/YYYY"));
-  const [endDate, setEndDate] = useState(dayjs().endOf("month").format("DD/MM/YYYY"));
+  const [startDate, setStartDate] = useState<string>(dayjs().subtract(5, "month").startOf("month").format("DD/MM/YYYY"));
+  const [endDate, setEndDate] = useState<string>(dayjs().endOf("month").format("DD/MM/YYYY"));
 
-  const FuelList = useRunsStore((s) => s.runsList);
-  const remove = useRunsStore((s) => s.remove);
+  const FuelList: RunRow[] = useRunsStore(useShallow((s: any) => s.runsList as RunRow[]));
+  const remove: (id: string | RunRow) => Promise<void> = useRunsStore((s: any) => s.remove);
 
-  const handleViewRun = (item) => {
+  const handleViewRun = (item: RunRow): void => {
     setSelectedRun(item);
     setIsRunEditMode(false);
     setIsRunModalOpen(true);
   };
-  const handleEditRun = (item) => {
+  const handleEditRun = (item: RunRow): void => {
     setSelectedRun(item);
     setIsRunEditMode(true);
     setIsRunModalOpen(true);
   };
-  const handleDeleteRun = (item) => setConfirmDeleteRun(item);
-  const handleConfirmDeleteRun = async () => {
+  const handleDeleteRun = (item: RunRow): void => setConfirmDeleteRun(item);
+  const handleConfirmDeleteRun = async (): Promise<void> => {
     if (!confirmDeleteRun) return;
-    await remove(confirmDeleteRun.id ?? confirmDeleteRun);
+    await remove((confirmDeleteRun as RunRow).id ?? (confirmDeleteRun as any));
     setConfirmDeleteRun(null);
   };
-  const onCloseRunModal = () => {
+  const onCloseRunModal = (): void => {
     setIsRunModalOpen(false);
     setIsRunEditMode(false);
   };
 
-  const filteredList = useMemo(() => {
+  const filteredList: RunRow[] = useMemo(() => {
     if (FuelList.length > 0) {
-      const filteredByPeriod = FuelList.filter((item) => {
+      const filteredByPeriod = FuelList.filter((item: RunRow) => {
         const itemDate = dayjs(item.date);
         const currentStartDate = dayjs(`${startDate.split("/")[2]}-${startDate.split("/")[1]}-${startDate.split("/")[0]}`);
         const currentEndDate = dayjs(`${endDate.split("/")[2]}-${endDate.split("/")[1]}-${endDate.split("/")[0]}`);
         return itemDate.isSameOrAfter(currentStartDate) && itemDate.isSameOrBefore(currentEndDate);
       });
-      const sortedByDateArray = filteredByPeriod.sort((a, b) => {
+      const sortedByDateArray = filteredByPeriod.sort((a: RunRow, b: RunRow) => {
         const dateA = dayjs(a.date);
         const dateB = dayjs(b.date);
         if (dateA.isBefore(dateB)) return 1;
@@ -110,25 +111,25 @@ export default function Runs() {
     return [];
   }, [FuelList, startDate, endDate]);
 
-  const listTotal = useMemo(() => {
+  const listTotal: number = useMemo(() => {
     let TotalList = 0.0;
-    for (const item of filteredList) TotalList = TotalList + item.amount;
+    for (const item of filteredList) TotalList = TotalList + Number(item.amount);
     return TotalList;
   }, [filteredList]);
 
-  const currentEstimative = useMemo(() => {
-    const result = filteredList[0] ? (Number(veicleAutonomy) * Number(filteredList[0]?.amount)) / Number(filteredList[0]?.unityAmount) + Number(filteredList[0]?.currentDistance) : 0;
+  const currentEstimative: string = useMemo(() => {
+    const result: number = filteredList[0] ? (Number(veicleAutonomy) * Number(filteredList[0]?.amount)) / Number(filteredList[0]?.unityAmount) + Number(filteredList[0]?.currentDistance) : 0;
     return result.toFixed(0);
   }, [filteredList, veicleAutonomy]);
 
-  const onChangeStartDate = (_, selectedDate) => {
+  const onChangeStartDate = (_: any, selectedDate?: Date): void => {
     if (selectedDate) setStartDate(dayjs(selectedDate).format("DD/MM/YYYY"));
   };
-  const onChangeEndDate = (_, selectedDate) => {
+  const onChangeEndDate = (_: any, selectedDate?: Date): void => {
     if (selectedDate) setEndDate(dayjs(selectedDate).format("DD/MM/YYYY"));
   };
 
-  const [selectedSheetOpen, setSelectedSheetOpen] = useState(null);
+  const [selectedSheetOpen, setSelectedSheetOpen] = useState<string | null>(null);
 
   return (
     <View style={{ flex: 1, backgroundColor: bg }} className="flex-1 bg-gray-50 dark:bg-gray-900">
@@ -196,10 +197,10 @@ export default function Runs() {
               </Text>
               <FlatList
                 data={filteredList}
-                keyExtractor={(item) => item.id}
+                keyExtractor={(item: RunRow) => item.id}
                 scrollEnabled={false}
                 ItemSeparatorComponent={() => <View style={{ height: 8 }} />}
-                renderItem={({ item }) => (
+                renderItem={({ item }: { item: RunRow }) => (
                   <SwipeableRunRow item={item} onEdit={handleEditRun} onDelete={handleDeleteRun}>
                     <RunCard item={item} onPress={() => {}} onLongPress={handleViewRun} testID={`run-card-${item.id}`} />
                   </SwipeableRunRow>
@@ -222,7 +223,7 @@ export default function Runs() {
       {(() => {
         const fabSize = 64;
         const fabBottom = tabBarHeight + 16;
-        const onPressVehicle = () => { setSelectedSheetOpen("veicle"); onOpen(); };
+        const onPressVehicle = (): void => { setSelectedSheetOpen("veicle"); onOpen(); };
         if (BorderBeam) {
           return (
             <View style={{ position: "absolute", bottom: fabBottom - 12, right: 4, zIndex: 10, padding: 12 }} testID="vehicle-info-button-wrapper">

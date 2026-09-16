@@ -1,18 +1,18 @@
 import React, { useMemo } from "react";
-
 import { Feather } from "@expo/vector-icons";
 import { openThemedDatePicker } from "../utils/datePicker";
 import { Picker } from "@react-native-picker/picker";
 import { useFormik } from "formik";
 import { View, Text, TextInput, ScrollView, Pressable, TouchableOpacity, Switch } from "react-native";
-import * as Yup from "yup";
 import { useFinanceStore } from "../stores/finance";
-import { useSettingsStore } from "../stores/settings";
+import { useSettingsStore, type SettingsState } from "../stores/settings";
+import { financeSchema } from "../schemas/finance.zod";
+import type { FinanceRow } from "../repositories/finance";
 
 const PURPLE_600 = "#9c44dc";
 const PURPLE_900 = "#581C87";
 
-const categoriesList = [
+const categoriesList: string[] = [
   "Todos",
   "Outros",
   "Bares e Restaurantes",
@@ -31,27 +31,61 @@ const categoriesList = [
   "Vestuário",
 ];
 
-export default function AddItemForm({ onClose }) {
-  const colorModeState = useSettingsStore((s) => s.colorModeState);
-  const isDark = colorModeState === "dark";
-  const text = isDark ? "#e4e4e7" : "#52525b";
+interface AddItemFormProps {
+  onClose: () => void;
+}
 
-  const addTransaction = useFinanceStore((s) => s.add);
-  const simpleFinancesItem = useSettingsStore((s) => !!s.simpleFinancesItem);
+interface FormValues {
+  description: string;
+  amount: string;
+  date: string;
+  category: string;
+  paymentDate: string;
+  paymentStatus: boolean;
+  isEnabled: boolean;
+}
 
-  const formSchema = useMemo(() => {
-    return Yup.object().shape({
-      description: Yup.string().required("O campo Descrição é obrigatório"),
-      amount: Yup.string().required("O campo Valor é obrigatório"),
-      category: Yup.string(),
-      date: Yup.string(),
-      paymentDate: Yup.string(),
-      paymentStatus: Yup.boolean(),
-      isEnabled: Yup.boolean(),
-    });
-  }, []);
+export default function AddItemForm({ onClose }: AddItemFormProps): React.JSX.Element {
+  const colorModeState = useSettingsStore((s: SettingsState) => s.colorModeState);
+  const isDark: boolean = colorModeState === "dark";
+  const text: string = isDark ? "#e4e4e7" : "#52525b";
 
-  const formik = useFormik({
+  const addTransaction: (dto: Partial<FinanceRow> & { amount: number; description: string }) => Promise<void> = useFinanceStore((s: any) => s.add);
+  const simpleFinancesItem: boolean = useSettingsStore((s: SettingsState) => !!s.simpleFinancesItem);
+
+  const validate = (values: FormValues): Partial<Record<keyof FormValues, string>> => {
+    const errors: Partial<Record<keyof FormValues, string>> = {};
+    if (!values.description.trim()) {
+      errors.description = "O campo Descrição é obrigatório";
+    }
+    if (!values.amount.trim()) {
+      errors.amount = "O campo Valor é obrigatório";
+    }
+    // optional zod validation for extra sanitization feedback
+    if (values.description.trim() && values.amount.trim()) {
+      const parsedAmount = parseFloat(values.amount.replaceAll(".", "").replace(",", "."));
+      const amountNum = isNaN(parsedAmount) ? 0 : parsedAmount;
+      const candidate: Record<string, unknown> = {
+        description: values.description,
+        amount: amountNum,
+        category: values.category,
+        date: Date.now(),
+        paymentStatus: values.paymentStatus ? 1 : 0,
+        isEnabled: values.isEnabled ? 1 : 0,
+        isFavorited: 0,
+      };
+      const res = financeSchema.safeParse(candidate);
+      if (!res.success) {
+        const descIssue = res.error.errors.find((e) => e.path[0] === "description");
+        if (descIssue) errors.description = descIssue.message;
+        const amountIssue = res.error.errors.find((e) => e.path[0] === "amount");
+        if (amountIssue) errors.amount = amountIssue.message;
+      }
+    }
+    return errors;
+  };
+
+  const formik = useFormik<FormValues>({
     initialValues: {
       description: "",
       amount: "",
@@ -61,18 +95,18 @@ export default function AddItemForm({ onClose }) {
       paymentStatus: false,
       isEnabled: true,
     },
-    validationSchema: formSchema,
-    onSubmit: (values) => {
+    validate,
+    onSubmit: (values: FormValues) => {
       handleSubmitForm(values);
     },
   });
 
-  async function handleSubmitForm(formValues) {
-    const submittedDate = formValues.date !== "" ? formValues.date.split("/") : null;
-    const submittedPaymentDate =
+  async function handleSubmitForm(formValues: FormValues): Promise<void> {
+    const submittedDate: string[] | null = formValues.date !== "" ? formValues.date.split("/") : null;
+    const submittedPaymentDate: string[] | null =
       formValues.paymentDate !== "" ? formValues.paymentDate.split("/") : null;
     const parsedAmount = parseFloat(formValues.amount.replaceAll(".", "").replace(",", "."));
-    const data = {
+    const data: Record<string, unknown> = {
       amount: isNaN(parsedAmount) ? 0 : parsedAmount,
       date:
         submittedDate
@@ -88,22 +122,46 @@ export default function AddItemForm({ onClose }) {
       isEnabled: formValues.isEnabled ? 1 : 0,
       isFavorited: 0,
     };
+    const validation = financeSchema.safeParse(data);
+    if (!validation.success) {
+      const fieldErrors: Partial<Record<keyof FormValues, string>> = {};
+      for (const issue of validation.error.errors) {
+        const path = issue.path[0] as string;
+        if (path === "description" && !fieldErrors.description) fieldErrors.description = issue.message;
+        if (path === "amount" && !fieldErrors.amount) fieldErrors.amount = issue.message;
+      }
+      if (Object.keys(fieldErrors).length > 0) {
+        formik.setErrors(fieldErrors as any);
+        return;
+      }
+    }
+    const sanitized = validation.success ? validation.data : data;
+    const finalData = {
+      amount: (sanitized as any).amount,
+      date: (sanitized as any).date,
+      paymentDate: (sanitized as any).paymentDate ?? null,
+      description: (sanitized as any).description,
+      category: (sanitized as any).category,
+      paymentStatus: (sanitized as any).paymentStatus,
+      isEnabled: (sanitized as any).isEnabled,
+      isFavorited: 0,
+    };
     try {
-      await addTransaction(data);
+      await addTransaction(finalData as any);
     } catch (e) {
       console.error("Add transaction failed", e);
     }
     onClose();
   }
 
-  function moeda(e) {
-    let value = e;
+  function moeda(e: string): string {
+    let value: string = e;
     value = value.replace(/\D/g, "");
     value = value.replace(/(\d)(\d{2})$/, "$1,$2");
     value = value.replace(/(?=(\d{3})+(\D))\B/g, ".");
     return value;
   }
-  const toggleSwitch = () => {
+  const toggleSwitch = (): void => {
     if (formik.values.isEnabled) {
       formik.setFieldValue("category", "Ganhos");
     } else {
@@ -113,7 +171,7 @@ export default function AddItemForm({ onClose }) {
     formik.setFieldValue("isEnabled", !formik.values.isEnabled);
   };
 
-  const toggleSwitchPaymentStatus = () => {
+  const toggleSwitchPaymentStatus = (): void => {
     if (!formik.values.paymentStatus) {
       const currentDate = new Date();
       formik.setFieldValue(
@@ -134,8 +192,9 @@ export default function AddItemForm({ onClose }) {
     formik.setFieldValue("paymentStatus", !formik.values.paymentStatus);
   };
 
-  const onChange = (event, selectedDate) => {
-    const currentDate = selectedDate;
+  const onChange = (_event: unknown, selectedDate?: Date): void => {
+    const currentDate = selectedDate as Date;
+    if (!currentDate) return;
     formik.setFieldValue(
       "date",
       `${
@@ -150,8 +209,9 @@ export default function AddItemForm({ onClose }) {
     );
   };
 
-  const onChangePaymentDate = (event, selectedDate) => {
-    const currentDate = selectedDate;
+  const onChangePaymentDate = (_event: unknown, selectedDate?: Date): void => {
+    const currentDate = selectedDate as Date;
+    if (!currentDate) return;
     formik.setFieldValue(
       "paymentDate",
       `${
@@ -167,7 +227,7 @@ export default function AddItemForm({ onClose }) {
   };
 
   return (
-    <ScrollView style={{ flex: 1, width: "100%", paddingHorizontal: 16 }} contentContainerStyle={{ paddingBottom: 48, flexGrow: 1 }} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled" keyboardDismissMode="interactive">
+    <ScrollView style={{ flex: 1, width: "100%", paddingHorizontal: 16 }} contentContainerStyle={{ paddingBottom: 48, flexGrow: 1 }} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false} keyboardDismissMode="interactive">
       <Text style={{ fontWeight: "700", fontSize: 24, color: text }}>Adicionar transação</Text>
       <Text style={{ color: text, marginBottom: 16 }}>
         Adicione informações sobre o entrada ou saída que está adicionando.
@@ -179,9 +239,8 @@ export default function AddItemForm({ onClose }) {
         accessibilityLabel="Descrição"
         placeholder="Descrição"
         placeholderTextColor="#a1a1aa"
-        onChangeText={(t) => formik.setFieldValue("description", t)}
+        onChangeText={(t: string) => formik.setFieldValue("description", t)}
         value={formik.values.description}
-        className="bg-white dark:bg-gray-800 rounded-xl p-3 border border-gray-200 dark:border-gray-700"
         style={{ color: text, backgroundColor: isDark ? "#3f3f46" : "white", borderWidth: 1, borderColor: isDark ? "#3f3f46" : "#d4d4d8", borderRadius: 8, paddingHorizontal: 12, paddingVertical: 10, marginBottom: 12 }}
       />
       {formik.errors.description && (
@@ -194,16 +253,15 @@ export default function AddItemForm({ onClose }) {
         keyboardType="decimal-pad"
         placeholder="Valor"
         placeholderTextColor="#a1a1aa"
-        onChangeText={(t) => formik.setFieldValue("amount", moeda(t))}
+        onChangeText={(t: string) => formik.setFieldValue("amount", moeda(t))}
         value={formik.values.amount}
-        className="bg-white dark:bg-gray-800 rounded-xl p-3 border border-gray-200 dark:border-gray-700"
         style={{ color: text, backgroundColor: isDark ? "#3f3f46" : "white", borderWidth: 1, borderColor: isDark ? "#3f3f46" : "#d4d4d8", borderRadius: 8, paddingHorizontal: 12, paddingVertical: 10, marginBottom: 12 }}
       />
       {formik.errors.amount && (
         <Text style={{ color: "#dc2626", marginBottom: 8 }}>{formik.errors.amount}</Text>
       )}
       <Text style={{ fontSize: 14, fontWeight: "600", color: text, marginBottom: 4 }}>Data de vencimento</Text>
-      <Pressable onPress={() => openThemedDatePicker({ value: new Date(), onChange, isDark })} className="flex-row items-center bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden" style={{ flexDirection: "row", alignItems: "stretch", height: 48, backgroundColor: isDark ? "#27272a" : "white", borderWidth: 1, borderColor: isDark ? "#3f3f46" : "#e4e4e7", borderRadius: 12, overflow: "hidden", marginBottom: 12 }}>
+      <Pressable onPress={() => openThemedDatePicker({ value: new Date(), onChange, isDark })} style={{ flexDirection: "row", alignItems: "stretch", height: 48, backgroundColor: isDark ? "#27272a" : "white", borderWidth: 1, borderColor: isDark ? "#3f3f46" : "#e4e4e7", borderRadius: 12, overflow: "hidden", marginBottom: 12 }}>
         <TextInput
           placeholder="DD/MM/AAAA"
           placeholderTextColor="#a1a1aa"
@@ -226,7 +284,7 @@ export default function AddItemForm({ onClose }) {
           <View style={{ borderWidth: 1, borderColor: isDark ? "#3f3f46" : "#e4e4e7", borderRadius: 12, overflow: "hidden", backgroundColor: isDark ? "#27272a" : "white", marginBottom: 12 }}>
             <Picker
               selectedValue={formik.values.category ?? "Outros"}
-              onValueChange={(itemValue) =>
+              onValueChange={(itemValue: string) =>
                 formik.setFieldValue("category", itemValue)
               }
               mode="dropdown"
@@ -238,7 +296,7 @@ export default function AddItemForm({ onClose }) {
                 height: 48,
               }}
             >
-              {categoriesList.map((cat, index) =>
+              {categoriesList.map((cat: string, index: number) =>
                 index === 0 ? null : (
                   <Picker.Item key={index} label={cat} value={cat} />
                 )
@@ -249,7 +307,7 @@ export default function AddItemForm({ onClose }) {
             <Text style={{ color: "#dc2626", marginBottom: 8 }}>{formik.errors.category}</Text>
           )}
           <Text style={{ fontSize: 14, fontWeight: "600", color: text, marginBottom: 4 }}>Data do pagamento</Text>
-          <Pressable onPress={() => openThemedDatePicker({ value: new Date(), onChange: onChangePaymentDate, isDark })} className="flex-row items-center bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden" style={{ flexDirection: "row", alignItems: "stretch", height: 48, backgroundColor: isDark ? "#27272a" : "white", borderWidth: 1, borderColor: isDark ? "#3f3f46" : "#e4e4e7", borderRadius: 12, overflow: "hidden", marginBottom: 12 }}>
+          <Pressable onPress={() => openThemedDatePicker({ value: new Date(), onChange: onChangePaymentDate, isDark })} style={{ flexDirection: "row", alignItems: "stretch", height: 48, backgroundColor: isDark ? "#27272a" : "white", borderWidth: 1, borderColor: isDark ? "#3f3f46" : "#e4e4e7", borderRadius: 12, overflow: "hidden", marginBottom: 12 }}>
             <TextInput
               placeholder="DD/MM/AAAA"
               placeholderTextColor="#a1a1aa"
@@ -268,7 +326,7 @@ export default function AddItemForm({ onClose }) {
         </>
       )}
 
-      <View className="flex-row items-center gap-2" style={{ flexDirection: "row", alignItems: "center", gap: 8, marginTop: 12 }}>
+      <View style={{ flexDirection: "row", alignItems: "center", gap: 8, marginTop: 12 }}>
         <Switch
           trackColor={{
             false: "#a1a1aa",
@@ -294,7 +352,7 @@ export default function AddItemForm({ onClose }) {
 
       {!simpleFinancesItem && (
         <>
-          <View className="flex-row items-center gap-2" style={{ flexDirection: "row", alignItems: "center", gap: 8, marginTop: 12 }}>
+          <View style={{ flexDirection: "row", alignItems: "center", gap: 8, marginTop: 12 }}>
             <Switch
               trackColor={{
                 false: "#a1a1aa",
@@ -318,8 +376,7 @@ export default function AddItemForm({ onClose }) {
       )}
 
       <Pressable
-        onPress={formik.submitForm}
-        className="bg-purple-600 rounded-xl p-3 mt-2 mb-8 items-center justify-center active:bg-purple-900"
+        onPress={() => formik.submitForm()}
         style={{ backgroundColor: PURPLE_600, marginTop: 20, marginBottom: 32, padding: 12, borderRadius: 12, alignItems: "center", justifyContent: "center" }}
       >
         <Text style={{ color: "white", fontWeight: "600" }}>Adicionar</Text>

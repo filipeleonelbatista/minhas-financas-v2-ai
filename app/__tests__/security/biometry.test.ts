@@ -93,8 +93,9 @@ describe('biometry + secure-store', () => {
   test('App.js contains LocalAuth gate before Routes', async () => {
     const fs = require('fs');
     const path = require('path');
-    const p = path.join(__dirname, '../../App.js');
-    const content = fs.readFileSync(p, 'utf8');
+    const candidates = [path.join(__dirname, '../../App.js'), path.join(__dirname, '../../App.tsx')];
+    let content = '';
+    for (const p of candidates) { try { content = fs.readFileSync(p, 'utf8'); if (content) break; } catch {} }
     expect(content).toMatch(/expo-local-authentication|LocalAuthentication|LocalAuth/);
     expect(content).toMatch(/authenticateAsync/);
     expect(content).toMatch(/isBiometricEnabled/);

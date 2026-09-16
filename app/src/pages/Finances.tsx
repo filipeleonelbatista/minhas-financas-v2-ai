@@ -30,13 +30,14 @@ import SwipeableFinanceRow from "../components/SwipeableFinanceRow";
 import ThemedAlert from "../components/ui/ThemedAlert";
 import Header from "../components/Header";
 import { useIsKeyboardOpen } from "../hooks/useIsKeyboardOpen";
-import { useSettingsStore } from "../stores/settings";
+import { useSettingsStore, type SettingsState } from "../stores/settings";
 import { useFinanceStore } from "../stores/finance";
 import { useShallow } from "zustand/react/shallow";
 import AIComponent from "../components/AIComponent";
 import { Sheet, useSheetRef } from "../components/nativewindui/Sheet";
 import { BottomSheetScrollView } from "@gorhom/bottom-sheet";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import type { FinanceRow } from "../repositories/finance";
 
 dayjs.extend(isSameOrAfter);
 dayjs.extend(isSameOrBefore);
@@ -49,7 +50,7 @@ const RED_500 = "#ef4444";
 const RED_600 = "#dc2626";
 const YELLOW_400 = "#facc15";
 
-const categoriesList = [
+const categoriesList: string[] = [
   "Todos",
   "Outros",
   "Bares e Restaurantes",
@@ -68,68 +69,68 @@ const categoriesList = [
   "Vestuário",
 ];
 
-const favoritedFilterLabel = ["Todos", "Favoritos", "Não favoritados"];
-const pamentStatusLabel = ["Todos", "Pago", "Não Pago"];
+const favoritedFilterLabel: string[] = ["Todos", "Favoritos", "Não favoritados"];
+const pamentStatusLabel: string[] = ["Todos", "Pago", "Não Pago"];
 
-export default function Finances() {
-  const colorModeState = useSettingsStore((s) => s.colorModeState);
-  const isDark = colorModeState === "dark";
-  const bg = isDark ? "#1c1e21" : "#f5f5f4";
-  const bgCard = isDark ? "#27272a" : "#f5f5f4";
-  const headerText = isDark ? "#27272a" : "white";
-  const text = isDark ? "#e4e4e7" : "#52525b";
-  const bgCardPressed = isDark ? "#3f3f46" : "#e7e5e4";
+export default function Finances(): React.JSX.Element {
+  const colorModeState = useSettingsStore((s: SettingsState) => s.colorModeState);
+  const isDark: boolean = colorModeState === "dark";
+  const bg: string = isDark ? "#1c1e21" : "#f5f5f4";
+  const bgCard: string = isDark ? "#27272a" : "#f5f5f4";
+  const headerText: string = isDark ? "#27272a" : "white";
+  const text: string = isDark ? "#e4e4e7" : "#52525b";
+  const bgCardPressed: string = isDark ? "#3f3f46" : "#e7e5e4";
 
   // finance store selectors
-  const filteredList = useFinanceStore(useShallow((s) => s.getFilteredList()));
-  const Incomings = useFinanceStore((s) => s.getIncomings());
-  const Expenses = useFinanceStore((s) => s.getExpenses());
-  const Total = useFinanceStore((s) => s.getListTotal());
-  const Saldo = useFinanceStore((s) => s.getSaldo());
-  const tithePercentFin = useSettingsStore((s) => s.tithePercent ?? 10);
-  const titheCategoriesFinRaw = useSettingsStore((s) => s.titheCategories);
-  const titheCategoriesFin = useMemo(() => {
-    try { const p = typeof titheCategoriesFinRaw === 'string' ? JSON.parse(titheCategoriesFinRaw) : titheCategoriesFinRaw; if(Array.isArray(p)&&p.length) return p; } catch {}
+  const filteredList: FinanceRow[] = useFinanceStore(useShallow((s: any) => s.getFilteredList()));
+  const Incomings: number = useFinanceStore((s: any) => s.getIncomings());
+  const Expenses: number = useFinanceStore((s: any) => s.getExpenses());
+  const Total: number = useFinanceStore((s: any) => s.getListTotal());
+  const Saldo: number = useFinanceStore((s: any) => s.getSaldo());
+  const tithePercentFin: number = useSettingsStore((s: SettingsState) => s.tithePercent ?? 10);
+  const titheCategoriesFinRaw: string = useSettingsStore((s: SettingsState) => s.titheCategories);
+  const titheCategoriesFin: string[] = useMemo(() => {
+    try { const p = typeof titheCategoriesFinRaw === 'string' ? JSON.parse(titheCategoriesFinRaw) : titheCategoriesFinRaw; if(Array.isArray(p)&&p.length) return p as string[]; } catch {}
     return ['Ganhos'];
   }, [titheCategoriesFinRaw]);
-  const Tithe = useFinanceStore((s) => s.getTithe({ percent: tithePercentFin, categories: titheCategoriesFin }));
-  const search = useFinanceStore((s) => s.search);
-  const setSearch = useFinanceStore((s) => s.setSearch);
-  const selectedtypeofpayment = useFinanceStore((s) => s.selectedtypeofpayment);
-  const setselectedtypeofpayment = useFinanceStore((s) => s.setSelectedType);
-  const selectedPaymentCategory = useFinanceStore((s) => s.selectedPaymentCategory);
-  const setSelectedPaymentCategory = useFinanceStore((s) => s.setSelectedCategory);
-  const selectedPaymentStatus = useFinanceStore((s) => s.selectedPaymentStatus);
-  const setSelectedPaymentStatus = useFinanceStore((s) => s.setSelectedStatus);
-  const selectedFavoritedFilter = useFinanceStore((s) => s.selectedFavoritedFilter);
-  const setSelectedFavoritedFilter = useFinanceStore((s) => s.setSelectedFavorited);
-  const startDate = useFinanceStore((s) => s.startDate);
-  const endDate = useFinanceStore((s) => s.endDate);
-  const setPeriod = useFinanceStore((s) => s.setPeriod);
-  const setStartDate = (v) => setPeriod(v, useFinanceStore.getState().endDate);
-  const setEndDate = (v) => setPeriod(useFinanceStore.getState().startDate, v);
-  const handleFavorite = useFinanceStore((s) => s.handleFavorite);
-  const removeFinance = useFinanceStore((s) => s.remove);
-  const load = useFinanceStore((s) => s.load);
+  const Tithe: number = useFinanceStore((s: any) => s.getTithe({ percent: tithePercentFin, categories: titheCategoriesFin }));
+  const search: string = useFinanceStore((s: any) => s.search);
+  const setSearch: (v: string) => void = useFinanceStore((s: any) => s.setSearch);
+  const selectedtypeofpayment: string = useFinanceStore((s: any) => s.selectedtypeofpayment);
+  const setselectedtypeofpayment: (v: string) => void = useFinanceStore((s: any) => s.setSelectedType);
+  const selectedPaymentCategory: string = useFinanceStore((s: any) => s.selectedPaymentCategory);
+  const setSelectedPaymentCategory: (v: string) => void = useFinanceStore((s: any) => s.setSelectedCategory);
+  const selectedPaymentStatus: string = useFinanceStore((s: any) => s.selectedPaymentStatus);
+  const setSelectedPaymentStatus: (v: string) => void = useFinanceStore((s: any) => s.setSelectedStatus);
+  const selectedFavoritedFilter: string = useFinanceStore((s: any) => s.selectedFavoritedFilter);
+  const setSelectedFavoritedFilter: (v: string) => void = useFinanceStore((s: any) => s.setSelectedFavorited);
+  const startDate: string = useFinanceStore((s: any) => s.startDate);
+  const endDate: string = useFinanceStore((s: any) => s.endDate);
+  const setPeriod: (start: string, end: string) => void = useFinanceStore((s: any) => s.setPeriod);
+  const setStartDate = (v: string): void => setPeriod(v, useFinanceStore.getState().endDate);
+  const setEndDate = (v: string): void => setPeriod(useFinanceStore.getState().startDate, v);
+  const handleFavorite: (dto: FinanceRow) => Promise<void> = useFinanceStore((s: any) => s.handleFavorite);
+  const removeFinance: (dto: FinanceRow) => Promise<void> = useFinanceStore((s: any) => s.remove);
+  const load: () => Promise<void> = useFinanceStore((s: any) => s.load);
 
-  const isEnableTitheCard = useSettingsStore((s) => !!s.isEnableTitheCard);
-  const isEnableTotalHistoryCard = useSettingsStore((s) => !!s.isEnableTotalHistoryCard);
-  const simpleFinancesItem = useSettingsStore((s) => !!s.simpleFinancesItem);
-  const isAiEnabled = useSettingsStore((s) => !!s.isAiEnabled);
-  const isTitheMenuEnabled = useSettingsStore((s) => !!s.isTitheMenuEnabled);
+  const isEnableTitheCard: boolean = useSettingsStore((s: SettingsState) => !!s.isEnableTitheCard);
+  const isEnableTotalHistoryCard: boolean = useSettingsStore((s: SettingsState) => !!s.isEnableTotalHistoryCard);
+  const simpleFinancesItem: boolean = useSettingsStore((s: SettingsState) => !!s.simpleFinancesItem);
+  const isAiEnabled: boolean = useSettingsStore((s: SettingsState) => !!s.isAiEnabled);
+  const isTitheMenuEnabled: boolean = useSettingsStore((s: SettingsState) => !!s.isTitheMenuEnabled);
 
-  const [selectedTransaction, setSelectedTransaction] = useState(null);
-  const [isOpen, setIsOpen] = useState(false);
-  const [isEditMode, setIsEditMode] = useState(false);
-  const onOpen = () => setIsOpen(true);
-  const onClose = () => {
+  const [selectedTransaction, setSelectedTransaction] = useState<FinanceRow | null>(null);
+  const [isOpen, setIsOpen] = useState<boolean>(false);
+  const [isEditMode, setIsEditMode] = useState<boolean>(false);
+  const onOpen = (): void => setIsOpen(true);
+  const onClose = (): void => {
     setIsOpen(false);
     setIsEditMode(false);
   };
-  const [confirmDeleteFinance, setConfirmDeleteFinance] = useState(null);
+  const [confirmDeleteFinance, setConfirmDeleteFinance] = useState<FinanceRow | null>(null);
 
-  const navigation = useNavigation();
-  const isFocused = useIsFocused();
+  const navigation: any = useNavigation();
+  const isFocused: boolean = useIsFocused();
 
   useEffect(() => {
     load();
@@ -138,11 +139,11 @@ export default function Finances() {
   // Pages context replacement: track selectedSheet via simple store or just ignore
   // Keep for FAB: we skip setSelectedSheet
 
-  const isKeyboardOpen = useIsKeyboardOpen();
+  const isKeyboardOpen: boolean = useIsKeyboardOpen();
   const { height } = useWindowDimensions();
-  const tabBarHeight = (() => { try { const { useBottomTabBarHeight } = require("@react-navigation/bottom-tabs"); return useBottomTabBarHeight(); } catch { return 80; } })();
+  const tabBarHeight: number = (() => { try { const { useBottomTabBarHeight } = require("@react-navigation/bottom-tabs"); return useBottomTabBarHeight(); } catch { return 80; } })();
 
-  const formatCurrency = (value) => {
+  const formatCurrency = (value: number): string => {
     return value.toLocaleString("pt-BR", {
       style: "currency",
       currency: "BRL",
@@ -155,24 +156,24 @@ export default function Finances() {
   const insets = useSafeAreaInsets();
   const filterSheetRef = useSheetRef();
 
-  const handleViewFinance = (item) => {
+  const handleViewFinance = (item: FinanceRow): void => {
     setSelectedTransaction(item);
     setIsEditMode(false);
     onOpen();
   };
-  const handleEditFinance = (item) => {
+  const handleEditFinance = (item: FinanceRow): void => {
     setSelectedTransaction(item);
     setIsEditMode(true);
     onOpen();
   };
-  const handleDeleteFinance = (item) => setConfirmDeleteFinance(item);
-  const handleConfirmDeleteFinance = async () => {
+  const handleDeleteFinance = (item: FinanceRow): void => setConfirmDeleteFinance(item);
+  const handleConfirmDeleteFinance = async (): Promise<void> => {
     if (!confirmDeleteFinance) return;
     await removeFinance(confirmDeleteFinance);
     setConfirmDeleteFinance(null);
   };
 
-  const categoryItemLib = {
+  const categoryItemLib: Record<string, React.ReactNode> = {
     Outros: <Feather name="dollar-sign" size={28} color={"#e83e5a"} />,
     Moradia: <Feather name="home" size={28} color={"#e83e5a"} />,
     Vestuário: <Ionicons name="shirt-outline" size={28} color={"#e83e5a"} />,
@@ -190,14 +191,14 @@ export default function Finances() {
     Investimentos: <FontAwesome name="line-chart" size={28} color={"#12a454"} />,
   };
 
-  const onChangeStartDate = (_, selectedDate) => {
+  const onChangeStartDate = (_: any, selectedDate?: Date): void => {
     if (selectedDate) setStartDate(dayjs(selectedDate).format("DD/MM/YYYY"));
   };
-  const onChangeEndDate = (_, selectedDate) => {
+  const onChangeEndDate = (_: any, selectedDate?: Date): void => {
     if (selectedDate) setEndDate(dayjs(selectedDate).format("DD/MM/YYYY"));
   };
 
-  const listTotal = Total;
+  const listTotal: number = Total;
 
   return (
     <View style={{ flex: 1, backgroundColor: bg }}>
@@ -319,7 +320,7 @@ export default function Finances() {
         {filteredList.length > 0 && (
           <TextInput
             placeholder="Pesquise os itens..."
-            onChangeText={(t) => setSearch(t)}
+            onChangeText={(t: string) => setSearch(t)}
             value={search}
             editable={true}
             style={{ marginHorizontal: 16, marginTop: 8, borderWidth: 1, borderColor: "#d4d4d8", borderRadius: 4, padding: 8, color: text }}
@@ -336,10 +337,10 @@ export default function Finances() {
             </Text>
             <FlatList
               data={filteredList}
-              keyExtractor={(item) => item.id}
+              keyExtractor={(item: FinanceRow) => item.id}
               scrollEnabled={false}
               ItemSeparatorComponent={() => <View style={{ height: 8 }} />}
-              renderItem={({ item }) => (
+              renderItem={({ item }: { item: FinanceRow }) => (
                 <SwipeableFinanceRow item={item} onEdit={handleEditFinance} onDelete={handleDeleteFinance}>
                   <FinanceCard
                     item={item}
@@ -429,7 +430,7 @@ export default function Finances() {
 
           <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
             <Text style={{ color: text, fontSize: 16, fontWeight: "700" }}>Entradas/Saídas</Text>
-            <Picker selectedValue={selectedtypeofpayment} onValueChange={(itemValue) => setselectedtypeofpayment(itemValue)} mode="dropdown" dropdownIconColor={PURPLE_600} enabled style={{ width: "50%", borderRadius: 4, color: text }}>
+            <Picker selectedValue={selectedtypeofpayment} onValueChange={(itemValue: string) => setselectedtypeofpayment(itemValue)} mode="dropdown" dropdownIconColor={PURPLE_600} enabled style={{ width: "50%", borderRadius: 4, color: text }}>
               <Picker.Item label="Todas" value="0" />
               <Picker.Item label="Entradas" value="1" />
               <Picker.Item label="Saídas" value="2" />
@@ -440,15 +441,15 @@ export default function Finances() {
             <>
               <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
                 <Text style={{ color: text, fontSize: 16, fontWeight: "700" }}>Categoria de gastos</Text>
-                <Picker selectedValue={selectedPaymentCategory} onValueChange={(itemValue) => setSelectedPaymentCategory(itemValue)} mode="dropdown" dropdownIconColor={PURPLE_600} enabled style={{ width: "50%", borderRadius: 4, color: text }}>
-                  {categoriesList.map((cat, index) => (
+                <Picker selectedValue={selectedPaymentCategory} onValueChange={(itemValue: string) => setSelectedPaymentCategory(itemValue)} mode="dropdown" dropdownIconColor={PURPLE_600} enabled style={{ width: "50%", borderRadius: 4, color: text }}>
+                  {categoriesList.map((cat: string, index: number) => (
                     <Picker.Item key={index} label={cat} value={cat} />
                   ))}
                 </Picker>
               </View>
               <View style={{ gap: 8 }}>
                 <Text style={{ color: text, fontSize: 16, fontWeight: "700" }}>Status de pagamento</Text>
-                <FlatList showsHorizontalScrollIndicator={false} horizontal ItemSeparatorComponent={() => <View style={{ width: 8, height: "100%" }} />} data={pamentStatusLabel} renderItem={({ item }) => (
+                <FlatList showsHorizontalScrollIndicator={false} horizontal ItemSeparatorComponent={() => <View style={{ width: 8, height: "100%" }} />} data={pamentStatusLabel} renderItem={({ item }: { item: string }) => (
                   <TouchableOpacity style={{ alignItems: "center", justifyContent: "center", paddingHorizontal: 8, paddingVertical: 4, borderWidth: 1, borderRadius: 16, backgroundColor: "transparent", borderColor: item === selectedPaymentStatus ? PURPLE_600 : text }} onPress={() => setSelectedPaymentStatus(item)}>
                     <Text style={{ color: item === selectedPaymentStatus ? PURPLE_600 : text }}>{item}</Text>
                   </TouchableOpacity>
@@ -459,7 +460,7 @@ export default function Finances() {
 
           <View>
             <Text style={{ color: text, fontSize: 16, fontWeight: "700" }}>Favoritos</Text>
-            <FlatList showsHorizontalScrollIndicator={false} horizontal ItemSeparatorComponent={() => <View style={{ width: 8, height: "100%" }} />} data={favoritedFilterLabel} renderItem={({ item }) => (
+            <FlatList showsHorizontalScrollIndicator={false} horizontal ItemSeparatorComponent={() => <View style={{ width: 8, height: "100%" }} />} data={favoritedFilterLabel} renderItem={({ item }: { item: string }) => (
               <TouchableOpacity style={{ alignItems: "center", justifyContent: "center", paddingHorizontal: 8, paddingVertical: 4, borderWidth: 1, borderRadius: 16, backgroundColor: "transparent", borderColor: item === selectedFavoritedFilter ? PURPLE_600 : text }} onPress={() => setSelectedFavoritedFilter(item)}>
                 <Text style={{ color: item === selectedFavoritedFilter ? PURPLE_600 : text }}>{item}</Text>
               </TouchableOpacity>

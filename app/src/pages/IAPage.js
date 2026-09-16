@@ -386,7 +386,7 @@ export default function IAPage() {
         {error && (
           <SolidAlert variant="danger" message={String(error)} onClose={() => setError(null)} style={{ marginHorizontal: 16, marginBottom: 8 }} testID="error-alert" />
         )}
-        <View style={{ position: 'absolute', left: 28, bottom: insets.bottom + 22, zIndex: 10 }}>
+        <View style={{ position: 'absolute', left: 28, bottom: insets.bottom + 18, zIndex: 10 }}>
           <MorphFab.Root direction="up" align="start" spacing={10} triggerColor={"#9c44dc"} color={"#9c44dc"} style={{}}>
             <MorphFab.Trigger size={32} >
               <Feather name="plus" size={14} color="white" />
@@ -406,7 +406,7 @@ export default function IAPage() {
           <View style={{backgroundColor: isDark?'#27272a':'white', borderRadius:16, padding:12, gap:12, width:'100%'}}>
             <TextInput testID="input-ask" multiline numberOfLines={4} placeholder="Digite sua pergunta aqui..." value={inputText} onChangeText={setInputText} style={{color:text, minHeight:48, maxHeight:120, textAlignVertical:'top', paddingTop:8, paddingBottom:8}} placeholderTextColor="#a1a1aa" editable={!isLoading} onSubmitEditing={() => { if (inputText.length > 0 && !isLoading) { setError(null); handleAskToAi(); } }} />
             <View style={{flexDirection:'row', alignItems:'center', gap:8}}>
-              <Pressable testID="model-select" disabled={isLoading} onPress={()=>{ if(!isLoading) navigation.navigate("AIProviders"); }} style={{flexDirection:'row', alignItems:'center', gap:4, backgroundColor: isDark?'#3f3f46':'#f3e8ff', paddingHorizontal:10, paddingVertical:6, borderRadius:20, opacity: isLoading?0.5:1, marginLeft: 52, maxWidth: 110, flexShrink: 1}}>
+              <Pressable testID="model-select" disabled={isLoading} onPress={()=>{ if(!isLoading) navigation.navigate("AIProviders"); }} style={{flexDirection:'row', alignItems:'center', gap:4, backgroundColor: isDark?'#3f3f46':'#f3e8ff', paddingHorizontal:10, paddingVertical:6, borderRadius:20, opacity: isLoading?0.5:1, marginLeft: 40, maxWidth: 110, flexShrink: 1}}>
                 <Feather name="cpu" size={12} color="#9c44dc" />
                 <Text numberOfLines={1} ellipsizeMode="tail" style={{color:text, fontSize:11, fontWeight:'600', flexShrink: 1}}>{activeLabel} ▾</Text>
               </Pressable>

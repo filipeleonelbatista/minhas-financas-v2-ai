@@ -80,6 +80,24 @@
 - [x] `yarn jest` 27/159 PASS + `npx expo-doctor` 21/21
 - [ ] `eas build -p android --profile preview` gera APK `2.3.0` que instala em `Pixel_2_API_33` e passa smoke: criar entrada/saída, Dashboard hero, Dízimo preview, IA fallback mock
 
+### 2.4 TODO Fase 1 — Migração completa para TypeScript + tipagem estrita [NOVO 2026-09-15]
+> **Objetivo:** migrar 100% `app/` de JS para TS e fechar débito de tipagem deixado como `checkJs:false` + `|| echo` no gate. Base: `npx tsc --noEmit` atual falha em 10 arquivos TS + `any` em JS (`: any` em `.js`).
+
+- [ ] **Inventário:** `app/src` tem **~28 arquivos `.js`** ainda JS (`App.js`, `src/pages/Finances.js`, `Market.js`, `Runs.js`, `Lists.js`, `List.js`, `Reports.js`, `AboutUs.js`, `Dashboard.js`, `Goals.js`, `IAPage.js`, `Onboarding.js`, `src/components/Add*Form.js`, `Edit*Form.js`, `Header.js` etc) vs **~18 `.ts/.tsx`** (`repositories/*`, `stores/*`, `schemas/*`, `utils/*`). Meta: 0 `.js`.
+- [ ] **Migração incremental:** renomear `.js → .tsx` por domínio (1 PR por domínio: `finance` → `market` → `runs` → `goals` → `settings`), usar `z.*` de `src/schemas/*` como fonte de tipos, `drizzle-orm` infer `InferSelectModel`.
+- [ ] **Corrigir erros `tsc` atuais (Fase 1 ainda permissivo):**
+  - [ ] `src/components/ui/index.tsx:158,175` `effectiveWidth/Height used before declaration` (hoisting)
+  - [ ] `src/components/ui/index.tsx:273` `StyleSheet.absoluteFillObject` → `absoluteFill`
+  - [ ] `src/components/ui/morph-fab/index.tsx:403` `transform` tipo `DefaultStyle` incompatível
+  - [ ] `src/components/ui/nebula-orb.tsx:4` `INebulaOrb` missing export `types.ts`
+  - [ ] `src/components/ui/shimmer-wave-text/index.tsx:73,284` `AnimatedStyleHandle` → `StyleProp`
+  - [ ] `src/db/seed.ts:354` `require.main/module` needs `@types/node` + `types: ["node"]` no `tsconfig`
+  - [ ] `src/pages/*.js` com `: any` em `.js` (ex-`AboutUs.js:69` `?:`, `: any[]`) — já removido `as any` mas ainda `any[]` em tipagem solta
+- [ ] **Endurecer `tsconfig.json`:** `checkJs:false → true`, `strict:true`, `noImplicitAny:true`, `strictNullChecks:true`, `include: ["src/**/*.{ts,tsx}"]`, `exclude` JS removido; `typecheck` volta a `tsc --noEmit --skipLibCheck` sem `|| echo`.
+- [ ] **ESLint:** trocar `eslint-config-expo` `9 → ~57.0.2` (SDK 57) + `eslint-config-prettier` + `@typescript-eslint`, `lint` volta a `--max-warnings 0` sem fallback.
+- [ ] **Gate:** `yarn typecheck` + `yarn lint` verdes em CI antes de `test:security`; `docs/DOSSIE.md §2.1` atualizado para `typescript ~6.0.3` + `zod` como única validação (remover `yup` legacy).
+- [ ] **Critério de aceite:** `npx tsc --noEmit` 0 errors, `yarn lint` 0 errors, `yarn jest` 27/159 ainda PASS, `src/schemas/*` usados em `repositories/*` via `zod.parse` antes de `sanitize`.
+
 ---
 
 ## 3. Onde está o quê

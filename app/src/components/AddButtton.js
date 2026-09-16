@@ -91,7 +91,7 @@ export default function AddButton() {
   return (
     <>
       {BorderBeam ? (
-        <View testID="add-button-fab" accessibilityLabel="Adicionar" style={{ marginTop: -24, padding: 12 }}>
+        <View testID="add-button-fab" accessibilityLabel="Adicionar" style={{ marginTop: -56, padding: 12 }}>
           <BorderBeam borderRadius={fabSize/2} borderWidth={2} colors={["#9c44dc","#581C87","#9c44dc"]} duration={3} glow={6} style={{ width: fabSize, height: fabSize, borderRadius: fabSize/2 }}>
             <Pressable onPress={onOpen} style={{ width: fabSize, height: fabSize, borderRadius: fabSize/2, backgroundColor: PURPLE_600, alignItems: 'center', justifyContent: 'center' }}>
               <Feather name="plus" size={26} color="white" />

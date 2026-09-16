@@ -15,7 +15,7 @@ import {
 
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { SafeAreaProvider } from "react-native-safe-area-context";
-import { useSettingsStore } from "./src/stores/settings";
+import { useSettingsStore, type SettingsState } from "./src/stores/settings";
 import Loading from "./src/components/Loading";
 import { ThemeProvider } from "./src/components/organisms/theme-switch/context";
 import { ThemeMode } from "./src/components/organisms/theme-switch/types";
@@ -31,22 +31,22 @@ LogBox.ignoreLogs([
   "Reading from `value` during component render",
 ]);
 
-export default function App() {
-  let [fontsLoaded] = useFonts({
+export default function App(): React.JSX.Element {
+  const [fontsLoaded] = useFonts({
     Poppins_400Regular,
     Poppins_600SemiBold,
   });
 
-  const loadSettings = useSettingsStore((s) => s.load);
-  const isBiometricEnabled = useSettingsStore((s) => !!s.isBiometricEnabled);
-  const [appIsReady, setAppIsReady] = useState(false);
+  const loadSettings = useSettingsStore((s: SettingsState) => s.load);
+  const isBiometricEnabled: boolean = useSettingsStore((s: SettingsState) => !!s.isBiometricEnabled);
+  const [appIsReady, setAppIsReady] = useState<boolean>(false);
 
   // Biometric state lifted to App to coordinate splash hiding
-  const [biometricLocked, setBiometricLocked] = useState(null); // null = not checked yet, true = locked, false = unlocked
-  const [biometricChecking, setBiometricChecking] = useState(false);
-  const [errorMsg, setErrorMsg] = useState("");
+  const [biometricLocked, setBiometricLocked] = useState<boolean | null>(null); // null = not checked yet, true = locked, false = unlocked
+  const [biometricChecking, setBiometricChecking] = useState<boolean>(false);
+  const [errorMsg, setErrorMsg] = useState<string>("");
 
-  const authenticate = useCallback(async () => {
+  const authenticate = useCallback(async (): Promise<void> => {
     if (!isBiometricEnabled) {
       setBiometricLocked(false);
       setBiometricChecking(false);
@@ -56,11 +56,11 @@ export default function App() {
     setBiometricChecking(true);
     setErrorMsg("");
     try {
-      let LocalAuth;
+      let LocalAuth: typeof import("expo-local-authentication") | null = null;
       try {
         LocalAuth = require("expo-local-authentication");
       } catch {
-        const { authenticateAsync } = require("./src/utils/biometry");
+        const { authenticateAsync } = require("./src/utils/biometry") as typeof import("./src/utils/biometry");
         const res = await authenticateAsync("Desbloquear Finanças");
         setBiometricLocked(!res.success);
         if (!res.success) setErrorMsg(res.error || "Falha");
@@ -84,11 +84,11 @@ export default function App() {
         setBiometricLocked(false);
       } else {
         setBiometricLocked(true);
-        setErrorMsg(result.error || "Autenticação falhou");
+        setErrorMsg((result as { error?: string }).error || "Autenticação falhou");
       }
     } catch (e) {
       try {
-        const { authenticateAsync } = require("./src/utils/biometry");
+        const { authenticateAsync } = require("./src/utils/biometry") as typeof import("./src/utils/biometry");
         const res = await authenticateAsync("Desbloquear Finanças");
         setBiometricLocked(!res.success);
         if (!res.success) setErrorMsg(res.error || "Falha");
@@ -152,7 +152,7 @@ export default function App() {
   }, []);
 
   // Trigger biometric check after app is ready; also handle toggle on/off
-  const prevBioEnabledRef = React.useRef(isBiometricEnabled);
+  const prevBioEnabledRef = React.useRef<boolean>(isBiometricEnabled);
   useEffect(() => {
     if (!appIsReady) return;
     if (isBiometricEnabled) {
@@ -182,9 +182,9 @@ export default function App() {
     return () => sub.remove();
   }, [isBiometricEnabled, authenticate]);
 
-  const biometricReady = !isBiometricEnabled || (biometricLocked !== null && !biometricChecking);
+  const biometricReady: boolean = !isBiometricEnabled || (biometricLocked !== null && !biometricChecking);
 
-  const onLayoutRootView = useCallback(async () => {
+  const onLayoutRootView = useCallback(async (): Promise<void> => {
     if (appIsReady && fontsLoaded && biometricReady) {
       try { await SplashScreen.hideAsync(); } catch {}
     }
@@ -231,7 +231,7 @@ export default function App() {
     );
   }
 
-  const initialTheme = useSettingsStore.getState().colorModeState === "dark" ? ThemeMode.Dark : ThemeMode.Light;
+  const initialTheme: ThemeMode = useSettingsStore.getState().colorModeState === "dark" ? ThemeMode.Dark : ThemeMode.Light;
   return (
     <GestureHandlerRootView style={{ flex: 1 }} onLayout={onLayoutRootView}>
       <SafeAreaProvider>
@@ -239,7 +239,7 @@ export default function App() {
           defaultTheme={initialTheme}
           customLightColors={{ background: "#f5f5f4", text: "#52525b" }}
           customDarkColors={{ background: "#1c1e21", text: "#e4e4e7" }}
-          onThemeChange={(newTheme) => {
+          onThemeChange={(newTheme: ThemeMode) => {
             const next = newTheme === ThemeMode.Dark ? "dark" : "light";
             try { useSettingsStore.getState().setColorMode(next); } catch {}
           }}

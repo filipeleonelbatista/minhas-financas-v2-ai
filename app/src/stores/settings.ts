@@ -35,7 +35,7 @@ function applyColorScheme(scheme: string) {
   } catch {}
 }
 
-type SettingsState = {
+export type SettingsState = {
   colorModeState: string; // light|dark
   isAiEnabled: number;
   apiKey: string;

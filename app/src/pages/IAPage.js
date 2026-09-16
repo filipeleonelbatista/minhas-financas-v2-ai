@@ -8,6 +8,7 @@ import Orb from "../components/ui/Orb";
 import { BorderBeam } from "../components/ui/border-beam";
 import { ShimmerWaveText } from "../components/ui/shimmer-wave-text/index";
 import SolidAlert from "../components/ui/SolidAlert";
+import { MorphFab } from "../components/ui/morph-fab";
 import { useIsKeyboardOpen } from "../hooks/useIsKeyboardOpen";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import Markdown from "react-native-markdown-display";
@@ -289,12 +290,8 @@ export default function IAPage() {
           <View style={{ alignItems: "center", marginTop: 8, marginBottom: 8, gap: 8, paddingHorizontal: 16 }}>
             <Orb size="lg" color="#9c44dc" testID="orb-header" />
             <Text style={{ color: text, fontSize: 12, textAlign: "center" }}>
-              Ativo: <Text style={{ fontWeight: "700", color: "#9c44dc" }}>{activeLabel}</Text>{activeModel ? ` • ${activeModel}` : ""} {"\n"}
-              Fallback: <Text style={{ color: text }}>{fallbackLabel}</Text>
+              Ativo: <Text style={{ fontWeight: "700", color: "#9c44dc" }}>{activeLabel}</Text>{activeModel ? ` • ${activeModel}` : ""}
             </Text>
-            <Pressable testID="btn-manage-providers" onPress={() => navigation.navigate("AIProviders")} style={({ pressed }) => ({ opacity: pressed ? 0.6 : 1 })}>
-              <Text style={{ color: "#9c44dc", fontSize: 12, textDecorationLine: "underline" }}>Mudar provider/modelo</Text>
-            </Pressable>
             <View style={{ backgroundColor: isDark ? "#27272a" : "white", borderRadius: 12, paddingHorizontal: 12, paddingVertical: 6, borderWidth: 1, borderColor: isDark ? "#3f3f46" : "#e5e7eb", marginTop: 4 }}>
               <Text style={{ fontSize: 11, color: subText, textAlign: "center" }}>Contexto: {filteredList.length} finanças • {FuelList.length} abastecimentos • {MarketList.length} estoque • {GoalsList.length} metas • {ListsList.length} listas</Text>
             </View>
@@ -310,24 +307,33 @@ export default function IAPage() {
             <View style={{ width: "100%", gap: 16, paddingHorizontal: 16, alignItems: "center", justifyContent: "center", flex: 1, marginTop: 16 }}>
               <Text style={{ color: text, fontSize: 18, lineHeight: 24, textAlign: "center", maxWidth: "80%", marginVertical: 16 }}>Converse com um assistente baseado em Inteligência Artificial.</Text>
 
-              <Pressable onPress={handleAskForFinancialTips} testID="btn-financial-tips" style={({ pressed }) => ({ backgroundColor: pressed ? "#d1d5db" : bgCard, shadowColor: "#000", shadowOpacity: 0.1, elevation: 2, borderRadius: 4, width: "90%", paddingHorizontal: 16, paddingVertical: 8 })}>
+              <Pressable onPress={handleAskForFinancialTips} testID="btn-financial-tips" style={({ pressed }) => ({ backgroundColor: pressed ? "#e9d5ff" : bgCard, borderWidth: 1, borderColor: pressed ? "#9c44dc" : isDark ? "#3f3f46" : "#e5e7eb", shadowColor: "#9c44dc", shadowOpacity: pressed ? 0.2 : 0.08, elevation: 3, borderRadius: 12, width: "90%", paddingHorizontal: 16, paddingVertical: 12 })}>
                 <View style={{ position: "relative", flexDirection: "row", alignItems: "center", gap: 16 }}>
-                  <Feather name="dollar-sign" size={20} color={text} />
-                  <Text style={{ color: text, maxWidth: "90%" }}>Analise meus gastos e sugira pontos onde eu posso melhorar.</Text>
+                  <View style={{ width: 36, height: 36, borderRadius: 18, backgroundColor: "#9c44dc", alignItems: "center", justifyContent: "center" }}>
+                    <Feather name="dollar-sign" size={18} color="white" />
+                  </View>
+                  <Text style={{ color: text, maxWidth: "80%", fontWeight: "600", flex: 1 }}>Analise meus gastos e sugira pontos onde eu posso melhorar.</Text>
+                  <Feather name="chevron-right" size={16} color={subText} />
                 </View>
               </Pressable>
 
-              <Pressable onPress={handleAskForFuelCostsTips} testID="btn-fuel-tips" style={({ pressed }) => ({ backgroundColor: pressed ? "#d1d5db" : bgCard, shadowColor: "#000", shadowOpacity: 0.1, elevation: 2, borderRadius: 4, width: "90%", paddingHorizontal: 16, paddingVertical: 8 })}>
+              <Pressable onPress={handleAskForFuelCostsTips} testID="btn-fuel-tips" style={({ pressed }) => ({ backgroundColor: pressed ? "#e9d5ff" : bgCard, borderWidth: 1, borderColor: pressed ? "#9c44dc" : isDark ? "#3f3f46" : "#e5e7eb", shadowColor: "#9c44dc", shadowOpacity: pressed ? 0.2 : 0.08, elevation: 3, borderRadius: 12, width: "90%", paddingHorizontal: 16, paddingVertical: 12 })}>
                 <View style={{ position: "relative", flexDirection: "row", alignItems: "center", gap: 16 }}>
-                  <Feather name="droplet" size={20} color={text} />
-                  <Text style={{ color: text, maxWidth: "90%" }}>Analise como posso melhorar meus gastos com combustível.</Text>
+                  <View style={{ width: 36, height: 36, borderRadius: 18, backgroundColor: "#0ea5e9", alignItems: "center", justifyContent: "center" }}>
+                    <Feather name="droplet" size={18} color="white" />
+                  </View>
+                  <Text style={{ color: text, maxWidth: "80%", fontWeight: "600", flex: 1 }}>Analise como posso melhorar meus gastos com combustível.</Text>
+                  <Feather name="chevron-right" size={16} color={subText} />
                 </View>
               </Pressable>
 
-              <Pressable onPress={handleAskForMarketCostsTips} testID="btn-market-tips" style={({ pressed }) => ({ backgroundColor: pressed ? "#d1d5db" : bgCard, shadowColor: "#000", shadowOpacity: 0.1, elevation: 2, borderRadius: 4, width: "90%", paddingHorizontal: 16, paddingVertical: 8 })}>
+              <Pressable onPress={handleAskForMarketCostsTips} testID="btn-market-tips" style={({ pressed }) => ({ backgroundColor: pressed ? "#e9d5ff" : bgCard, borderWidth: 1, borderColor: pressed ? "#9c44dc" : isDark ? "#3f3f46" : "#e5e7eb", shadowColor: "#9c44dc", shadowOpacity: pressed ? 0.2 : 0.08, elevation: 3, borderRadius: 12, width: "90%", paddingHorizontal: 16, paddingVertical: 12 })}>
                 <View style={{ position: "relative", flexDirection: "row", alignItems: "center", gap: 16 }}>
-                  <Feather name="shopping-cart" size={20} color={text} />
-                  <Text style={{ color: text, maxWidth: "90%" }}>Analise meus gastos com mercado e sugira pontos onde eu posso melhorar a alimentação.</Text>
+                  <View style={{ width: 36, height: 36, borderRadius: 18, backgroundColor: "#22c55e", alignItems: "center", justifyContent: "center" }}>
+                    <Feather name="shopping-cart" size={18} color="white" />
+                  </View>
+                  <Text style={{ color: text, maxWidth: "80%", fontWeight: "600", flex: 1 }}>Analise meus gastos com mercado e sugira pontos onde eu posso melhorar a alimentação.</Text>
+                  <Feather name="chevron-right" size={16} color={subText} />
                 </View>
               </Pressable>
 
@@ -382,7 +388,24 @@ export default function IAPage() {
         <BorderBeam testID="border-beam" borderRadius={16} borderWidth={1} colors={["#9c44dc","#581C87","#9c44dc"]} duration={3} glow={6} style={{marginHorizontal:16, marginBottom: insets.bottom + 12, alignSelf:'stretch'}}>
           <View style={{backgroundColor: isDark?'#27272a':'white', borderRadius:16, padding:12, gap:12, width:'100%'}}>
             <TextInput testID="input-ask" multiline numberOfLines={4} placeholder="Digite sua pergunta aqui..." value={inputText} onChangeText={setInputText} style={{color:text, minHeight:48, maxHeight:120, textAlignVertical:'top', paddingTop:8, paddingBottom:8}} placeholderTextColor="#a1a1aa" editable={!isLoading} onSubmitEditing={() => { if (inputText.length > 0 && !isLoading) { setError(null); handleAskToAi(); } }} />
-            <View style={{flexDirection:'row', alignItems:'center', gap:12}}>
+            <View style={{flexDirection:'row', alignItems:'center', gap:8}}>
+              <MorphFab.Root direction="up" spacing={10} triggerColor={isDark?"#27272a":"white"} color={isDark?"#27272a":"white"} style={{}} >
+                <MorphFab.Trigger size={36} >
+                  <Feather name="plus" size={16} color={isDark?"#e4e4e7":"#52525b"} />
+                </MorphFab.Trigger>
+                <MorphFab.Item value="gastos" onSelect={()=>setInputText("Analise meus gastos e sugira pontos onde eu posso melhorar.")}>
+                  <MorphFab.ItemIcon><Feather name="dollar-sign" size={14} color="#9c44dc" /></MorphFab.ItemIcon>
+                  <MorphFab.ItemLabel><Text style={{ fontSize: 11, fontWeight: "600", color: isDark ? "#e4e4e7" : "#52525b" }}>Gastos</Text></MorphFab.ItemLabel>
+                </MorphFab.Item>
+                <MorphFab.Item value="combustivel" onSelect={()=>setInputText("Analise como posso melhorar meus gastos com combustível.")}>
+                  <MorphFab.ItemIcon><Feather name="droplet" size={14} color="#0ea5e9" /></MorphFab.ItemIcon>
+                  <MorphFab.ItemLabel><Text style={{ fontSize: 11, fontWeight: "600", color: isDark ? "#e4e4e7" : "#52525b" }}>Combustível</Text></MorphFab.ItemLabel>
+                </MorphFab.Item>
+                <MorphFab.Item value="mercado" onSelect={()=>setInputText("Analise meus gastos com mercado e sugira pontos onde eu posso melhorar a alimentação.")}>
+                  <MorphFab.ItemIcon><Feather name="shopping-cart" size={14} color="#22c55e" /></MorphFab.ItemIcon>
+                  <MorphFab.ItemLabel><Text style={{ fontSize: 11, fontWeight: "600", color: isDark ? "#e4e4e7" : "#52525b" }}>Mercado</Text></MorphFab.ItemLabel>
+                </MorphFab.Item>
+              </MorphFab.Root>
               <Pressable testID="model-select" disabled={isLoading} onPress={()=>{ if(!isLoading) navigation.navigate("AIProviders"); }} style={{flexDirection:'row', alignItems:'center', gap:6, backgroundColor: isDark?'#3f3f46':'#f3e8ff', paddingHorizontal:12, paddingVertical:8, borderRadius:20, opacity: isLoading?0.5:1}}>
                 <Feather name="cpu" size={14} color="#9c44dc" />
                 <Text style={{color:text, fontSize:12, fontWeight:'600'}}>{activeLabel}{activeModel?` • ${activeModel}`:''} ▾</Text>

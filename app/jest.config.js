@@ -9,5 +9,6 @@ module.exports = {
     "^@expo/vector-icons$": "<rootDir>/__mocks__/vectorIconsMock.js",
     "^@expo/vector-icons/(.*)$": "<rootDir>/__mocks__/vectorIconsMock.js",
     "^.*/components/ui/shimmer-wave-text.*$": "<rootDir>/__mocks__/shimmerMock.js",
+    "^.*/components/ui/morph-fab.*$": "<rootDir>/__mocks__/morphFabMock.js",
   },
 };

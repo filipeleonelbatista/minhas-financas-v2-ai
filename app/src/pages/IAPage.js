@@ -61,6 +61,7 @@ export default function IAPage() {
   const [fallbackOrder, setFallbackOrder] = useState([]);
   const [expanded, setExpanded] = useState(new Set());
   const prevModelRef = useRef(null);
+  const [selectedTool, setSelectedTool] = useState(null); // 'gastos' | 'combustivel' | 'mercado'
 
   const loadProviderInfo = useCallback(async () => {
     try {
@@ -386,17 +387,17 @@ export default function IAPage() {
           <SolidAlert variant="danger" message={String(error)} onClose={() => setError(null)} style={{ marginHorizontal: 16, marginBottom: 8 }} testID="error-alert" />
         )}
         <View style={{ position: 'absolute', left: 28, bottom: insets.bottom + 22, zIndex: 10 }}>
-          <MorphFab.Root direction="up" align="start" spacing={16} gooStrength={8} triggerColor={"#9c44dc"} color={"#9c44dc"} style={{}}>
-            <MorphFab.Trigger size={48} >
-              <Feather name="plus" size={18} color="white" />
+          <MorphFab.Root direction="up" align="start" spacing={10} triggerColor={"#9c44dc"} color={"#9c44dc"} style={{}}>
+            <MorphFab.Trigger size={36} >
+              <Feather name="plus" size={16} color="white" />
             </MorphFab.Trigger>
-            <MorphFab.Item value="gastos" onSelect={()=>setInputText("Analise meus gastos e sugira pontos onde eu posso melhorar.")}>
+            <MorphFab.Item value="gastos" onSelect={()=>{ setSelectedTool('gastos'); setInputText("Analise meus gastos e sugira pontos onde eu posso melhorar."); }}>
               <MorphFab.ItemIcon><Feather name="dollar-sign" size={14} color="white" /></MorphFab.ItemIcon>
             </MorphFab.Item>
-            <MorphFab.Item value="combustivel" onSelect={()=>setInputText("Analise como posso melhorar meus gastos com combustível.")}>
+            <MorphFab.Item value="combustivel" onSelect={()=>{ setSelectedTool('combustivel'); setInputText("Analise como posso melhorar meus gastos com combustível."); }}>
               <MorphFab.ItemIcon><Feather name="droplet" size={14} color="white" /></MorphFab.ItemIcon>
             </MorphFab.Item>
-            <MorphFab.Item value="mercado" onSelect={()=>setInputText("Analise meus gastos com mercado e sugira pontos onde eu posso melhorar a alimentação.")}>
+            <MorphFab.Item value="mercado" onSelect={()=>{ setSelectedTool('mercado'); setInputText("Analise meus gastos com mercado e sugira pontos onde eu posso melhorar a alimentação."); }}>
               <MorphFab.ItemIcon><Feather name="shopping-cart" size={14} color="white" /></MorphFab.ItemIcon>
             </MorphFab.Item>
           </MorphFab.Root>
@@ -409,6 +410,12 @@ export default function IAPage() {
                 <Feather name="cpu" size={14} color="#9c44dc" />
                 <Text style={{color:text, fontSize:12, fontWeight:'600'}}>{activeLabel} ▾</Text>
               </Pressable>
+              {selectedTool && (
+                <Pressable onPress={()=>{ setSelectedTool(null); setInputText(""); }} style={{ flexDirection:'row', alignItems:'center', gap:4, backgroundColor: '#9c44dc', borderColor: '#581C87', borderWidth: 1, paddingHorizontal: 10, paddingVertical: 6, borderRadius: 16 }}>
+                  <Text style={{ color: 'white', fontSize: 11, fontWeight: '700' }}>{selectedTool==='gastos'?'Finanças':selectedTool==='combustivel'?'Combustível':'Estoque'}</Text>
+                  <Feather name="x" size={12} color="white" />
+                </Pressable>
+              )}
               <View style={{flex:1}}/>
               <TouchableOpacity testID="btn-send" disabled={isLoading || !inputText} onPress={() => { if (inputText.length === 0) setError("Digite uma mensagem para continuar"); else { setError(null); handleAskToAi(); } }} style={{width:36,height:36,borderRadius:18, backgroundColor: (isLoading || !inputText)?'#d1d5db':'#9c44dc', alignItems:'center', justifyContent:'center', opacity: (isLoading || !inputText)?0.6:1}}>
                 {isLoading ? <ActivityIndicator color="white"/> : <Octicons name="paper-airplane" size={16} color="white"/>}

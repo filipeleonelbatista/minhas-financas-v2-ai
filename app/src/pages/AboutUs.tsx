@@ -1,6 +1,6 @@
 import { Feather } from "@expo/vector-icons";
 import Constants from "expo-constants";
-import { useSettingsStore } from "../stores/settings";
+import { useSettingsStore, type SettingsState } from "../stores/settings";
 import React, { useEffect, useState } from "react";
 import {
   Alert,
@@ -18,6 +18,7 @@ import {
   Image,
 } from "react-native";
 import * as FileSystem from "expo-file-system";
+// @ts-ignore - SAF types differ across expo versions
 import * as DocumentPicker from "expo-document-picker";
 import { isAllowedImport, parseImport } from "../utils/excel";
 import { sanitizeDescription } from "../utils/sanitize";
@@ -27,6 +28,7 @@ import {
   useNavigation,
 } from "@react-navigation/native";
 import { jsonToCSV, readString } from "react-native-csv";
+// @ts-ignore
 import userImg from "../assets/icon.png";
 import Header from "../components/Header";
 import { useFinanceStore } from "../stores/finance";
@@ -39,9 +41,13 @@ import { marketRepo } from "../repositories/market";
 import { listRepo } from "../repositories/list";
 import { runRepo } from "../repositories/run";
 import { isBiometricAvailable } from "../utils/biometry";
+import type { FinanceRow } from "../repositories/finance";
+import type { RunRow } from "../stores/runs";
+import type { StockRow } from "../repositories/market";
+import type { ListRow } from "../repositories/list";
 
-export default function AboutUs() {
-  const colorModeState = useSettingsStore((s) => s.colorModeState);
+export default function AboutUs(): React.JSX.Element {
+  const colorModeState: string = useSettingsStore((s: SettingsState) => s.colorModeState);
   const colorMode = colorModeState;
   const isDark = colorModeState === "dark";
   const bg = isDark ? "#1c1e21" : "#f5f5f4";
@@ -59,14 +65,14 @@ export default function AboutUs() {
       white: "#fff",
     },
   };
-  const navigation = useNavigation();
+  const navigation: any = useNavigation();
   const toggleColorMode = useSettingsStore((s) => s.toggleColorMode);
   let themeHook: any = null;
   try {
     const { useTheme } = require("../components/organisms/theme-switch/context");
     themeHook = useTheme();
   } catch { themeHook = null; }
-  const handleToggleTheme = async (e?: any) => {
+  const handleToggleTheme = async (e?: any): Promise<void> => {
     try {
       if (themeHook?.toggleTheme) {
         const { AnimationType, EasingType } = require("../components/organisms/theme-switch/types");
@@ -79,47 +85,47 @@ export default function AboutUs() {
     return toggleColorMode();
   };
   // map settings store booleans and handlers
-  const s = useSettingsStore();
+  const s: SettingsState & { reset?: () => Promise<void>; update: (k: string, v: unknown) => Promise<void> } = useSettingsStore() as any;
   const isEnableTitheCard = !!s.isEnableTitheCard;
-  const handleSwitchViewTitheCard = (v) => s.update('isEnableTitheCard', v ? 1 : 0);
+  const handleSwitchViewTitheCard = (v: boolean): Promise<void> => s.update('isEnableTitheCard', v ? 1 : 0) as unknown as Promise<void>;
   const willAddFuelToTransactionList = !!s.willAddFuelToTransactionList;
-  const handleToggleWillAddFuel = (v) => s.update('willAddFuelToTransactionList', v ? 1 : 0);
+  const handleToggleWillAddFuel = (v: boolean): Promise<void> => s.update('willAddFuelToTransactionList', v ? 1 : 0) as unknown as Promise<void>;
   const willUsePrefixToRemoveTihteSum = !!s.willUsePrefixToRemoveTihteSum;
-  const handleWillRemovePrefixToRemove = (v) => s.update('willUsePrefixToRemoveTihteSum', v ? 1 : 0);
-  const prefixTithe = s.prefixTithe;
-  const handleSetPrefixTithe = (v) => s.update('prefixTithe', v);
+  const handleWillRemovePrefixToRemove = (v: boolean): Promise<void> => s.update('willUsePrefixToRemoveTihteSum', v ? 1 : 0) as unknown as Promise<void>;
+  const prefixTithe: string = s.prefixTithe as string;
+  const handleSetPrefixTithe = (v: string): Promise<void> => s.update('prefixTithe', v) as unknown as Promise<void>;
   const isEnableTotalHistoryCard = !!s.isEnableTotalHistoryCard;
-  const handleSwitchViewTotalHistoryCard = (v) => s.update('isEnableTotalHistoryCard', v ? 1 : 0);
+  const handleSwitchViewTotalHistoryCard = (v: boolean): Promise<void> => s.update('isEnableTotalHistoryCard', v ? 1 : 0) as unknown as Promise<void>;
   const simpleFinancesItem = !!s.simpleFinancesItem;
-  const handleSetSimpleFinancesItem = (v) => s.update('simpleFinancesItem', v ? 1 : 0);
+  const handleSetSimpleFinancesItem = (v: boolean): Promise<void> => s.update('simpleFinancesItem', v ? 1 : 0) as unknown as Promise<void>;
   const marketSimplifiedItems = !!s.marketSimplifiedItems;
-  const handleSetmarketSimplifiedItems = (v) => s.update('marketSimplifiedItems', v ? 1 : 0);
+  const handleSetmarketSimplifiedItems = (v: boolean): Promise<void> => s.update('marketSimplifiedItems', v ? 1 : 0) as unknown as Promise<void>;
   const isAiEnabled = !!s.isAiEnabled;
-  const handleSetIsAiEnabled = (v) => s.update('isAiEnabled', v ? 1 : 0);
+  const handleSetIsAiEnabled = (v: boolean): Promise<void> => s.update('isAiEnabled', v ? 1 : 0) as unknown as Promise<void>;
   const isTitheMenuEnabled = !!s.isTitheMenuEnabled;
-  const handleToggleTitheMenu = (v) => s.update('isTitheMenuEnabled', v ? 1 : 0);
+  const handleToggleTitheMenu = (v: boolean): Promise<void> => s.update('isTitheMenuEnabled', v ? 1 : 0) as unknown as Promise<void>;
   const isBiometricEnabled = !!s.isBiometricEnabled;
-  const handleSetIsBiometricEnabled = (v) => s.update('isBiometricEnabled', v ? 1 : 0);
-  const selectedFolderToSave = s.selectedFolderToSave;
-  const handleUpdateSelectedFolderToSave = (v) => s.update('selectedFolderToSave', v);
+  const handleSetIsBiometricEnabled = (v: boolean): Promise<void> => s.update('isBiometricEnabled', v ? 1 : 0) as unknown as Promise<void>;
+  const selectedFolderToSave: string = s.selectedFolderToSave as string;
+  const handleUpdateSelectedFolderToSave = (v: string): Promise<void> => s.update('selectedFolderToSave', v) as unknown as Promise<void>;
   const handleResetConfigs = async () => { if (s.reset) await s.reset(); };
   const handleCleanStorage = async () => { await s.update('isEnableTitheCard', 0); };
-  const apiKey = s.apiKey;
-  const handleSaveApiKey = (v) => s.update('apiKey', v);
+  const apiKey: string = s.apiKey as string;
+  const handleSaveApiKey = (v: string): Promise<void> => s.update('apiKey', v) as unknown as Promise<void>;
   // finance/lists/market/runs repos via stores
   const financeState = useFinanceStore();
-  const transactionsList = financeState.transactionsList;
-  const importTransactions = async (list) => { for (const item of list) await financeState.add(item); };
-  const setTransactionsList = (list) => useFinanceStore.setState({ transactionsList: list });
+  const transactionsList: FinanceRow[] = financeState.transactionsList;
+  const importTransactions = async (list: FinanceRow[]): Promise<void> => { for (const item of list) await financeState.add(item as any); };
+  const setTransactionsList = (list: FinanceRow[]): void => useFinanceStore.setState({ transactionsList: list } as any);
   const runsState = useRunsStore();
-  const setFuelList = (list) => useRunsStore.setState({ runsList: list });
+  const setFuelList = (list: RunRow[]): void => useRunsStore.setState({ runsList: list } as any);
   const loadRuns = runsState.load ?? (async () => { try { const all = await runRepo.getAll(); useRunsStore.setState({ runsList: all }); } catch {} });
   const handleImportRuns = async () => {
     const { ToastAndroid } = require('react-native');
     try {
       const ok = await checkPermissions();
       if (!ok) return;
-      const res = await DocumentPicker.getDocumentAsync({ copyToCacheDirectory: false, type: "*/*" });
+      const res: any = await (DocumentPicker as any).getDocumentAsync({ copyToCacheDirectory: false, type: "*/*" });
       if (res.canceled || res.type === "cancel") return;
       const uri = res.assets?.[0]?.uri ?? res.uri;
       const fileName = res.assets?.[0]?.name ?? res.name ?? 'import.csv';
@@ -136,10 +142,10 @@ export default function AboutUs() {
       }
       if (!uri) return;
       // Excel hardening: usa parseImport para sanitização + magic bytes + limites
-      let rows = [];
+      let rows: Record<string, unknown>[] = [];
       const ext = String(fileName).split('.').pop()?.toLowerCase() ?? 'csv';
       if (ext === 'xlsx') {
-        const b64 = await FileSystem.readAsStringAsync(uri, { encoding: "base64" });
+        const b64 = await (FileSystem as any).readAsStringAsync(uri, { encoding: "base64" });
         // Converte base64 -> Uint8Array para parseImport
         const binary = global.Buffer ? global.Buffer.from(b64, 'base64') : (() => { const s = atob(b64); const a = new Uint8Array(s.length); for(let i=0;i<s.length;i++) a[i]=s.charCodeAt(i); return a; })();
         const arr = binary instanceof Uint8Array ? binary : new Uint8Array(binary);
@@ -151,7 +157,7 @@ export default function AboutUs() {
           return;
         }
       } else {
-        const content = await FileSystem.readAsStringAsync(uri, { encoding: "utf8" });
+        const content = await (FileSystem as any).readAsStringAsync(uri, { encoding: "utf8" });
         if (content.length > 5 * 1024 * 1024) {
           ToastAndroid.show("Arquivo muito grande: max 5MB", ToastAndroid.SHORT);
           return;
@@ -160,12 +166,12 @@ export default function AboutUs() {
         try {
           rows = parseImport(content, fileName);
           if (!rows || rows.length === 0) {
-            const parsed = readString(content);
-            rows = await handleCSVtoArrayFormat(parsed.data);
+            const parsed: any = readString(content);
+            rows = await handleCSVtoArrayFormat(parsed.data as unknown as string[][]);
           }
         } catch {
-          const parsed = readString(content);
-          rows = await handleCSVtoArrayFormat(parsed.data);
+          const parsed: any = readString(content);
+          rows = await handleCSVtoArrayFormat(parsed.data as unknown as string[][]);
         }
       }
       for (const item of rows) {
@@ -195,7 +201,7 @@ export default function AboutUs() {
     try {
       const ok = await checkPermissions();
       if (!ok) return;
-      const res = await DocumentPicker.getDocumentAsync({ copyToCacheDirectory: false, type: "*/*" });
+      const res: any = await (DocumentPicker as any).getDocumentAsync({ copyToCacheDirectory: false, type: "*/*" });
       if (res.canceled || res.type === "cancel") return;
       const uri = res.assets?.[0]?.uri ?? res.uri;
       const fileName = res.assets?.[0]?.name ?? res.name ?? 'import.csv';
@@ -207,21 +213,21 @@ export default function AboutUs() {
         return;
       }
       if (!uri) return;
-      let rows = [];
+      let rows: Record<string, unknown>[] = [];
       const ext = String(fileName).split('.').pop()?.toLowerCase() ?? 'csv';
       if (ext === 'xlsx') {
-        const b64 = await FileSystem.readAsStringAsync(uri, { encoding: "base64" });
+        const b64 = await (FileSystem as any).readAsStringAsync(uri, { encoding: "base64" });
         const binary = global.Buffer ? global.Buffer.from(b64, 'base64') : (() => { const s = atob(b64); const a = new Uint8Array(s.length); for(let i=0;i<s.length;i++) a[i]=s.charCodeAt(i); return a; })();
         const arr = binary instanceof Uint8Array ? binary : new Uint8Array(binary);
         rows = parseImport(arr, fileName);
         if (rows.length === 0) { ToastAndroid.show("Arquivo vazio ou bloqueado", ToastAndroid.SHORT); return; }
       } else {
-        const content = await FileSystem.readAsStringAsync(uri, { encoding: "utf8" });
+        const content = await (FileSystem as any).readAsStringAsync(uri, { encoding: "utf8" });
         if (content.length > 5 * 1024 * 1024) { ToastAndroid.show("Arquivo muito grande: max 5MB", ToastAndroid.SHORT); return; }
         try {
           rows = parseImport(content, fileName);
-          if (!rows || rows.length === 0) { const parsed = readString(content); rows = await handleCSVtoArrayFormat(parsed.data); }
-        } catch { const parsed = readString(content); rows = await handleCSVtoArrayFormat(parsed.data); }
+          if (!rows || rows.length === 0) { const parsed: any = readString(content); rows = await handleCSVtoArrayFormat(parsed.data as unknown as string[][]); }
+        } catch { const parsed: any = readString(content); rows = await handleCSVtoArrayFormat(parsed.data as unknown as string[][]); }
       }
       for (const item of rows) {
         const dto = { description: String(item.description ?? ""), category: String(item.category ?? "Outros"), amount: Number(item.amount ?? 0), quantity: Number(item.quantity ?? 0), quantityDesired: Number(item.quantityDesired ?? item.desiredQuantity ?? 1) };
@@ -248,7 +254,7 @@ export default function AboutUs() {
     try {
       const ok = await checkPermissions();
       if (!ok) return;
-      const res = await DocumentPicker.getDocumentAsync({ copyToCacheDirectory: false, type: "*/*" });
+      const res: any = await (DocumentPicker as any).getDocumentAsync({ copyToCacheDirectory: false, type: "*/*" });
       if (res.canceled || res.type === "cancel") return;
       const uri = res.assets?.[0]?.uri ?? res.uri;
       const fileName = res.assets?.[0]?.name ?? res.name ?? 'import.csv';
@@ -260,18 +266,18 @@ export default function AboutUs() {
         return;
       }
       if (!uri) return;
-      let rows = [];
+      let rows: Record<string, unknown>[] = [];
       const ext = String(fileName).split('.').pop()?.toLowerCase() ?? 'csv';
       if (ext === 'xlsx') {
-        const b64 = await FileSystem.readAsStringAsync(uri, { encoding: "base64" });
+        const b64 = await (FileSystem as any).readAsStringAsync(uri, { encoding: "base64" });
         const binary = global.Buffer ? global.Buffer.from(b64, 'base64') : (() => { const s = atob(b64); const a = new Uint8Array(s.length); for(let i=0;i<s.length;i++) a[i]=s.charCodeAt(i); return a; })();
         const arr = binary instanceof Uint8Array ? binary : new Uint8Array(binary);
         rows = parseImport(arr, fileName);
         if (rows.length === 0) { ToastAndroid.show("Arquivo vazio ou bloqueado", ToastAndroid.SHORT); return; }
       } else {
-        const content = await FileSystem.readAsStringAsync(uri, { encoding: "utf8" });
+        const content = await (FileSystem as any).readAsStringAsync(uri, { encoding: "utf8" });
         if (content.length > 5 * 1024 * 1024) { ToastAndroid.show("Arquivo muito grande: max 5MB", ToastAndroid.SHORT); return; }
-        try { rows = parseImport(content, fileName); if (!rows || rows.length === 0) { const parsed = readString(content); rows = await handleCSVtoArrayFormat(parsed.data); } } catch { const parsed = readString(content); rows = await handleCSVtoArrayFormat(parsed.data); }
+        try { rows = parseImport(content, fileName); if (!rows || rows.length === 0) { const parsed: any = readString(content); rows = await handleCSVtoArrayFormat(parsed.data as unknown as string[][]); } } catch { const parsed: any = readString(content); rows = await handleCSVtoArrayFormat(parsed.data as unknown as string[][]); }
       }
       if (rows.length === 0) { ToastAndroid.show("Arquivo vazio", ToastAndroid.SHORT); return; }
       // Heuristic: if rows contain list header (description+location) treat as lists export, else as generic
@@ -285,9 +291,9 @@ export default function AboutUs() {
     } catch (e) { console.log(e); ToastAndroid.show("Falha ao importar listas", ToastAndroid.SHORT); }
   };
 
-  const isFocused = useIsFocused();
-  const [inputOpenAiText, setInputOpenAiText] = useState("");
-  const [bioAvailable, setBioAvailable] = useState(null);
+  const isFocused: boolean = useIsFocused();
+  const [inputOpenAiText, setInputOpenAiText] = useState<string>("");
+  const [bioAvailable, setBioAvailable] = useState<boolean | null>(null);
   useEffect(() => {
     let mounted = true;
     (async () => {
@@ -299,7 +305,7 @@ export default function AboutUs() {
     return () => { mounted = false; };
   }, [isFocused]);
 
-  async function getAllDataAsJSON() {
+  async function getAllDataAsJSON(): Promise<{key: string, value: string | null}[]> {
     try {
       // Obtenha todas as chaves do AsyncStorage
       const keys = await AsyncStorage.getAllKeys();
@@ -319,7 +325,7 @@ export default function AboutUs() {
     }
   }
 
-  async function exportSomeData(data, format, filePrefix) {
+  async function exportSomeData(data: string, format: string, filePrefix: string): Promise<void> {
     try {
       const currentDate = new Date();
 
@@ -350,11 +356,11 @@ export default function AboutUs() {
             Alert.alert("Selecione pasta", "Escolha a pasta em Configurações → Alterar pasta de exportação");
             return;
           }
-          const createdFile = await FileSystem.StorageAccessFramework.createFileAsync(directoryUri, fileName, "text/*");
-          await FileSystem.StorageAccessFramework.writeAsStringAsync(createdFile, data, { encoding: "utf8" });
+          const createdFile = await (FileSystem as any).StorageAccessFramework.createFileAsync(directoryUri, fileName, "text/*");
+          await (FileSystem as any).StorageAccessFramework.writeAsStringAsync(createdFile, data, { encoding: "utf8" });
         } else {
-          const fileUri = FileSystem.documentDirectory + fileName;
-          await FileSystem.writeAsStringAsync(fileUri, data, { encoding: "utf8" });
+          const fileUri = (FileSystem as any).documentDirectory + fileName;
+          await (FileSystem as any).writeAsStringAsync(fileUri, data, { encoding: "utf8" });
           Alert.alert("Exportado", `Arquivo salvo em ${fileUri}`);
         }
         ToastAndroid.show(`Exportação ${filePrefix.replace(/[^\w\s]/gi, "")} realizada com sucesso!`, ToastAndroid.SHORT);
@@ -374,8 +380,8 @@ export default function AboutUs() {
   async function saveStorageToExportedFile() {
     let storageStringfyData = (await getAllDataAsJSON()) ?? "";
 
-    for (const table of storageStringfyData) {
-      await exportSomeData(table.value, "txt", table.key);
+    for (const table of storageStringfyData as any) {
+      await exportSomeData((table as any).value as string, "txt", (table as any).key);
     }
   }
 
@@ -397,9 +403,10 @@ export default function AboutUs() {
               for (const item of allLists) {
                 await listRepo.delete(item.id);
               }
-              if (listRepo.clearItems) {
+              // @ts-ignore
+              if ((listRepo as any).clearItems) {
                 // fallback clear via memory if available
-                try { await listRepo.clearMemory(); } catch {}
+                try { await (listRepo as any).clearMemory(); } catch {}
               }
             } catch {}
 
@@ -415,7 +422,8 @@ export default function AboutUs() {
           text: "Apagar estoque",
           onPress: async () => {
             try {
-              if (marketRepo.clearMemory) await marketRepo.clearMemory();
+              // @ts-ignore
+              if ((marketRepo as any).clearMemory) await (marketRepo as any).clearMemory();
               const allStock = await marketRepo.getAll();
               for (const item of allStock) {
                 await marketRepo.delete(item.id);
@@ -434,7 +442,8 @@ export default function AboutUs() {
           text: "Apagar tudo",
           onPress: async () => {
             try {
-              if (marketRepo.clearMemory) await marketRepo.clearMemory();
+              // @ts-ignore
+              if ((marketRepo as any).clearMemory) await (marketRepo as any).clearMemory();
               const allStock = await marketRepo.getAll();
               for (const item of allStock) {
                 await marketRepo.delete(item.id);
@@ -443,7 +452,7 @@ export default function AboutUs() {
               for (const item of allLists) {
                 await listRepo.delete(item.id);
               }
-              if (listRepo.clearMemory) try { await listRepo.clearMemory(); } catch {}
+              if ((listRepo as any).clearMemory) try { await (listRepo as any).clearMemory(); } catch {}
             } catch {}
 
             await loadTransactions();
@@ -473,7 +482,7 @@ export default function AboutUs() {
           text: "Sim",
           onPress: async () => {
             try {
-              if (financeRepo.clearMemory) await financeRepo.clearMemory();
+              if ((financeRepo as any).clearMemory) await (financeRepo as any).clearMemory();
               const allFinances = await financeRepo.getAll();
               for (const item of allFinances) {
                 await financeRepo.delete(item.id);
@@ -526,7 +535,7 @@ export default function AboutUs() {
           text: "Sim",
           onPress: async () => {
             try {
-              if (runRepo.clearMemory) await runRepo.clearMemory();
+              if ((runRepo as any).clearMemory) await (runRepo as any).clearMemory();
               const allRuns = await runRepo.getAll();
               for (const item of allRuns) {
                 await runRepo.delete(item.id);
@@ -545,12 +554,12 @@ export default function AboutUs() {
     );
   }
 
-  const checkPermissions = async () => {
+  const checkPermissions = async (): Promise<boolean> => {
     // SAF alinhado: StorageAccessFramework + DocumentPicker não exigem READ/WRITE_EXTERNAL_STORAGE.
     // Em Android (targetSdk 36) SAF é via picker de diretório; em iOS usa documentDirectory.
     // Mantém fallback iOS mas sem bloquear: sempre true, diretório SAF é validado separadamente.
     if (Platform.OS === 'android') return true;
-    // iOS branch padrão mantido (FileSystem.documentDirectory) - sem permissão extra
+    // iOS branch padrão mantido ((FileSystem as any).documentDirectory) - sem permissão extra
     return true;
   };
 
@@ -579,12 +588,12 @@ export default function AboutUs() {
             Alert.alert("Selecione pasta", "Escolha a pasta em Configurações → Alterar pasta de exportação");
             return;
           }
-          const createdFile = await FileSystem.StorageAccessFramework.createFileAsync(directoryUri, fileName, "text/*");
-          await FileSystem.StorageAccessFramework.writeAsStringAsync(createdFile, CSV, { encoding: "utf8" });
+          const createdFile = await (FileSystem as any).StorageAccessFramework.createFileAsync(directoryUri, fileName, "text/*");
+          await (FileSystem as any).StorageAccessFramework.writeAsStringAsync(createdFile, CSV, { encoding: "utf8" });
           ToastAndroid.show("Finanças exportadas com sucesso para a pasta selecionada", ToastAndroid.SHORT);
         } else {
-          const fileUri = FileSystem.documentDirectory + fileName;
-          await FileSystem.writeAsStringAsync(fileUri, CSV, { encoding: "utf8" });
+          const fileUri = (FileSystem as any).documentDirectory + fileName;
+          await (FileSystem as any).writeAsStringAsync(fileUri, CSV, { encoding: "utf8" });
           Alert.alert("Exportado", `Arquivo salvo em ${fileUri}`);
           ToastAndroid.show("Finanças exportadas com sucesso!", ToastAndroid.SHORT);
         }
@@ -601,13 +610,13 @@ export default function AboutUs() {
     }
   }
 
-  async function handleCSVtoArrayFormat(data) {
+  async function handleCSVtoArrayFormat(data: string[][]): Promise<Record<string, string>[]> {
     const [headers, ...rows] = data;
-    let newArray = [];
+    let newArray: Record<string, string>[] = [];
 
     for (const row of rows) {
       let i = 0;
-      let newRowObject = {};
+      let newRowObject: Record<string, string> = {};
       for (const header of headers) {
         newRowObject[header] = row[i];
         i = i + 1;
@@ -626,7 +635,7 @@ export default function AboutUs() {
     try {
       const resultPerm = await checkPermissions();
       if (resultPerm) {
-        const picked = await DocumentPicker.getDocumentAsync({
+        const picked: any = await (DocumentPicker as any).getDocumentAsync({
           copyToCacheDirectory: false,
           type: "*/*",
         });
@@ -642,25 +651,25 @@ export default function AboutUs() {
         }
         const isSuccess = picked.type === "success" || !picked.canceled;
         if (isSuccess && uri) {
-          let csvFormated = [];
+          let csvFormated: Record<string, unknown>[] = [];
           const ext = String(fileName).split('.').pop()?.toLowerCase() ?? 'csv';
           if (ext === 'xlsx') {
-            const b64 = await FileSystem.readAsStringAsync(uri, { encoding: "base64" });
+            const b64 = await (FileSystem as any).readAsStringAsync(uri, { encoding: "base64" });
             const binary = global.Buffer ? global.Buffer.from(b64, 'base64') : (() => { const s = atob(b64); const a = new Uint8Array(s.length); for(let i=0;i<s.length;i++) a[i]=s.charCodeAt(i); return a; })();
             const arr = binary instanceof Uint8Array ? binary : new Uint8Array(binary);
             csvFormated = parseImport(arr, fileName);
           } else {
-            let fileContent = await FileSystem.readAsStringAsync(uri, { encoding: "utf8" });
+            let fileContent = await (FileSystem as any).readAsStringAsync(uri, { encoding: "utf8" });
             if (fileContent.length > 5 * 1024 * 1024) { ToastAndroid.show("Arquivo muito grande: max 5MB", ToastAndroid.SHORT); return; }
             try {
               csvFormated = parseImport(fileContent, fileName);
               if (!csvFormated || csvFormated.length === 0) {
-                const dataFromCSV = readString(fileContent);
-                csvFormated = await handleCSVtoArrayFormat(dataFromCSV.data);
+                const dataFromCSV: any = readString(fileContent);
+                csvFormated = await handleCSVtoArrayFormat(dataFromCSV.data as unknown as string[][]);
               }
             } catch {
-              const dataFromCSV = readString(fileContent);
-              csvFormated = await handleCSVtoArrayFormat(dataFromCSV.data);
+              const dataFromCSV: any = readString(fileContent);
+              csvFormated = await handleCSVtoArrayFormat(dataFromCSV.data as unknown as string[][]);
             }
           }
           if (csvFormated) {
@@ -678,7 +687,8 @@ export default function AboutUs() {
 
               return row;
             });
-            await importTransactions(importedTransactions);
+            // @ts-ignore
+            await importTransactions(importedTransactions as any);
           } else {
             ToastAndroid.show(
               "Houve um problema ao exportar as finanças!",
@@ -1136,7 +1146,7 @@ export default function AboutUs() {
           <TouchableOpacity
             onPress={async () => {
               const requestedDirPerm =
-                await FileSystem.StorageAccessFramework.requestDirectoryPermissionsAsync();
+                await (FileSystem as any).StorageAccessFramework.requestDirectoryPermissionsAsync();
               await handleUpdateSelectedFolderToSave(
                 requestedDirPerm.directoryUri
               );
@@ -1179,7 +1189,7 @@ export default function AboutUs() {
             <Text style={{ color: "white", fontSize: 16, fontWeight: "600" }}>Sobre o desenvolvedor</Text>
           </TouchableOpacity>
 
-          <Text textAlign={"center"} fontSize={12} color={text} my={6} style={{ textAlign: "center", fontSize: 12, color: text, marginVertical: 24 }}>
+          <Text style={{ textAlign: "center", fontSize: 12, color: text, marginVertical: 24 }}>
             Versão {Constants.expoConfig?.version ?? Constants.manifest?.version ?? Constants.manifest2?.extra?.expoClient?.version ?? "2.2.2"}
           </Text>
         </View>

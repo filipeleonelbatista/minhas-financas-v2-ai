@@ -1,25 +1,38 @@
+import React, { useEffect, useState, useRef } from "react";
 import { Feather } from "@expo/vector-icons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useIsFocused, useNavigation } from "@react-navigation/native";
 import * as FileSystem from "expo-file-system";
-import { useEffect, useState, useRef } from "react";
 import { Alert, Platform, ToastAndroid, useWindowDimensions, View, Text, FlatList, Image, TouchableOpacity } from "react-native";
 import Loading from "../components/Loading";
 import { useSettings } from "../hooks/useSettings";
 import CTA from "../components/ui/CTA";
 
-export default function Onboarding() {
+type Slide = {
+  id: string;
+  image: any;
+  title: string;
+  subtitle: string;
+  show: boolean;
+};
+
+type OnboardingStatus = "waiting" | "passed" | "no-passed";
+
+export default function Onboarding(): React.JSX.Element {
   const { width } = useWindowDimensions();
-  const navigation = useNavigation();
-  const isFocused = useIsFocused();
+  const navigation: any = useNavigation();
+  const isFocused: boolean = useIsFocused();
 
-  const { selectedFolderToSave, handleUpdateSelectedFolderToSave } = useSettings();
+  const { selectedFolderToSave, handleUpdateSelectedFolderToSave } = useSettings() as {
+    selectedFolderToSave: string;
+    handleUpdateSelectedFolderToSave: (v: string) => Promise<void>;
+  };
 
-  const [isOnboardingPassed, setIsOnboardingPassed] = useState("waiting");
-  const [currentIndex, setCurrentIndex] = useState(0);
-  const flatListRef = useRef(null);
+  const [isOnboardingPassed, setIsOnboardingPassed] = useState<OnboardingStatus>("waiting");
+  const [currentIndex, setCurrentIndex] = useState<number>(0);
+  const flatListRef = useRef<FlatList<Slide> | null>(null);
 
-  const slides = [
+  const slides: Slide[] = [
     {
       id: "1",
       image: require("../assets/onboarding/1.png"),
@@ -71,7 +84,7 @@ export default function Onboarding() {
     },
   ];
 
-  async function preleavingOnboarding() {
+  async function preleavingOnboarding(): Promise<void> {
     if (Platform.OS !== 'android') {
       await handleLeaveOnboarding();
       return;
@@ -82,9 +95,9 @@ export default function Onboarding() {
       [
         {
           text: "Ok",
-          onPress: async () => {
+          onPress: async (): Promise<void> => {
             try {
-              const requestedDirPerm = await FileSystem.StorageAccessFramework.requestDirectoryPermissionsAsync();
+              const requestedDirPerm = await (FileSystem as any).StorageAccessFramework.requestDirectoryPermissionsAsync();
               if (requestedDirPerm.granted) {
                 await handleUpdateSelectedFolderToSave(requestedDirPerm.directoryUri);
                 ToastAndroid.show("Pasta selecionada!", ToastAndroid.SHORT);
@@ -99,7 +112,7 @@ export default function Onboarding() {
     );
   }
 
-  async function handleLeaveOnboarding() {
+  async function handleLeaveOnboarding(): Promise<void> {
     try {
       await AsyncStorage.setItem("@onboarding", "true");
       setIsOnboardingPassed("passed");
@@ -109,7 +122,7 @@ export default function Onboarding() {
     }
   }
 
-  async function handleSkip() {
+  async function handleSkip(): Promise<void> {
     try {
       await AsyncStorage.setItem("@onboarding", "true");
       setIsOnboardingPassed("passed");
@@ -119,21 +132,21 @@ export default function Onboarding() {
     }
   }
 
-  function handleNext() {
+  function handleNext(): void {
     if (currentIndex < slides.length - 1) {
-      const nextIndex = currentIndex + 1;
+      const nextIndex: number = currentIndex + 1;
       flatListRef.current?.scrollToIndex({ index: nextIndex, animated: true });
       setCurrentIndex(nextIndex);
     } else {
-      preleavingOnboarding();
+      void preleavingOnboarding();
     }
   }
 
   useEffect(() => {
     if (isFocused) {
-      const executeAsync = async () => {
+      const executeAsync = async (): Promise<void> => {
         try {
-          const value = await AsyncStorage.getItem("@onboarding");
+          const value: string | null = await AsyncStorage.getItem("@onboarding");
           if (value !== null) {
             if (JSON.parse(value)) {
               setIsOnboardingPassed("passed");
@@ -146,7 +159,7 @@ export default function Onboarding() {
           console.error(e);
         }
       };
-      executeAsync();
+      void executeAsync();
     }
   }, [isFocused, navigation]);
 
@@ -154,7 +167,7 @@ export default function Onboarding() {
     return <Loading />;
   }
 
-  const isLast = currentIndex === slides.length - 1;
+  const isLast: boolean = currentIndex === slides.length - 1;
 
   return (
     <View className="flex-1 bg-purple-900" style={{ flex: 1, backgroundColor: "#581C87" }} testID="onboarding-container">
@@ -176,19 +189,19 @@ export default function Onboarding() {
         )}
       </View>
 
-      <FlatList
-        ref={flatListRef}
+      <FlatList<Slide>
+        ref={flatListRef as any}
         pagingEnabled
         horizontal
         showsHorizontalScrollIndicator={false}
         data={slides}
-        keyExtractor={(item) => String(item.id)}
-        onMomentumScrollEnd={(e) => {
-          const index = Math.round(e.nativeEvent.contentOffset.x / width);
+        keyExtractor={(item: Slide) => String(item.id)}
+        onMomentumScrollEnd={(e: any) => {
+          const index: number = Math.round(e.nativeEvent.contentOffset.x / width);
           setCurrentIndex(index);
         }}
         testID="onboarding-flatlist"
-        renderItem={({ item }) => (
+        renderItem={({ item }: { item: Slide }) => (
           <View
             className="items-center justify-center px-4"
             style={{ width, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 16, flex: 1 }}
@@ -196,7 +209,7 @@ export default function Onboarding() {
           >
             <Image
               source={item.image}
-              style={{ width: width * 0.8, height: width * 0.8, borderRadius: 8, resizeMode: 'contain' }}
+              style={{ width: width * 0.8, height: width * 0.8, borderRadius: 8, resizeMode: 'contain' } as any}
               accessibilityLabel={item.title}
               testID={`onboarding-image-${item.id}`}
             />
@@ -212,7 +225,7 @@ export default function Onboarding() {
 
       {/* Pagination dots */}
       <View className="flex-row justify-center items-center mb-4" style={{ flexDirection: 'row', justifyContent: 'center', alignItems: 'center', marginBottom: 16 }} testID="onboarding-dots">
-        {slides.map((_, idx) => (
+        {slides.map((_, idx: number) => (
           <View
             key={idx}
             testID={`onboarding-dot-${idx}`}
@@ -235,7 +248,7 @@ export default function Onboarding() {
           onPress={handleNext}
           variant="glow"
           accessibilityLabel={isLast ? "Vamos começar?!" : "Próximo"}
-          style={{ width: '70%', borderRadius: 999 }}
+          style={{ width: '70%', borderRadius: 999 } as any}
         >
           <View className="flex-row items-center justify-center" style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center' }}>
             <Text className="text-white font-bold text-base mr-2" style={{ color: 'white', fontWeight: '700', fontSize: 16, marginRight: 8 }}>

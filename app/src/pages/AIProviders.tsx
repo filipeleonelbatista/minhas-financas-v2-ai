@@ -2,8 +2,7 @@ import React, { useEffect, useState, useCallback } from 'react';
 import { Alert, ScrollView, Text, View, TouchableOpacity, ActivityIndicator, Modal, TextInput } from 'react-native';
 import { Picker } from '@react-native-picker/picker';
 import { Feather } from '@expo/vector-icons';
-import { useNavigation } from '@react-navigation/native';
-import { useIsFocused } from '@react-navigation/native';
+import { useNavigation, useIsFocused } from '@react-navigation/native';
 import Header from '../components/Header';
 import { getProviderKey, saveProviderKey, deleteProviderKey } from '../utils/secureStore';
 import {
@@ -17,37 +16,42 @@ import {
   setFallbackOrder,
   getProviderModel,
   saveProviderModel,
+  type ProviderId,
 } from '../utils/aiProviders';
 
-export default function AIProviders() {
-  const navigation = useNavigation();
-  const isFocused = useIsFocused();
+type KeysMap = Record<string, string>;
+type ModelsMap = Record<string, string[]>;
+type SelectedModelsMap = Record<string, string>;
 
-  const [keys, setKeys] = useState({});
-  const [models, setModels] = useState({});
-  const [selectedModels, setSelectedModels] = useState({});
-  const [active, setActive] = useState(null);
-  const [fallback, setFallback] = useState([]);
+export default function AIProviders(): React.JSX.Element {
+  const navigation: any = useNavigation();
+  const isFocused: boolean = useIsFocused();
+
+  const [keys, setKeys] = useState<KeysMap>({});
+  const [models, setModels] = useState<ModelsMap>({});
+  const [selectedModels, setSelectedModels] = useState<SelectedModelsMap>({});
+  const [active, setActive] = useState<ProviderId | null>(null);
+  const [fallback, setFallback] = useState<ProviderId[]>([]);
 
   // modal states
-  const [modalVisible, setModalVisible] = useState(false);
-  const [modalProvider, setModalProvider] = useState(PROVIDERS[0]);
-  const [modalKey, setModalKey] = useState('');
-  const [modalModels, setModalModels] = useState([]);
-  const [modalSelectedModel, setModalSelectedModel] = useState('');
-  const [modalLoadingModels, setModalLoadingModels] = useState(false);
+  const [modalVisible, setModalVisible] = useState<boolean>(false);
+  const [modalProvider, setModalProvider] = useState<ProviderId>(PROVIDERS[0] as ProviderId);
+  const [modalKey, setModalKey] = useState<string>('');
+  const [modalModels, setModalModels] = useState<string[]>([]);
+  const [modalSelectedModel, setModalSelectedModel] = useState<string>('');
+  const [modalLoadingModels, setModalLoadingModels] = useState<boolean>(false);
 
-  const load = useCallback(async () => {
-    const newKeys = {};
-    const newModels = {};
-    const newSelected = {};
+  const load = useCallback(async (): Promise<void> => {
+    const newKeys: KeysMap = {};
+    const newModels: ModelsMap = {};
+    const newSelected: SelectedModelsMap = {};
     for (const p of PROVIDERS) {
       try { newKeys[p] = (await getProviderKey(p)) ?? ''; } catch { newKeys[p] = ''; }
-      try { newSelected[p] = (await getProviderModel(p)) ?? FALLBACK_MODELS[p]?.[0] ?? ''; } catch { newSelected[p] = FALLBACK_MODELS[p]?.[0] ?? ''; }
-      newModels[p] = FALLBACK_MODELS[p] ?? [];
+      try { newSelected[p] = (await getProviderModel(p as ProviderId)) ?? (FALLBACK_MODELS as any)[p]?.[0] ?? ''; } catch { newSelected[p] = (FALLBACK_MODELS as any)[p]?.[0] ?? ''; }
+      newModels[p] = (FALLBACK_MODELS as any)[p] ?? [];
     }
-    let act = null;
-    let fb = [];
+    let act: ProviderId | null = null;
+    let fb: ProviderId[] = [];
     try { act = await getActiveProvider(); } catch {}
     try { fb = await getFallbackOrder(); } catch {}
     setKeys(newKeys);
@@ -58,31 +62,31 @@ export default function AIProviders() {
   }, []);
 
   useEffect(() => {
-    if (isFocused) load();
+    if (isFocused) void load();
   }, [isFocused, load]);
 
-  const registeredProviders = PROVIDERS.filter((p) => keys[p] && keys[p].length > 0);
+  const registeredProviders: string[] = (PROVIDERS as readonly string[]).filter((p) => keys[p] && keys[p].length > 0);
 
-  const handleSearchModelsModal = async () => {
-    const key = modalKey.trim();
+  const handleSearchModelsModal = async (): Promise<void> => {
+    const key: string = modalKey.trim();
     if (!key) return;
     setModalLoadingModels(true);
     try {
-      const list = await fetchModels(modalProvider, key);
+      const list: string[] = await fetchModels(modalProvider, key);
       setModalModels(list);
       if (list.length > 0) setModalSelectedModel(list[0]);
       else setModalSelectedModel('');
     } catch {
-      setModalModels(FALLBACK_MODELS[modalProvider] ?? []);
-      const fb = FALLBACK_MODELS[modalProvider] ?? [];
+      setModalModels((FALLBACK_MODELS as any)[modalProvider] ?? []);
+      const fb: string[] = (FALLBACK_MODELS as any)[modalProvider] ?? [];
       if (fb.length > 0) setModalSelectedModel(fb[0]);
     } finally {
       setModalLoadingModels(false);
     }
   };
 
-  const handleSaveProvider = async () => {
-    const key = modalKey.trim();
+  const handleSaveProvider = async (): Promise<void> => {
+    const key: string = modalKey.trim();
     if (!key || !modalSelectedModel) {
       Alert.alert('Erro', 'Preencha a chave e selecione um modelo');
       return;
@@ -100,40 +104,40 @@ export default function AIProviders() {
       setModalModels([]);
       setModalSelectedModel('');
       await load();
-      Alert.alert('Sucesso', `${PROVIDER_META[modalProvider].label} salvo`);
+      Alert.alert('Sucesso', `${(PROVIDER_META as any)[modalProvider].label} salvo`);
       // volta para tela de configurações dos provedores (já está nela, apenas fecha modal)
-    } catch (e) {
+    } catch (e: any) {
       Alert.alert('Erro', String(e?.message ?? e));
     }
   };
 
-  const handleDeleteProvider = async (provider) => {
-    Alert.alert('Remover provedor', `Remover ${PROVIDER_META[provider].label}?`, [
+  const handleDeleteProvider = async (provider: string): Promise<void> => {
+    Alert.alert('Remover provedor', `Remover ${(PROVIDER_META as any)[provider].label}?`, [
       { text: 'Cancelar', style: 'cancel' },
       {
         text: 'Remover',
         style: 'destructive',
-        onPress: async () => {
+        onPress: async (): Promise<void> => {
           try {
             await deleteProviderKey(provider);
-            await saveProviderModel(provider, '');
+            await saveProviderModel(provider as ProviderId, '');
             // remove from fallback
-            const nextFb = fallback.filter((p) => p !== provider);
+            const nextFb: ProviderId[] = (fallback as string[]).filter((p) => p !== provider) as ProviderId[];
             setFallback(nextFb);
             await setFallbackOrder(nextFb);
             if (active === provider) {
-              const nextActive = registeredProviders.filter((p) => p !== provider)[0] ?? null;
+              const nextActive: string | null = registeredProviders.filter((p) => p !== provider)[0] ?? null;
               if (nextActive) {
-                await setActiveProvider(nextActive);
-                setActive(nextActive);
+                await setActiveProvider(nextActive as ProviderId);
+                setActive(nextActive as ProviderId);
               } else {
                 // clear active
-                try { await setActiveProvider(registeredProviders[0] ?? 'openai'); } catch {}
+                try { await setActiveProvider((registeredProviders[0] ?? 'openai') as ProviderId); } catch {}
                 setActive(null);
               }
             }
             await load();
-          } catch (e) {
+          } catch (e: any) {
             Alert.alert('Erro', String(e?.message ?? e));
           }
         },
@@ -141,26 +145,26 @@ export default function AIProviders() {
     ]);
   };
 
-  const handleSetActive = async (provider) => {
-    setActive(provider);
-    try { await setActiveProvider(provider); } catch {}
+  const handleSetActive = async (provider: string): Promise<void> => {
+    setActive(provider as ProviderId);
+    try { await setActiveProvider(provider as ProviderId); } catch {}
   };
 
-  const handleToggleFallback = async (provider) => {
-    let next;
-    if (fallback.includes(provider)) next = fallback.filter((p) => p !== provider);
-    else next = [...fallback, provider];
+  const handleToggleFallback = async (provider: string): Promise<void> => {
+    let next: ProviderId[];
+    if ((fallback as string[]).includes(provider)) next = (fallback as string[]).filter((p) => p !== provider) as ProviderId[];
+    else next = [...fallback, provider as ProviderId];
     // filtra apenas cadastrados
-    next = next.filter((p) => registeredProviders.includes(p) || p === provider);
+    next = next.filter((p) => registeredProviders.includes(p) || p === provider) as ProviderId[];
     setFallback(next);
     try { await setFallbackOrder(next); } catch {}
   };
 
-  const moveFallback = async (index, dir) => {
-    const next = [...fallback];
-    const target = index + dir;
+  const moveFallback = async (index: number, dir: number): Promise<void> => {
+    const next: ProviderId[] = [...fallback];
+    const target: number = index + dir;
     if (target < 0 || target >= next.length) return;
-    const tmp = next[index];
+    const tmp: ProviderId = next[index];
     next[index] = next[target];
     next[target] = tmp;
     setFallback(next);
@@ -168,9 +172,9 @@ export default function AIProviders() {
   };
 
   // FallbackCard só se houver cadastrados
-  const FallbackCard = () => {
+  const FallbackCard = (): React.JSX.Element | null => {
     if (registeredProviders.length === 0) return null;
-    const visibleFallback = fallback.filter((p) => registeredProviders.includes(p));
+    const visibleFallback: string[] = (fallback as string[]).filter((p) => registeredProviders.includes(p));
     return (
       <View className="bg-white rounded-2xl p-4 mx-4 mt-4" style={{ backgroundColor: 'white', borderRadius: 16, padding: 16, marginHorizontal: 16, marginTop: 16, elevation: 2 }}>
         <Text className="font-bold text-gray-700" style={{ fontWeight: '700', color: '#374151', fontSize: 16, marginBottom: 8 }}>
@@ -183,18 +187,18 @@ export default function AIProviders() {
           <Text testID="fallback-empty" style={{ color: '#9ca3af', fontSize: 13, textAlign: 'center' }}>Nenhum fallback selecionado — marque providers abaixo</Text>
         ) : (
           <View testID="fallback-list">
-            {visibleFallback.map((p, idx) => (
+            {visibleFallback.map((p: string, idx: number) => (
               <View key={p} testID={`fallback-item-${p}`} className="flex-row items-center justify-between bg-gray-50 rounded-xl px-3 py-2 mb-2" style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', backgroundColor: '#f9fafb', borderRadius: 12, paddingHorizontal: 12, paddingVertical: 8, marginBottom: 8 }}>
                 <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1 }}>
                   <Text style={{ fontWeight: '600', color: '#581C87', marginRight: 8 }}>{idx + 1}.</Text>
-                  <Text style={{ fontWeight: '600', color: '#374151' }}>{PROVIDER_META[p]?.label ?? p}</Text>
+                  <Text style={{ fontWeight: '600', color: '#374151' }}>{(PROVIDER_META as any)[p]?.label ?? p}</Text>
                   {active === p && <Text style={{ marginLeft: 6, fontSize: 10, color: '#9c44dc', backgroundColor: '#f3e8ff', paddingHorizontal: 6, paddingVertical: 2, borderRadius: 999 }}>ativo</Text>}
                 </View>
                 <View style={{ flexDirection: 'row', gap: 8 }}>
-                  <TouchableOpacity testID={`fallback-up-${p}`} onPress={() => moveFallback(fallback.indexOf(p), -1)} disabled={idx === 0} style={{ padding: 6, opacity: idx === 0 ? 0.3 : 1 }}>
+                  <TouchableOpacity testID={`fallback-up-${p}`} onPress={() => void moveFallback((fallback as string[]).indexOf(p), -1)} disabled={idx === 0} style={{ padding: 6, opacity: idx === 0 ? 0.3 : 1 }}>
                     <Feather name="chevron-up" size={18} color="#581C87" />
                   </TouchableOpacity>
-                  <TouchableOpacity testID={`fallback-down-${p}`} onPress={() => moveFallback(fallback.indexOf(p), 1)} disabled={idx === visibleFallback.length - 1} style={{ padding: 6, opacity: idx === visibleFallback.length - 1 ? 0.3 : 1 }}>
+                  <TouchableOpacity testID={`fallback-down-${p}`} onPress={() => void moveFallback((fallback as string[]).indexOf(p), 1)} disabled={idx === visibleFallback.length - 1} style={{ padding: 6, opacity: idx === visibleFallback.length - 1 ? 0.3 : 1 }}>
                     <Feather name="chevron-down" size={18} color="#581C87" />
                   </TouchableOpacity>
                 </View>
@@ -203,15 +207,15 @@ export default function AIProviders() {
           </View>
         )}
         <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginTop: 8 }}>
-          {registeredProviders.filter((p) => p !== active).map((p) => (
+          {registeredProviders.filter((p) => p !== active).map((p: string) => (
             <TouchableOpacity
               key={`toggle-${p}`}
               testID={`toggle-fallback-${p}`}
-              onPress={() => handleToggleFallback(p)}
+              onPress={() => void handleToggleFallback(p)}
               style={{
                 borderWidth: 1,
-                borderColor: fallback.includes(p) ? '#9c44dc' : '#e5e7eb',
-                backgroundColor: fallback.includes(p) ? '#f3e8ff' : 'white',
+                borderColor: (fallback as string[]).includes(p) ? '#9c44dc' : '#e5e7eb',
+                backgroundColor: (fallback as string[]).includes(p) ? '#f3e8ff' : 'white',
                 paddingHorizontal: 12,
                 paddingVertical: 6,
                 borderRadius: 999,
@@ -219,8 +223,8 @@ export default function AIProviders() {
                 alignItems: 'center',
               }}
             >
-              <Feather name={fallback.includes(p) ? 'check' : 'plus'} size={14} color={fallback.includes(p) ? '#581C87' : '#6b7280'} />
-              <Text style={{ marginLeft: 6, fontSize: 13, color: fallback.includes(p) ? '#581C87' : '#374151' }}>{PROVIDER_META[p].label}</Text>
+              <Feather name={(fallback as string[]).includes(p) ? 'check' : 'plus'} size={14} color={(fallback as string[]).includes(p) ? '#581C87' : '#6b7280'} />
+              <Text style={{ marginLeft: 6, fontSize: 13, color: (fallback as string[]).includes(p) ? '#581C87' : '#374151' }}>{(PROVIDER_META as any)[p].label}</Text>
             </TouchableOpacity>
           ))}
         </View>
@@ -228,10 +232,10 @@ export default function AIProviders() {
     );
   };
 
-  const openAddModal = () => {
+  const openAddModal = (): void => {
     // escolhe primeiro não cadastrado ou primeiro
-    const firstNotRegistered = PROVIDERS.find((p) => !keys[p]) ?? PROVIDERS[0];
-    setModalProvider(firstNotRegistered);
+    const firstNotRegistered: string = (PROVIDERS as readonly string[]).find((p) => !keys[p]) ?? (PROVIDERS[0] as string);
+    setModalProvider(firstNotRegistered as ProviderId);
     setModalKey('');
     setModalModels([]);
     setModalSelectedModel('');
@@ -257,20 +261,20 @@ export default function AIProviders() {
         {registeredProviders.length > 0 ? (
           <View style={{ marginHorizontal: 16, marginTop: 16 }}>
             <Text style={{ fontWeight: '700', color: '#374151', fontSize: 15, marginBottom: 8 }}>Provedores cadastrados</Text>
-            {registeredProviders.map((p) => {
-              const isActive = active === p;
+            {registeredProviders.map((p: string) => {
+              const isActive: boolean = active === p;
               return (
                 <View key={p} testID={`registered-card-${p}`} style={{ backgroundColor: 'white', borderRadius: 16, padding: 14, marginBottom: 12, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', borderWidth: isActive ? 2 : 1, borderColor: isActive ? '#9c44dc' : '#f3f4f6', elevation: 1 }}>
                   <View style={{ flex: 1 }}>
-                    <Text style={{ fontWeight: '700', color: '#1f2937' }}>{PROVIDER_META[p].label}</Text>
+                    <Text style={{ fontWeight: '700', color: '#1f2937' }}>{(PROVIDER_META as any)[p].label}</Text>
                     <Text style={{ fontSize: 12, color: '#6b7280' }}>{selectedModels[p] ?? ''}</Text>
                     {isActive && <Text style={{ fontSize: 11, color: '#9c44dc', marginTop: 2 }}>Ativo</Text>}
                   </View>
                   <View style={{ flexDirection: 'row', gap: 8, alignItems: 'center' }}>
-                    <TouchableOpacity testID={`btn-active-${p}`} onPress={() => handleSetActive(p)} style={{ paddingHorizontal: 10, paddingVertical: 6, borderRadius: 999, backgroundColor: isActive ? '#581C87' : 'white', borderWidth: 1, borderColor: isActive ? '#581C87' : '#e5e7eb' }}>
+                    <TouchableOpacity testID={`btn-active-${p}`} onPress={() => void handleSetActive(p)} style={{ paddingHorizontal: 10, paddingVertical: 6, borderRadius: 999, backgroundColor: isActive ? '#581C87' : 'white', borderWidth: 1, borderColor: isActive ? '#581C87' : '#e5e7eb' }}>
                       <Text style={{ color: isActive ? 'white' : '#374151', fontWeight: '700', fontSize: 12 }}>{isActive ? 'Ativo' : 'Ativar'}</Text>
                     </TouchableOpacity>
-                    <TouchableOpacity testID={`btn-delete-${p}`} onPress={() => handleDeleteProvider(p)} style={{ padding: 8 }}>
+                    <TouchableOpacity testID={`btn-delete-${p}`} onPress={() => void handleDeleteProvider(p)} style={{ padding: 8 }}>
                       <Feather name="trash-2" size={18} color="#dc2626" />
                     </TouchableOpacity>
                   </View>
@@ -310,11 +314,11 @@ export default function AIProviders() {
               <Picker
                 testID="picker-provider"
                 selectedValue={modalProvider}
-                onValueChange={(v) => { setModalProvider(v); setModalModels([]); setModalSelectedModel(''); }}
-                style={{ height: 48 }}
+                onValueChange={(v: ProviderId) => { setModalProvider(v); setModalModels([]); setModalSelectedModel(''); }}
+                style={{ height: 48 } as any}
               >
-                {PROVIDERS.map((p) => (
-                  <Picker.Item key={p} label={PROVIDER_META[p].label} value={p} />
+                {(PROVIDERS as readonly string[]).map((p: string) => (
+                  <Picker.Item key={p} label={(PROVIDER_META as any)[p].label} value={p} />
                 ))}
               </Picker>
             </View>
@@ -323,7 +327,7 @@ export default function AIProviders() {
             <View style={{ borderWidth: 1, borderColor: '#e5e7eb', borderRadius: 12, backgroundColor: 'white', paddingHorizontal: 12, marginBottom: 12 }}>
               <TextInput
                 testID="input-key-modal"
-                placeholder={PROVIDER_META[modalProvider]?.placeholder ?? 'sk-...'}
+                placeholder={(PROVIDER_META as any)[modalProvider]?.placeholder ?? 'sk-...'}
                 placeholderTextColor="#9ca3af"
                 value={modalKey}
                 onChangeText={setModalKey}
@@ -335,7 +339,7 @@ export default function AIProviders() {
 
             <TouchableOpacity
               testID="btn-search-models"
-              onPress={handleSearchModelsModal}
+              onPress={() => void handleSearchModelsModal()}
               disabled={!modalKey.trim() || modalLoadingModels}
               style={{ backgroundColor: !modalKey.trim() || modalLoadingModels ? '#d1d5db' : '#9c44dc', borderRadius: 12, paddingVertical: 12, alignItems: 'center', flexDirection: 'row', justifyContent: 'center', gap: 8, opacity: !modalKey.trim() ? 0.6 : 1 }}
             >
@@ -350,10 +354,10 @@ export default function AIProviders() {
                   <Picker
                     testID="picker-model-modal"
                     selectedValue={modalSelectedModel}
-                    onValueChange={(v) => setModalSelectedModel(v)}
-                    style={{ height: 48 }}
+                    onValueChange={(v: string) => setModalSelectedModel(v)}
+                    style={{ height: 48 } as any}
                   >
-                    {modalModels.map((m) => (
+                    {modalModels.map((m: string) => (
                       <Picker.Item key={m} label={m} value={m} />
                     ))}
                   </Picker>
@@ -362,7 +366,7 @@ export default function AIProviders() {
             )}
 
             {modalSelectedModel ? (
-              <TouchableOpacity testID="btn-save-provider" onPress={handleSaveProvider} style={{ backgroundColor: '#581C87', borderRadius: 12, paddingVertical: 14, alignItems: 'center', marginTop: 16 }}>
+              <TouchableOpacity testID="btn-save-provider" onPress={() => void handleSaveProvider()} style={{ backgroundColor: '#581C87', borderRadius: 12, paddingVertical: 14, alignItems: 'center', marginTop: 16 }}>
                 <Text style={{ color: 'white', fontWeight: '700' }}>Salvar provedor</Text>
               </TouchableOpacity>
             ) : null}

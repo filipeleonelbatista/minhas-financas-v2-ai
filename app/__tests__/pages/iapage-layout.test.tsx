@@ -2,7 +2,8 @@ import fs from 'fs';
 import path from 'path';
 
 describe('IAPage layout SafeArea + Keyboard + Markdown', () => {
-  const filePath = path.join(__dirname, '../../src/pages/IAPage.js');
+  const candidates = [path.join(__dirname, '../../src/pages/IAPage.tsx'), path.join(__dirname, '../../src/pages/IAPage.js')];
+  const filePath = candidates.find((p) => fs.existsSync(p)) || candidates[0];
   const src = fs.readFileSync(filePath, 'utf8');
 
   test('uses useSafeAreaInsets', () => {
@@ -27,7 +28,8 @@ describe('IAPage layout SafeArea + Keyboard + Markdown', () => {
 });
 
 describe('IAPage chat layout mensagens (Task 5)', () => {
-  const filePath2 = path.join(__dirname, '../../src/pages/IAPage.js');
+  const candidates2 = [path.join(__dirname, '../../src/pages/IAPage.tsx'), path.join(__dirname, '../../src/pages/IAPage.js')];
+  const filePath2 = candidates2.find((p) => fs.existsSync(p)) || candidates2[0];
   const src2 = fs.readFileSync(filePath2, 'utf8');
 
   test('assistant renders Markdown full width', () => {

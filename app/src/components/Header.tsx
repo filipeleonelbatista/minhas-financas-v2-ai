@@ -1,19 +1,28 @@
+import React from "react";
 import { ImageBackground, View, Text } from "react-native";
-import { useSettingsStore } from "../stores/settings";
+import { useSettingsStore, type SettingsState } from "../stores/settings";
+// @ts-ignore
 import bgImg from "../assets/images/background.png";
 
-const PURPLE_600 = "#9c44dc";
-const PURPLE_900 = "#581c87";
+const PURPLE_600: string = "#9c44dc";
+const PURPLE_900: string = "#581c87";
+
+type HeaderProps = {
+  title?: string;
+  isLeftIconComponent?: React.ReactNode | false;
+  isRightIconComponent?: React.ReactNode | false;
+  isShort?: boolean;
+};
 
 export default function Header({
   title,
   isLeftIconComponent = false,
   isRightIconComponent = false,
   isShort = false,
-}) {
-  const colorModeState = useSettingsStore((s) => s.colorModeState);
-  const isDark = colorModeState === "dark";
-  const bg = isDark ? "#1c1e21" : "#f5f5f4";
+}: HeaderProps): React.JSX.Element {
+  const colorModeState: string = useSettingsStore((s: SettingsState) => s.colorModeState);
+  const isDark: boolean = colorModeState === "dark";
+  const bg: string = isDark ? "#1c1e21" : "#f5f5f4";
 
   return (
     <ImageBackground

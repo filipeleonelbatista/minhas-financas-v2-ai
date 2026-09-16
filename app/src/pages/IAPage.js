@@ -329,17 +329,17 @@ export default function IAPage() {
               <Text style={{ color: text, fontSize: 14, lineHeight: 16, textAlign: "center", maxWidth: "80%", marginTop: 24 }}>ou digite seu texto para iniciar a conversa.</Text>
             </View>
           ) : (
-            <View style={{ alignItems: "center", justifyContent: "center", width: "100%", gap: 16, paddingHorizontal: 0 }}>
+            <View style={{ alignItems: "center", justifyContent: "center", width: "100%", gap: 16, paddingHorizontal: 16 }}>
               {data.map((m, i) =>
                 m.type === "assistant" ? (
-                  <View key={i} style={{ width: "100%", paddingHorizontal: 8, paddingVertical: 12, flexDirection: "row", gap: 8, alignItems: "flex-start" }}>
+                  <View key={i} style={{ width: "100%", paddingHorizontal: 0, paddingVertical: 12, flexDirection: "row", gap: 8, alignItems: "flex-start" }}>
                     <Orb size={32} color="#9c44dc" testID={`orb-${i}`} />
                     <View style={{ flex: 1 }}>
                       <Markdown style={{ body: { color: text, fontSize: 15, lineHeight: 22 }, strong: { fontWeight: "700", color: isDark ? "#e9d5ff" : "#581C87" } }}>{m.text}</Markdown>
                     </View>
                   </View>
                 ) : (
-                  <View key={i} style={{ alignSelf: "flex-end", maxWidth: "75%", backgroundColor: "#a855f7", borderRadius: 16, padding: 12, marginVertical: 8 }}>
+                  <View key={i} style={{ alignSelf: "flex-end", maxWidth: "75%", backgroundColor: "#a855f7", borderRadius: 16, padding: 12, marginVertical: 8, marginRight: 0 }}>
                     <Text numberOfLines={expanded.has(i) ? undefined : 3} style={{ color: "white" }}>{m.text}</Text>
                     {m.text.length > 120 && (
                       <Pressable onPress={() => { const n = new Set(expanded); n.has(i) ? n.delete(i) : n.add(i); setExpanded(n); }}>
@@ -350,13 +350,13 @@ export default function IAPage() {
                 )
               )}
               {isLoading && (
-                <View style={{ flexDirection: "row", gap: 12, alignItems: "center", width: "100%", paddingHorizontal: 8, paddingVertical: 12 }}>
+                <View style={{ flexDirection: "row", gap: 12, alignItems: "center", width: "100%", paddingHorizontal: 0, paddingVertical: 12 }}>
                   <Orb size={32} color="#9c44dc" testID="orb-loading" />
                   <ShimmerWaveText
                     text="Gerando resposta..."
                     textColor={isDark ? "#ffffff" : "#000000"}
                     textStyle={{ fontSize: 14, fontWeight: "600" }}
-                    shimmerConfig={{ duration: 1200, width: 0.7, colors: ["transparent","rgba(156,68,220,0.25)","rgba(156,68,220,0.85)","rgba(233,213,255,1)","rgba(156,68,220,0.5)","transparent"] }}
+                    shimmerConfig={{ duration: 900, width: 0.7, colors: ["transparent","rgba(156,68,220,0.25)","rgba(156,68,220,0.85)","rgba(233,213,255,1)","rgba(156,68,220,0.5)","transparent"] }}
                     testID="shimmer-loading"
                   />
                 </View>

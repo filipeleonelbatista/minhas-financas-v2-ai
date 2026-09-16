@@ -307,33 +307,24 @@ export default function IAPage() {
             <View style={{ width: "100%", gap: 16, paddingHorizontal: 16, alignItems: "center", justifyContent: "center", flex: 1, marginTop: 16 }}>
               <Text style={{ color: text, fontSize: 18, lineHeight: 24, textAlign: "center", maxWidth: "80%", marginVertical: 16 }}>Converse com um assistente baseado em Inteligência Artificial.</Text>
 
-              <Pressable onPress={handleAskForFinancialTips} testID="btn-financial-tips" style={({ pressed }) => ({ backgroundColor: pressed ? "#e9d5ff" : bgCard, borderWidth: 1, borderColor: pressed ? "#9c44dc" : isDark ? "#3f3f46" : "#e5e7eb", shadowColor: "#9c44dc", shadowOpacity: pressed ? 0.2 : 0.08, elevation: 3, borderRadius: 12, width: "100%", paddingHorizontal: 16, paddingVertical: 12 })}>
-                <View style={{ flexDirection: "row", alignItems: "center", gap: 12 }}>
-                  <View style={{ width: 36, height: 36, borderRadius: 18, backgroundColor: isDark ? "#3f3f46" : "#f3e8ff", alignItems: "center", justifyContent: "center" }}>
-                    <Feather name="dollar-sign" size={18} color="#9c44dc" />
-                  </View>
-                  <Text numberOfLines={2} style={{ color: text, fontWeight: "600", flex: 1 }}>Analise meus gastos e sugira pontos onde eu posso melhorar.</Text>
-                  <Feather name="chevron-right" size={16} color={subText} />
+              <Pressable onPress={handleAskForFinancialTips} testID="btn-financial-tips" style={({ pressed }) => ({ backgroundColor: pressed ? "#d1d5db" : bgCard, shadowColor: "#000", shadowOpacity: 0.1, elevation: 2, borderRadius: 4, width: "90%", paddingHorizontal: 16, paddingVertical: 8 })}>
+                <View style={{ position: "relative", flexDirection: "row", alignItems: "center", gap: 16 }}>
+                  <Feather name="dollar-sign" size={20} color={text} />
+                  <Text style={{ color: text, maxWidth: "90%" }}>Analise meus gastos e sugira pontos onde eu posso melhorar.</Text>
                 </View>
               </Pressable>
 
-              <Pressable onPress={handleAskForFuelCostsTips} testID="btn-fuel-tips" style={({ pressed }) => ({ backgroundColor: pressed ? "#e9d5ff" : bgCard, borderWidth: 1, borderColor: pressed ? "#9c44dc" : isDark ? "#3f3f46" : "#e5e7eb", shadowColor: "#9c44dc", shadowOpacity: pressed ? 0.2 : 0.08, elevation: 3, borderRadius: 12, width: "100%", paddingHorizontal: 16, paddingVertical: 12 })}>
-                <View style={{ flexDirection: "row", alignItems: "center", gap: 12 }}>
-                  <View style={{ width: 36, height: 36, borderRadius: 18, backgroundColor: isDark ? "#3f3f46" : "#f3e8ff", alignItems: "center", justifyContent: "center" }}>
-                    <Feather name="droplet" size={18} color="#9c44dc" />
-                  </View>
-                  <Text numberOfLines={2} style={{ color: text, fontWeight: "600", flex: 1 }}>Analise como posso melhorar meus gastos com combustível.</Text>
-                  <Feather name="chevron-right" size={16} color={subText} />
+              <Pressable onPress={handleAskForFuelCostsTips} testID="btn-fuel-tips" style={({ pressed }) => ({ backgroundColor: pressed ? "#d1d5db" : bgCard, shadowColor: "#000", shadowOpacity: 0.1, elevation: 2, borderRadius: 4, width: "90%", paddingHorizontal: 16, paddingVertical: 8 })}>
+                <View style={{ position: "relative", flexDirection: "row", alignItems: "center", gap: 16 }}>
+                  <Feather name="droplet" size={20} color={text} />
+                  <Text style={{ color: text, maxWidth: "90%" }}>Analise como posso melhorar meus gastos com combustível.</Text>
                 </View>
               </Pressable>
 
-              <Pressable onPress={handleAskForMarketCostsTips} testID="btn-market-tips" style={({ pressed }) => ({ backgroundColor: pressed ? "#e9d5ff" : bgCard, borderWidth: 1, borderColor: pressed ? "#9c44dc" : isDark ? "#3f3f46" : "#e5e7eb", shadowColor: "#9c44dc", shadowOpacity: pressed ? 0.2 : 0.08, elevation: 3, borderRadius: 12, width: "100%", paddingHorizontal: 16, paddingVertical: 12 })}>
-                <View style={{ flexDirection: "row", alignItems: "center", gap: 12 }}>
-                  <View style={{ width: 36, height: 36, borderRadius: 18, backgroundColor: isDark ? "#3f3f46" : "#f3e8ff", alignItems: "center", justifyContent: "center" }}>
-                    <Feather name="shopping-cart" size={18} color="#9c44dc" />
-                  </View>
-                  <Text numberOfLines={2} style={{ color: text, fontWeight: "600", flex: 1 }}>Analise meus gastos com mercado e sugira pontos onde eu posso melhorar a alimentação.</Text>
-                  <Feather name="chevron-right" size={16} color={subText} />
+              <Pressable onPress={handleAskForMarketCostsTips} testID="btn-market-tips" style={({ pressed }) => ({ backgroundColor: pressed ? "#d1d5db" : bgCard, shadowColor: "#000", shadowOpacity: 0.1, elevation: 2, borderRadius: 4, width: "90%", paddingHorizontal: 16, paddingVertical: 8 })}>
+                <View style={{ position: "relative", flexDirection: "row", alignItems: "center", gap: 16 }}>
+                  <Feather name="shopping-cart" size={20} color={text} />
+                  <Text style={{ color: text, maxWidth: "90%" }}>Analise meus gastos com mercado e sugira pontos onde eu posso melhorar a alimentação.</Text>
                 </View>
               </Pressable>
 

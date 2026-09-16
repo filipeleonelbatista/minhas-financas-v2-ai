@@ -31,7 +31,7 @@ import Animated, {
   useSharedValue,
   withSpring,
 } from "react-native-reanimated";
-import { createCompoundComponent } from "../../shared/utils/create-compound-component";
+function createCompoundComponent<T extends React.ComponentType<any>, TCompound extends Record<string, unknown> = {}>(name: string, component: T, compound: TCompound = {} as TCompound): T & TCompound { (component as any).displayName = name; return Object.assign(component, compound) as T & TCompound; }
 
 import {
   DEFAULT_ALIGN,

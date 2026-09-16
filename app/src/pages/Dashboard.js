@@ -1025,7 +1025,7 @@ export default function Dashboard() {
         const fabSize = 56;
         const onPress = () => navigation.navigate("IAPage");
         if (BorderBeam) return (
-          <View style={{ position: "absolute", bottom: tabBarHeight + 16, right: 16, zIndex: 10 }} testID="dashboard-ia-fab-wrapper">
+          <View style={{ position: "absolute", bottom: tabBarHeight + 4, right: 4, zIndex: 10, padding: 12 }} testID="dashboard-ia-fab-wrapper">
             <BorderBeam borderRadius={fabSize/2} borderWidth={2} colors={["#9c44dc","#581C87","#9c44dc"]} duration={3} glow={6} style={{ width: fabSize, height: fabSize, borderRadius: fabSize/2 }}>
               <TouchableOpacity testID="dashboard-ia-fab" onPress={onPress} style={{ width: fabSize, height: fabSize, borderRadius: fabSize/2, backgroundColor: PURPLE_600, alignItems: "center", justifyContent: "center" }}>
                 <Feather name="cpu" size={24} color="white" />

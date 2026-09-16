@@ -225,7 +225,7 @@ export default function Runs() {
         const onPressVehicle = () => { setSelectedSheetOpen("veicle"); onOpen(); };
         if (BorderBeam) {
           return (
-            <View style={{ position: "absolute", bottom: fabBottom, right: 16, zIndex: 10 }} testID="vehicle-info-button-wrapper">
+            <View style={{ position: "absolute", bottom: fabBottom - 12, right: 4, zIndex: 10, padding: 12 }} testID="vehicle-info-button-wrapper">
               <BorderBeam borderRadius={fabSize/2} borderWidth={2} colors={["#9c44dc","#581C87","#9c44dc"]} duration={3} glow={6} style={{ width: fabSize, height: fabSize, borderRadius: fabSize/2 }}>
                 <TouchableOpacity testID="vehicle-info-button" onPress={onPressVehicle} style={{ width: fabSize, height: fabSize, borderRadius: fabSize/2, backgroundColor: PURPLE_600, alignItems: "center", justifyContent: "center" }}>
                   <Ionicons name="car-sport-outline" size={28} color="white" />

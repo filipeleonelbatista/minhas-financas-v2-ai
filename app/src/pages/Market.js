@@ -273,7 +273,7 @@ export default function Market() {
         const onPress2 = () => navigation.navigate("Lists");
         const Fab1 = (() => {
           if (BorderBeam) return (
-            <View style={{ position: "absolute", bottom: fabBottomSecond, right: 16, zIndex: 10 }} testID="market-add-list-button-wrapper">
+            <View style={{ position: "absolute", bottom: fabBottomSecond - 12, right: 4, zIndex: 10, padding: 12 }} testID="market-add-list-button-wrapper">
               <BorderBeam borderRadius={fabSize/2} borderWidth={2} colors={["#9c44dc","#581C87","#9c44dc"]} duration={3} glow={6} style={{ width: fabSize, height: fabSize, borderRadius: fabSize/2 }}>
                 <TouchableOpacity testID="market-add-list-button" onPress={onPress1} style={{ width: fabSize, height: fabSize, borderRadius: fabSize/2, backgroundColor: PURPLE_600, alignItems: "center", justifyContent: "center" }}>{icon1}</TouchableOpacity>
               </BorderBeam>
@@ -283,7 +283,7 @@ export default function Market() {
         })();
         const Fab2 = (() => {
           if (BorderBeam) return (
-            <View style={{ position: "absolute", bottom: fabBottom, right: 16, zIndex: 10 }} testID="market-lists-button-wrapper">
+            <View style={{ position: "absolute", bottom: fabBottom - 12, right: 4, zIndex: 10, padding: 12 }} testID="market-lists-button-wrapper">
               <BorderBeam borderRadius={fabSize/2} borderWidth={2} colors={["#9c44dc","#581C87","#9c44dc"]} duration={3} glow={6} style={{ width: fabSize, height: fabSize, borderRadius: fabSize/2 }}>
                 <TouchableOpacity testID="market-lists-button" onPress={onPress2} style={{ width: fabSize, height: fabSize, borderRadius: fabSize/2, backgroundColor: PURPLE_600, alignItems: "center", justifyContent: "center" }}>{icon2}</TouchableOpacity>
               </BorderBeam>

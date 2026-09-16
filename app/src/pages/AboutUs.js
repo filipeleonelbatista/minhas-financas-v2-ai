@@ -71,9 +71,10 @@ export default function AboutUs() {
     try {
       if (themeHook?.toggleTheme) {
         const { AnimationType, EasingType } = require("../components/organisms/theme-switch/types");
-        const touchX = e?.nativeEvent?.pageX ?? undefined;
-        const touchY = e?.nativeEvent?.pageY ?? undefined;
-        await themeHook.toggleTheme({ animationType: AnimationType.CircularBlur, animationDuration: 900, easing: EasingType.EaseInOut, touchX, touchY });
+        const touchX = e?.nativeEvent?.pageX ?? e?.nativeEvent?.locationX ?? undefined;
+        const touchY = e?.nativeEvent?.pageY ?? e?.nativeEvent?.locationY ?? undefined;
+        await themeHook.toggleTheme({ animationType: AnimationType.CircularBlur, animationDuration: 1600, easing: EasingType.EaseInOut, touchX, touchY });
+        return;
       }
     } catch {}
     return toggleColorMode();

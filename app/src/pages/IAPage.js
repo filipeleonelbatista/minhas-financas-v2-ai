@@ -7,6 +7,7 @@ import Header from "../components/Header";
 import Orb from "../components/ui/Orb";
 import { BorderBeam } from "../components/ui/border-beam";
 import { ShimmerWaveText } from "../components/ui/shimmer-wave-text/index";
+import SolidAlert from "../components/ui/SolidAlert";
 import { useIsKeyboardOpen } from "../hooks/useIsKeyboardOpen";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import Markdown from "react-native-markdown-display";
@@ -375,6 +376,9 @@ export default function IAPage() {
           )}
           <View style={{ width: "100%", height: 24 }} />
         </ScrollView>
+        {error && (
+          <SolidAlert variant="danger" message={String(error)} onClose={() => setError(null)} style={{ marginHorizontal: 16, marginBottom: 8 }} testID="error-alert" />
+        )}
         <BorderBeam testID="border-beam" borderRadius={16} borderWidth={1} colors={["#9c44dc","#581C87","#9c44dc"]} duration={3} glow={6} style={{marginHorizontal:16, marginBottom: insets.bottom + 12, alignSelf:'stretch'}}>
           <View style={{backgroundColor: isDark?'#27272a':'white', borderRadius:16, padding:12, gap:12, width:'100%'}}>
             <TextInput testID="input-ask" multiline numberOfLines={4} placeholder="Digite sua pergunta aqui..." value={inputText} onChangeText={setInputText} style={{color:text, minHeight:48, maxHeight:120, textAlignVertical:'top', paddingTop:8, paddingBottom:8}} placeholderTextColor="#a1a1aa" editable={!isLoading} onSubmitEditing={() => { if (inputText.length > 0 && !isLoading) { setError(null); handleAskToAi(); } }} />
@@ -390,7 +394,6 @@ export default function IAPage() {
             </View>
           </View>
         </BorderBeam>
-        {error && <Text style={{ color: "#ef4444", fontSize: 12, marginHorizontal: 16, marginBottom: 4 }} testID="error-text"><Feather name="alert-circle" size={12} /> {error}</Text>}
       </View>
 
       <Modal visible={open} animationType="slide" onRequestClose={() => setOpen(false)} transparent>

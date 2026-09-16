@@ -54,7 +54,7 @@ describe('IAPage chat layout mensagens (Task 5)', () => {
   });
 
   test('shimmer soft com texto Pensando', () => {
-    expect(src2).toContain('Pensando melhores formas');
+    expect(src2).toContain('Pensando na sua solicitação');
     expect(src2).toMatch(/duration:\s*2600/);
   });
 });

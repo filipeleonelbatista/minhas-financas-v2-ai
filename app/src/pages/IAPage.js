@@ -5,7 +5,7 @@ import { useFocusEffect, useIsFocused, useNavigation } from "@react-navigation/n
 import LoadingDots from "react-native-loading-dots";
 import Header from "../components/Header";
 import Orb from "../components/ui/Orb";
-import { BorderBeam } from "../components/ui/border-beam";
+import { BorderBeam } from "../components/ui/border-beam/index";
 import { ShimmerWaveText } from "../components/ui/shimmer-wave-text/index";
 import SolidAlert from "../components/ui/SolidAlert";
 import { MorphFab } from "../components/ui/morph-fab";

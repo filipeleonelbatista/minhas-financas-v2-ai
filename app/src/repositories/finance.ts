@@ -9,6 +9,7 @@ dayjs.extend(isSameOrBefore);
 import { finances } from '../db/schema';
 import { eq } from 'drizzle-orm';
 import { sanitizeDescription, sanitizeAmount, sanitizeCategory } from '../utils/sanitize';
+import { financeSchema } from '../schemas/finance.zod';
 
 const FINANCE_CATEGORIES = ["Outros","Bares e Restaurantes","Beleza","Cartão","Emergência","Estudos","Ganhos","Investimentos","Mercado","Moradia","Saúde","Streaming","TV/Internet/Telefone","Transporte","Vestuário"];
 
@@ -237,19 +238,30 @@ async function getAllMemoryOrDb(): Promise<FinanceRow[]> {
 }
 
 export const financeRepo = {
-  /** Add finance row */
+  /** Add finance row – wired to zod source of truth */
   async add(dto: FinanceDTO): Promise<FinanceRow> {
     const id = dto.id ?? generateId();
-    const row: FinanceRow = {
-      id,
-      description: sanitizeDescription(dto.description) || 'Sem descrição',
-      amount: sanitizeAmount(dto.amount),
-      category: sanitizeCategory(dto.category, FINANCE_CATEGORIES),
+    const parsed = financeSchema.parse({
+      description: dto.description,
+      amount: dto.amount,
+      category: dto.category,
       date: Number(dto.date),
       paymentDate: dto.paymentDate ?? null,
-      paymentStatus: Number(dto.paymentStatus) ? 1 : 0,
-      isEnabled: Number(dto.isEnabled) ? 1 : 0,
-      isFavorited: Number(dto.isFavorited) ? 1 : 0,
+      paymentStatus: dto.paymentStatus,
+      isEnabled: dto.isEnabled,
+      isFavorited: dto.isFavorited,
+    });
+    const description = parsed.description || 'Sem descrição';
+    const row: FinanceRow = {
+      id,
+      description,
+      amount: parsed.amount,
+      category: parsed.category,
+      date: parsed.date,
+      paymentDate: parsed.paymentDate ?? null,
+      paymentStatus: parsed.paymentStatus,
+      isEnabled: parsed.isEnabled,
+      isFavorited: parsed.isFavorited,
     };
     const db = getDb();
     if (db) {

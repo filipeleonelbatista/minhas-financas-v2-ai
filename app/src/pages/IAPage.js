@@ -388,17 +388,17 @@ export default function IAPage() {
         )}
         <View style={{ position: 'absolute', left: 28, bottom: insets.bottom + 22, zIndex: 10 }}>
           <MorphFab.Root direction="up" align="start" spacing={10} triggerColor={"#9c44dc"} color={"#9c44dc"} style={{}}>
-            <MorphFab.Trigger size={36} >
-              <Feather name="plus" size={16} color="white" />
+            <MorphFab.Trigger size={32} >
+              <Feather name="plus" size={14} color="white" />
             </MorphFab.Trigger>
-            <MorphFab.Item value="gastos" onSelect={()=>{ setSelectedTool('gastos'); setInputText("Analise meus gastos e sugira pontos onde eu posso melhorar."); }}>
-              <MorphFab.ItemIcon><Feather name="dollar-sign" size={14} color="white" /></MorphFab.ItemIcon>
+            <MorphFab.Item value="gastos" size={32} onSelect={()=>{ setSelectedTool('gastos'); setInputText("Analise meus gastos e sugira pontos onde eu posso melhorar."); }}>
+              <MorphFab.ItemIcon><Feather name="dollar-sign" size={12} color="white" /></MorphFab.ItemIcon>
             </MorphFab.Item>
-            <MorphFab.Item value="combustivel" onSelect={()=>{ setSelectedTool('combustivel'); setInputText("Analise como posso melhorar meus gastos com combustível."); }}>
-              <MorphFab.ItemIcon><Feather name="droplet" size={14} color="white" /></MorphFab.ItemIcon>
+            <MorphFab.Item value="combustivel" size={32} onSelect={()=>{ setSelectedTool('combustivel'); setInputText("Analise como posso melhorar meus gastos com combustível."); }}>
+              <MorphFab.ItemIcon><Feather name="droplet" size={12} color="white" /></MorphFab.ItemIcon>
             </MorphFab.Item>
-            <MorphFab.Item value="mercado" onSelect={()=>{ setSelectedTool('mercado'); setInputText("Analise meus gastos com mercado e sugira pontos onde eu posso melhorar a alimentação."); }}>
-              <MorphFab.ItemIcon><Feather name="shopping-cart" size={14} color="white" /></MorphFab.ItemIcon>
+            <MorphFab.Item value="mercado" size={32} onSelect={()=>{ setSelectedTool('mercado'); setInputText("Analise meus gastos com mercado e sugira pontos onde eu posso melhorar a alimentação."); }}>
+              <MorphFab.ItemIcon><Feather name="shopping-cart" size={12} color="white" /></MorphFab.ItemIcon>
             </MorphFab.Item>
           </MorphFab.Root>
         </View>
@@ -406,14 +406,14 @@ export default function IAPage() {
           <View style={{backgroundColor: isDark?'#27272a':'white', borderRadius:16, padding:12, gap:12, width:'100%'}}>
             <TextInput testID="input-ask" multiline numberOfLines={4} placeholder="Digite sua pergunta aqui..." value={inputText} onChangeText={setInputText} style={{color:text, minHeight:48, maxHeight:120, textAlignVertical:'top', paddingTop:8, paddingBottom:8}} placeholderTextColor="#a1a1aa" editable={!isLoading} onSubmitEditing={() => { if (inputText.length > 0 && !isLoading) { setError(null); handleAskToAi(); } }} />
             <View style={{flexDirection:'row', alignItems:'center', gap:8}}>
-              <Pressable testID="model-select" disabled={isLoading} onPress={()=>{ if(!isLoading) navigation.navigate("AIProviders"); }} style={{flexDirection:'row', alignItems:'center', gap:6, backgroundColor: isDark?'#3f3f46':'#f3e8ff', paddingHorizontal:12, paddingVertical:8, borderRadius:20, opacity: isLoading?0.5:1, marginLeft: 52}}>
-                <Feather name="cpu" size={14} color="#9c44dc" />
-                <Text style={{color:text, fontSize:12, fontWeight:'600'}}>{activeLabel} ▾</Text>
+              <Pressable testID="model-select" disabled={isLoading} onPress={()=>{ if(!isLoading) navigation.navigate("AIProviders"); }} style={{flexDirection:'row', alignItems:'center', gap:4, backgroundColor: isDark?'#3f3f46':'#f3e8ff', paddingHorizontal:10, paddingVertical:6, borderRadius:20, opacity: isLoading?0.5:1, marginLeft: 52, maxWidth: 110, flexShrink: 1}}>
+                <Feather name="cpu" size={12} color="#9c44dc" />
+                <Text numberOfLines={1} ellipsizeMode="tail" style={{color:text, fontSize:11, fontWeight:'600', flexShrink: 1}}>{activeLabel} ▾</Text>
               </Pressable>
               {selectedTool && (
-                <Pressable onPress={()=>{ setSelectedTool(null); setInputText(""); }} style={{ flexDirection:'row', alignItems:'center', gap:4, backgroundColor: '#9c44dc', borderColor: '#581C87', borderWidth: 1, paddingHorizontal: 10, paddingVertical: 6, borderRadius: 16 }}>
-                  <Text style={{ color: 'white', fontSize: 11, fontWeight: '700' }}>{selectedTool==='gastos'?'Finanças':selectedTool==='combustivel'?'Combustível':'Estoque'}</Text>
-                  <Feather name="x" size={12} color="white" />
+                <Pressable onPress={()=>{ setSelectedTool(null); setInputText(""); }} style={{ flexDirection:'row', alignItems:'center', gap:4, backgroundColor: '#9c44dc', borderColor: '#581C87', borderWidth: 1, paddingHorizontal: 8, paddingVertical: 5, borderRadius: 14, maxWidth: 90, flexShrink: 1 }}>
+                  <Text numberOfLines={1} ellipsizeMode="tail" style={{ color: 'white', fontSize: 10, fontWeight: '700', flexShrink: 1 }}>{selectedTool==='gastos'?'Finanças':selectedTool==='combustivel'?'Combustível':'Estoque'}</Text>
+                  <Feather name="x" size={10} color="white" />
                 </Pressable>
               )}
               <View style={{flex:1}}/>

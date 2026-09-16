@@ -7,7 +7,6 @@ import dayjs from "dayjs";
 import isSameOrAfter from "dayjs/plugin/isSameOrAfter";
 import isSameOrBefore from "dayjs/plugin/isSameOrBefore";
 import AIComponent from "../components/AIComponent";
-import EditShoppingCartItem from "../components/EditShoppingCartItem";
 import EmptyMessage from "../components/EmptyMessage";
 import ErrorSheet from "../components/ErrorSheet";
 import EstimativeForm from "../components/EstimativeForm";
@@ -18,75 +17,62 @@ import ThemedAlert from "../components/ui/ThemedAlert";
 import EditListForm from "../components/EditListForm";
 import { useIsKeyboardOpen } from "../hooks/useIsKeyboardOpen";
 import { useListsStore } from "../stores/lists";
-import { useSettingsStore } from "../stores/settings";
+import { useSettingsStore, type SettingsState } from "../stores/settings";
 import { usePagesStore } from "../stores/pages";
+import type { ListRow } from "../repositories/list";
 
-let RadiantButton = null;
-try {
-  RadiantButton = require("../components/ui").RadiantButton ?? require("../components/ui/index").RadiantButton ?? null;
-} catch {
-  try { RadiantButton = require("reacticx").RadiantButton ?? null; } catch {}
-}
-let ChromaRing = null;
-try {
-  ChromaRing = require("../components/ui/ChromaRing").ChromaRing ?? require("reacticx").ChromaRing ?? null;
-} catch {}
-
-const PURPLE_600 = "#9c44dc";
+const PURPLE_600: string = "#9c44dc";
 
 dayjs.extend(isSameOrAfter);
 dayjs.extend(isSameOrBefore);
 
-export default function Lists() {
-  const colorModeState = useSettingsStore((s) => s.colorModeState);
-  const isDark = colorModeState === "dark";
-  const bg = isDark ? "#1c1e21" : "#f5f5f4";
-  const bgCard = isDark ? "#27272a" : "#f5f5f4";
-  const headerText = isDark ? "#27272a" : "white";
-  const text = isDark ? "#e4e4e7" : "#52525b";
-  const bgCardPressed = isDark ? "#3f3f46" : "#e7e5e4";
-  const isAiEnabled = useSettingsStore((s) => !!s.isAiEnabled);
+export default function Lists(): React.JSX.Element {
+  const colorModeState = useSettingsStore((s: SettingsState) => s.colorModeState);
+  const isDark: boolean = colorModeState === "dark";
+  const bg: string = isDark ? "#1c1e21" : "#f5f5f4";
+  const headerText: string = isDark ? "#27272a" : "white";
+  const text: string = isDark ? "#e4e4e7" : "#52525b";
+  const isAiEnabled: boolean = useSettingsStore((s: SettingsState) => !!s.isAiEnabled);
 
   const { setSelectedSheet } = usePagesStore();
-  const isFocused = useIsFocused();
-  const loadLists = useListsStore((s) => s.load);
+  const isFocused: boolean = useIsFocused();
+  const loadLists: () => Promise<void> = useListsStore((s: any) => s.load);
   useEffect(() => {
     if (isFocused) {
       setSelectedSheet("Lists");
       loadLists();
     }
-  }, [isFocused, loadLists]);
+  }, [isFocused, loadLists, setSelectedSheet]);
 
-  const isKeyboardOpen = useIsKeyboardOpen();
+  const isKeyboardOpen: boolean = useIsKeyboardOpen();
   const insets = useSafeAreaInsets();
-  const tabBarHeight = (() => { try { const { useBottomTabBarHeight } = require("@react-navigation/bottom-tabs"); return useBottomTabBarHeight(); } catch { return 80; } })();
-  const [isOpen, setIsOpen] = useState(false);
-  const onOpen = () => setIsOpen(true);
-  const onClose = () => setIsOpen(false);
-  const navigation = useNavigation();
-  const { height } = useWindowDimensions();
+  const tabBarHeight: number = (() => { try { const { useBottomTabBarHeight } = require("@react-navigation/bottom-tabs"); return useBottomTabBarHeight(); } catch { return 80; } })();
+  const [isOpen, setIsOpen] = useState<boolean>(false);
+  const onOpen = (): void => setIsOpen(true);
+  const onClose = (): void => setIsOpen(false);
+  const navigation: any = useNavigation();
 
-  const lists = useListsStore((s) => s.lists);
-  const handleSelectList = useListsStore((s) => s.handleSelect);
-  const deleteList = useListsStore((s) => s.deleteList);
-  const [confirmDeleteList, setConfirmDeleteList] = useState(null);
-  const handleExportList = async (id) => {
+  const lists: ListRow[] = useListsStore((s: any) => s.lists);
+  const handleSelectList: (id: string) => Promise<void> = useListsStore((s: any) => s.handleSelect);
+  const deleteList: (id: string) => Promise<void> = useListsStore((s: any) => s.deleteList);
+  const [confirmDeleteList, setConfirmDeleteList] = useState<ListRow | null>(null);
+  const handleExportList = async (id: string): Promise<void> => {
     const { ToastAndroid } = require("react-native");
     ToastAndroid.show("Exportação de lista disponível em breve", ToastAndroid.SHORT);
   };
-  const handleDeleteListSwipe = (item) => setConfirmDeleteList(item);
-  const handleConfirmDeleteList = async () => {
+  const handleDeleteListSwipe = (item: ListRow): void => setConfirmDeleteList(item);
+  const handleConfirmDeleteList = async (): Promise<void> => {
     if (!confirmDeleteList) return;
     await deleteList(confirmDeleteList.id);
     setConfirmDeleteList(null);
   };
-  const handleEditListSwipe = async (item) => {
+  const handleEditListSwipe = async (item: ListRow): Promise<void> => {
     await handleSelectList(item.id);
     setSelectedSheetOpen("editar");
     onOpen();
   };
 
-  const [selectedSheetOpen, setSelectedSheetOpen] = useState(null);
+  const [selectedSheetOpen, setSelectedSheetOpen] = useState<string | null>(null);
 
   return (
     <View style={{ flex: 1, backgroundColor: bg }} className="flex-1 bg-gray-50 dark:bg-gray-900">
@@ -119,10 +105,10 @@ export default function Lists() {
               </Text>
               <FlatList
                 data={lists}
-                keyExtractor={(item) => item.id}
+                keyExtractor={(item: ListRow) => item.id}
                 scrollEnabled={false}
                 ItemSeparatorComponent={() => <View style={{ height: 8 }} />}
-                renderItem={({ item }) => (
+                renderItem={({ item }: { item: ListRow }) => (
                   <SwipeableRow
                     item={item}
                     onEdit={handleEditListSwipe}
@@ -167,7 +153,7 @@ export default function Lists() {
       {isAiEnabled && <View style={{ width: "100%", height: 64 }} />}
       <AIComponent />
 
-            <Modal visible={isOpen} animationType="slide" onRequestClose={onClose} transparent={false} statusBarTranslucent>
+      <Modal visible={isOpen} animationType="slide" onRequestClose={onClose} transparent={false} statusBarTranslucent>
         <SafeAreaView style={{ flex: 1, backgroundColor: bg }} edges={["top","bottom"]}>
           <View style={{ alignItems: "center", paddingTop: 12, paddingBottom: 8 }}>
             <View style={{ width: 36, height: 4, borderRadius: 2, backgroundColor: "#e4e4e7" }} />
@@ -178,13 +164,13 @@ export default function Lists() {
             </Pressable>
           </View>
           <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : "height"} keyboardVerticalOffset={insets.top + 12} style={{ flex: 1 }}>
-          {selectedSheetOpen === "editar" ? (
-            <EditListForm onClose={onClose} />
-          ) : selectedSheetOpen === "estimativa" ? (
-            <EstimativeForm onClose={onClose} />
-          ) : (
-            <ErrorSheet />
-          )}
+            {selectedSheetOpen === "editar" ? (
+              <EditListForm onClose={onClose} />
+            ) : selectedSheetOpen === "estimativa" ? (
+              <EstimativeForm onClose={onClose} />
+            ) : (
+              <ErrorSheet />
+            )}
             <View style={{ height: 24, width: "100%" }} />
           </KeyboardAvoidingView>
         </SafeAreaView>

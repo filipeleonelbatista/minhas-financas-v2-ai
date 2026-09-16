@@ -1,28 +1,28 @@
 import { create } from 'zustand';
-import { listRepo } from '../repositories/list';
+import { listRepo, type ListRow, type ListItemRow, type ListDTO, type ListItemDTO } from '../repositories/list';
 
 type ListsState = {
-  lists: any[];
-  selectedList: any | null;
-  selectedListItems: any[];
+  lists: ListRow[];
+  selectedList: ListRow | null;
+  selectedListItems: ListItemRow[];
   search: string;
   selectedCategory: string;
   load: () => Promise<void>;
-  addList: (dto: any) => Promise<string>;
-  addItem: (dto: any) => Promise<void>;
+  addList: (dto: ListDTO) => Promise<string>;
+  addItem: (dto: ListItemDTO) => Promise<void>;
   handleSelect: (id: string) => Promise<void>;
   deleteList: (id: string) => Promise<void>;
-  updateQuantity: (item: any, isAdd: boolean) => Promise<void>;
+  updateQuantity: (item: ListItemRow, isAdd: boolean) => Promise<void>;
   deleteItem: (id: string, listId: string) => Promise<void>;
-  updateItem: (id: string, dto: any) => Promise<void>;
+  updateItem: (id: string, dto: Partial<ListItemDTO>) => Promise<void>;
   setSearch: (v: string) => void;
   setSelectedCategory: (v: string) => void;
-  getFilteredList: () => any[];
+  getFilteredList: () => ListItemRow[];
   getListTotal: () => number;
-  filteredList: any[];
+  filteredList: ListItemRow[];
 };
 
-function computeFiltered(selectedListItems: any[], search: string, selectedCategory: string) {
+function computeFiltered(selectedListItems: ListItemRow[], search: string, selectedCategory: string): ListItemRow[] {
   let f = selectedListItems;
   if (selectedCategory !== 'Todos os itens') {
     f = f.filter((i) => i.category === selectedCategory);
@@ -33,11 +33,11 @@ function computeFiltered(selectedListItems: any[], search: string, selectedCateg
   return f;
 }
 
-async function recalcListTotals(listId: string) {
+async function recalcListTotals(listId: string): Promise<void> {
   try {
     const items = await listRepo.getItems(listId);
-    const totalAmount = items.reduce((acc: number, it: any) => acc + Number(it.amount) * Number(it.quantity), 0);
-    const totalQuantity = items.reduce((acc: number, it: any) => acc + Number(it.quantity), 0);
+    const totalAmount = items.reduce((acc: number, it: ListItemRow) => acc + Number(it.amount) * Number(it.quantity), 0);
+    const totalQuantity = items.reduce((acc: number, it: ListItemRow) => acc + Number(it.quantity), 0);
     await listRepo.update(listId, { amount: totalAmount, quantity: totalQuantity });
   } catch {}
 }
@@ -54,13 +54,13 @@ export const useListsStore = create<ListsState>((set, get) => ({
     set({ lists });
   },
 
-  addList: async (dto: any) => {
+  addList: async (dto: ListDTO) => {
     const row = await listRepo.add(dto);
     await get().load();
     return row.id as string;
   },
 
-  addItem: async (dto: any) => {
+  addItem: async (dto: ListItemDTO) => {
     await listRepo.addItem(dto);
     await get().handleSelect(dto.list_id);
     await recalcListTotals(dto.list_id);
@@ -70,7 +70,7 @@ export const useListsStore = create<ListsState>((set, get) => ({
   handleSelect: async (id: string) => {
     const items = await listRepo.getItems(id);
     const all = await listRepo.getAll();
-    const list = all.find((l: any) => l.id === id) ?? null;
+    const list = all.find((l) => l.id === id) ?? null;
     set({ selectedList: list, selectedListItems: items });
   },
 
@@ -80,7 +80,7 @@ export const useListsStore = create<ListsState>((set, get) => ({
     await get().load();
   },
 
-  updateQuantity: async (item: any, isAdd: boolean) => {
+  updateQuantity: async (item: ListItemRow, isAdd: boolean) => {
     const newQty = isAdd ? Number(item.quantity) + 1 : Number(item.quantity) - 1;
     const clamped = newQty < 0 ? 0 : newQty;
     await listRepo.updateItem(item.id, { quantity: clamped });
@@ -96,11 +96,9 @@ export const useListsStore = create<ListsState>((set, get) => ({
     }
     await get().load();
   },
-  updateItem: async (id: string, dto: any) => {
+  updateItem: async (id: string, dto: Partial<ListItemDTO>) => {
     await listRepo.updateItem(id, dto);
-    const listId = dto.list_id ?? (await listRepo.getItems(dto.list_id).then(() => dto.list_id).catch(() => null));
-    // Try to get listId from dto or from current selectedList
-    const targetListId = dto.list_id ?? get().selectedList?.id ?? null;
+    const targetListId = (dto as any).list_id ?? get().selectedList?.id ?? null;
     if (targetListId) {
       await recalcListTotals(targetListId);
       await get().handleSelect(targetListId);
@@ -118,7 +116,7 @@ export const useListsStore = create<ListsState>((set, get) => ({
 
   getListTotal: () => {
     const filtered = get().getFilteredList();
-    return filtered.reduce((acc: number, it: any) => acc + Number(it.amount) * Number(it.quantity), 0);
+    return filtered.reduce((acc: number, it: ListItemRow) => acc + Number(it.amount) * Number(it.quantity), 0);
   },
 
   // placeholder, will be overridden by patched getState to stay live
@@ -132,18 +130,14 @@ if (_store && typeof _store.getState === 'function') {
   (_store as any).getState = () => {
     const state = originalGetState();
     const filtered = computeFiltered(state.selectedListItems ?? [], state.search ?? '', state.selectedCategory ?? 'Todos os itens');
-    // Return proxy-like object where filteredList is always up-to-date
     return Object.defineProperty({ ...state }, 'filteredList', {
       get() {
-        // recompute from latest state snapshot's fields (captured)
         return computeFiltered(state.selectedListItems ?? [], state.search ?? '', state.selectedCategory ?? 'Todos os itens');
       },
       enumerable: true,
       configurable: true,
     }) as any;
   };
-  // Also keep base state shape in sync for Zustand's subscribe: update filteredList value on every set
-  // Subscribe to keep underlying state's filteredList field updated (optional, for selectors using shallow)
   _store.subscribe((s: any) => {
     // no-op, patch is via getState
   });

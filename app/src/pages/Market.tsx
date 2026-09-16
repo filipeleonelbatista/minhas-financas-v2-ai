@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { View, Text, ScrollView, Pressable, TextInput, TouchableOpacity, Modal, FlatList, useWindowDimensions } from "react-native";
-import { Feather, FontAwesome, MaterialCommunityIcons } from "@expo/vector-icons";
+import { Feather, MaterialCommunityIcons } from "@expo/vector-icons";
 import { Picker } from "@react-native-picker/picker";
 import { useIsFocused, useNavigation } from "@react-navigation/native";
 import dayjs from "dayjs";
@@ -18,112 +18,111 @@ import ThemedAlert from "../components/ui/ThemedAlert";
 import { useIsKeyboardOpen } from "../hooks/useIsKeyboardOpen";
 import { useMarketStore } from "../stores/market";
 import { useListsStore } from "../stores/lists";
-import { useSettingsStore } from "../stores/settings";
+import { useSettingsStore, type SettingsState } from "../stores/settings";
 import { usePagesStore } from "../stores/pages";
 import { Sheet, useSheetRef } from "../components/nativewindui/Sheet";
 import { BottomSheetScrollView } from "@gorhom/bottom-sheet";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { useShallow } from "zustand/react/shallow";
+import type { StockRow } from "../repositories/market";
 
 let BorderBeam: any = null;
 try { BorderBeam = require("../components/ui/border-beam").BorderBeam || require("../components/ui/border-beam/index").BorderBeam || require("../components/ui/border-beam/index").default || null; } catch {}
 
-const PURPLE_600 = "#9c44dc";
+const PURPLE_600: string = "#9c44dc";
 
 dayjs.extend(isSameOrAfter);
 dayjs.extend(isSameOrBefore);
 
-export default function Market() {
-  const colorModeState = useSettingsStore((s) => s.colorModeState);
-  const isDark = colorModeState === "dark";
-  const bg = isDark ? "#1c1e21" : "#f5f5f4";
-  const bgCard = isDark ? "#27272a" : "#f5f5f4";
-  const headerText = isDark ? "#27272a" : "white";
-  const text = isDark ? "#e4e4e7" : "#52525b";
-  const bgCardPressed = isDark ? "#3f3f46" : "#e7e5e4";
+export default function Market(): React.JSX.Element {
+  const colorModeState = useSettingsStore((s: SettingsState) => s.colorModeState);
+  const isDark: boolean = colorModeState === "dark";
+  const bg: string = isDark ? "#1c1e21" : "#f5f5f4";
+  const headerText: string = isDark ? "#27272a" : "white";
+  const text: string = isDark ? "#e4e4e7" : "#52525b";
 
   const { setSelectedSheet } = usePagesStore();
-  const isFocused = useIsFocused();
+  const isFocused: boolean = useIsFocused();
   useEffect(() => {
     if (isFocused) setSelectedSheet("Stock");
-  }, [isFocused]);
+  }, [isFocused, setSelectedSheet]);
 
-  const isKeyboardOpen = useIsKeyboardOpen();
-  const tabBarHeight = (() => { try { const { useBottomTabBarHeight } = require("@react-navigation/bottom-tabs"); return useBottomTabBarHeight(); } catch { return 80; } })();
-  const [isOpen, setIsOpen] = useState(false);
-  const onOpen = () => setIsOpen(true);
-  const onClose = () => setIsOpen(false);
+  const isKeyboardOpen: boolean = useIsKeyboardOpen();
+  const tabBarHeight: number = (() => { try { const { useBottomTabBarHeight } = require("@react-navigation/bottom-tabs"); return useBottomTabBarHeight(); } catch { return 80; } })();
+  const [isOpen, setIsOpen] = useState<boolean>(false);
+  const onOpen = (): void => setIsOpen(true);
+  const onClose = (): void => setIsOpen(false);
 
-  const navigation = useNavigation();
+  const navigation: any = useNavigation();
   const { height } = useWindowDimensions();
   const insets = useSafeAreaInsets();
   const filterSheetRef = useSheetRef();
 
-  const isAiEnabled = useSettingsStore((s) => !!s.isAiEnabled);
-  const marketSimplifiedItems = useSettingsStore((s) => !!s.marketSimplifiedItems);
+  const isAiEnabled: boolean = useSettingsStore((s: SettingsState) => !!s.isAiEnabled);
+  const marketSimplifiedItems: boolean = useSettingsStore((s: SettingsState) => !!s.marketSimplifiedItems);
 
-  const stockList = useMarketStore((s) => s.stockList);
-  const search = useMarketStore((s) => s.search);
-  const setSearch = useMarketStore((s) => s.setSearch);
-  const selectedCategory = useMarketStore((s) => s.selectedCategory);
-  const setSelectedCategory = useMarketStore((s) => s.setSelectedCategory);
-  const load = useMarketStore((s) => s.load);
-  const updateStore = useMarketStore((s) => s.update);
-  const listsAddList = useListsStore((s) => s.addList);
-  const listsAddItem = useListsStore((s) => s.addItem);
+  const stockList: StockRow[] = useMarketStore((s: any) => s.stockList);
+  const search: string = useMarketStore((s: any) => s.search);
+  const setSearch: (v: string) => void = useMarketStore((s: any) => s.setSearch);
+  const selectedCategory: string = useMarketStore((s: any) => s.selectedCategory);
+  const setSelectedCategory: (v: string) => void = useMarketStore((s: any) => s.setSelectedCategory);
+  const updateStore: (id: string, dto: Partial<StockRow>) => Promise<void> = useMarketStore((s: any) => s.update);
+  const listsAddList: (dto: any) => Promise<string | null> = useListsStore((s: any) => s.addList);
+  const listsAddItem: (dto: any) => Promise<void> = useListsStore((s: any) => s.addItem);
 
-  const MarketList = stockList;
-  const filteredList = useMarketStore((s) => s.getFiltered());
-  const listTotal = filteredList.reduce((acc, it) => acc + Number(it.amount) * Number(it.quantity), 0);
+  const MarketList: StockRow[] = stockList;
+  const filteredList: StockRow[] = useMarketStore(useShallow((s: any) => s.getFiltered()));
+  const listTotal: number = filteredList.reduce((acc: number, it: StockRow) => acc + Number(it.amount) * Number(it.quantity), 0);
 
-  const [selectedTransaction, setSelectedTransaction] = useState(null);
-  const [selectedSheetOpen, setSelectedSheetOpen] = useState(null);
-  const [isEditMode, setIsEditMode] = useState(false);
-  const [confirmDeleteMarket, setConfirmDeleteMarket] = useState(null);
-  const removeStock = useMarketStore((s) => s.remove);
+  const [selectedTransaction, setSelectedTransaction] = useState<StockRow | null>(null);
+  const [selectedSheetOpen, setSelectedSheetOpen] = useState<string | null>(null);
+  const [isEditMode, setIsEditMode] = useState<boolean>(false);
+  const [confirmDeleteMarket, setConfirmDeleteMarket] = useState<StockRow | null>(null);
+  const removeStock: (id: string) => Promise<void> = useMarketStore((s: any) => s.remove);
 
-  const updateStock = async (item, isAdd, isSub) => {
-    const currentQuantity = isAdd ? Number(item.quantity) + 1 : isSub ? Number(item.quantity) - 1 : item.quantity;
+  const updateStock = async (item: StockRow, isAdd: boolean, isSub: boolean): Promise<void> => {
+    const currentQuantity: number = isAdd ? Number(item.quantity) + 1 : isSub ? Number(item.quantity) - 1 : item.quantity;
     await updateStore(item.id, { quantity: Number(currentQuantity) });
   };
 
-  const handleViewStock = (item) => {
+  const handleViewStock = (item: StockRow): void => {
     setSelectedTransaction(item);
     setIsEditMode(false);
     setSelectedSheetOpen("editar");
     onOpen();
   };
-  const handleEditStock = (item) => {
+  const handleEditStock = (item: StockRow): void => {
     setSelectedTransaction(item);
     setIsEditMode(true);
     setSelectedSheetOpen("editar");
     onOpen();
   };
-  const handleDeleteStock = (item) => setConfirmDeleteMarket(item);
-  const handleConfirmDeleteStock = async () => {
+  const handleDeleteStock = (item: StockRow): void => setConfirmDeleteMarket(item);
+  const handleConfirmDeleteStock = async (): Promise<void> => {
     if (!confirmDeleteMarket) return;
     await removeStock(confirmDeleteMarket.id);
     setConfirmDeleteMarket(null);
   };
-  const onCloseStockModal = () => {
+  const onCloseStockModal = (): void => {
     onClose();
     setIsEditMode(false);
   };
 
-  const [showAddToListAlert, setShowAddToListAlert] = useState(false);
-  const [addToListCallback, setAddToListCallback] = useState(null);
-  const handleAddItensOnBuyList = (goListsPage) => {
+  const [showAddToListAlert, setShowAddToListAlert] = useState<boolean>(false);
+  const [addToListCallback, setAddToListCallback] = useState<(() => void) | null>(null);
+  const handleAddItensOnBuyList = (goListsPage: () => void): void => {
     setAddToListCallback(() => goListsPage);
     setShowAddToListAlert(true);
   };
-  const handleAddToListConfirm = async (mode) => {
+  const handleAddToListConfirm = async (mode: string): Promise<void> => {
     const { ToastAndroid } = require("react-native");
     const goListsPage = addToListCallback;
     setShowAddToListAlert(false);
     if (mode === "falta") {
-      const lowest = MarketList.filter((i) => i.quantity < i.quantityDesired);
+      const lowest: StockRow[] = MarketList.filter((i: StockRow) => i.quantity < i.quantityDesired);
       if (lowest.length > 0) {
-        const totalAmount = lowest.reduce((acc, t) => acc + Number(t.amount) * Number(t.quantity), 0);
-        const totalQuantity = lowest.reduce((acc, t) => acc + Number(t.quantity), 0);
+        const totalAmount: number = lowest.reduce((acc: number, t: StockRow) => acc + Number(t.amount) * Number(t.quantity), 0);
+        const totalQuantity: number = lowest.reduce((acc: number, t: StockRow) => acc + Number(t.quantity), 0);
         const createdList = { description: "Em falta no estoque", location: "", amount: totalAmount, quantity: totalQuantity, date: Date.now() + 43200000 };
         const currentId = await listsAddList(createdList);
         if (currentId !== null) {
@@ -137,8 +136,8 @@ export default function Market() {
       }
     } else if (mode === "todos") {
       if (MarketList.length > 0) {
-        const totalAmount = MarketList.reduce((acc, t) => acc + Number(t.amount) * Number(t.quantity), 0);
-        const totalQuantity = MarketList.reduce((acc, t) => acc + Number(t.quantity), 0);
+        const totalAmount: number = MarketList.reduce((acc: number, t: StockRow) => acc + Number(t.amount) * Number(t.quantity), 0);
+        const totalQuantity: number = MarketList.reduce((acc: number, t: StockRow) => acc + Number(t.quantity), 0);
         const createdList = { description: "Itens do estoque", location: "", amount: totalAmount, quantity: totalQuantity, date: Date.now() + 43200000 };
         const currentId = await listsAddList(createdList);
         if (currentId !== null) {
@@ -182,7 +181,7 @@ export default function Market() {
         {MarketList.length > 0 && (
           <TextInput
             placeholder="Pesquise os itens..."
-            onChangeText={(t) => setSearch(t)}
+            onChangeText={(t: string) => setSearch(t)}
             value={search}
             editable={true}
             style={{ marginHorizontal: 16, marginTop: 8, borderWidth: 1, borderColor: "#d4d4d8", borderRadius: 4, padding: 8, color: text }}
@@ -199,10 +198,10 @@ export default function Market() {
             </Text>
             <FlatList
               data={filteredList}
-              keyExtractor={(item) => item.id}
+              keyExtractor={(item: StockRow) => item.id}
               scrollEnabled={false}
               ItemSeparatorComponent={() => <View style={{ height: 8 }} />}
-              renderItem={({ item }) => (
+              renderItem={({ item }: { item: StockRow }) => (
                 <SwipeableRow
                   item={item}
                   onEdit={handleEditStock}
@@ -303,7 +302,7 @@ export default function Market() {
             <Feather name="x" size={24} color={text} />
           </Pressable>
           {selectedSheetOpen === "editar" ? (
-            <EditShoppingCartItem onClose={onCloseStockModal} selectedTransaction={selectedTransaction} initialEditable={isEditMode} />
+            <EditShoppingCartItem onClose={onCloseStockModal} selectedTransaction={selectedTransaction as StockRow} initialEditable={isEditMode} />
           ) : selectedSheetOpen === "estimativa" ? (
             <EstimativeForm onClose={onCloseStockModal} />
           ) : (
@@ -338,7 +337,7 @@ export default function Market() {
           <View style={{ gap: 8 }}>
             <Text style={{ color: text, fontSize: 16, fontWeight: "700" }}>Categoria</Text>
             <View style={{ borderWidth: 1, borderColor: isDark ? "#3f3f46" : "#e4e4e7", borderRadius: 12, backgroundColor: isDark ? "#27272a" : "white", overflow: "hidden" }}>
-              <Picker selectedValue={selectedCategory} onValueChange={(itemValue) => setSelectedCategory(itemValue)} mode="dropdown" dropdownIconColor="#9c44dc" enabled style={{ width: "100%", color: text }}>
+              <Picker selectedValue={selectedCategory} onValueChange={(itemValue: string) => setSelectedCategory(itemValue)} mode="dropdown" dropdownIconColor="#9c44dc" enabled style={{ width: "100%", color: text }}>
                 <Picker.Item label="Todos os itens" value="Todos os itens" />
                 <Picker.Item label="Carnes" value="Carnes" />
                 <Picker.Item label="Fruteira" value="Fruteira" />

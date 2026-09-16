@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { View, Text, ScrollView, Pressable, TextInput, TouchableOpacity, Modal, FlatList, useWindowDimensions, KeyboardAvoidingView, Platform } from "react-native";
 import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
-import { Feather, FontAwesome } from "@expo/vector-icons";
+import { Feather } from "@expo/vector-icons";
 import { Picker } from "@react-native-picker/picker";
 import { useIsFocused, useNavigation } from "@react-navigation/native";
 import dayjs from "dayjs";
@@ -16,78 +16,67 @@ import SwipeableRow from "../components/SwipeableRow";
 import ThemedAlert from "../components/ui/ThemedAlert";
 import { useIsKeyboardOpen } from "../hooks/useIsKeyboardOpen";
 import { useListsStore } from "../stores/lists";
-import { useSettingsStore } from "../stores/settings";
+import { useSettingsStore, type SettingsState } from "../stores/settings";
 import { usePagesStore } from "../stores/pages";
 import EditListForm from "../components/EditListForm";
 import EditItemListItem from "../components/EdittemListtItem";
 import AddItemListtItem from "../components/AddItemListtItem";
-
-let RadiantButton = null;
-try {
-  RadiantButton = require("../components/ui").RadiantButton ?? require("../components/ui/index").RadiantButton ?? null;
-} catch {
-  try { RadiantButton = require("reacticx").RadiantButton ?? null; } catch {}
-}
-let ChromaRing = null;
-try {
-  ChromaRing = require("../components/ui/ChromaRing").ChromaRing ?? require("reacticx").ChromaRing ?? null;
-} catch {}
-
-const PURPLE_600 = "#9c44dc";
+import { useShallow } from "zustand/react/shallow";
+import type { ListRow, ListItemRow } from "../repositories/list";
 
 dayjs.extend(isSameOrAfter);
 dayjs.extend(isSameOrBefore);
 
-export default function List() {
-  const colorModeState = useSettingsStore((s) => s.colorModeState);
-  const isDark = colorModeState === "dark";
-  const bg = isDark ? "#1c1e21" : "#f5f5f4";
-  const bgCard = isDark ? "#27272a" : "#f5f5f4";
-  const headerText = isDark ? "#27272a" : "white";
-  const text = isDark ? "#e4e4e7" : "#52525b";
-  const bgCardPressed = isDark ? "#3f3f46" : "#e7e5e4";
-  const isAiEnabled = useSettingsStore((s) => !!s.isAiEnabled);
-  const marketSimplifiedItems = useSettingsStore((s) => !!s.marketSimplifiedItems);
+export default function List(): React.JSX.Element {
+  const colorModeState = useSettingsStore((s: SettingsState) => s.colorModeState);
+  const isDark: boolean = colorModeState === "dark";
+  const bg: string = isDark ? "#1c1e21" : "#f5f5f4";
+  const headerText: string = isDark ? "#27272a" : "white";
+  const text: string = isDark ? "#e4e4e7" : "#52525b";
+  const isAiEnabled: boolean = useSettingsStore((s: SettingsState) => !!s.isAiEnabled);
+  const marketSimplifiedItems: boolean = useSettingsStore((s: SettingsState) => !!s.marketSimplifiedItems);
 
   const { setSelectedSheet } = usePagesStore();
-  const isFocused = useIsFocused();
-  const refreshSelectedList = useListsStore((s) => s.handleSelect);
-  const loadLists = useListsStore((s) => s.load);
+  const isFocused: boolean = useIsFocused();
+  const refreshSelectedList: (id: string) => Promise<void> = useListsStore((s: any) => s.handleSelect);
+  const selectedListForEffect: ListRow | null = useListsStore((s: any) => s.selectedList);
   useEffect(() => {
     if (isFocused) {
       setSelectedSheet("List");
-      if (selectedList?.id) refreshSelectedList(selectedList.id);
+      if (selectedListForEffect?.id) refreshSelectedList(selectedListForEffect.id);
     }
-  }, [isFocused]);
+  }, [isFocused, setSelectedSheet, refreshSelectedList, selectedListForEffect?.id]);
 
-  const isKeyboardOpen = useIsKeyboardOpen();
+  const isKeyboardOpen: boolean = useIsKeyboardOpen();
   const insets = useSafeAreaInsets();
-  const tabBarHeight = (() => { try { const { useBottomTabBarHeight } = require("@react-navigation/bottom-tabs"); return useBottomTabBarHeight(); } catch { return 80; } })();
-  const [isOpen, setIsOpen] = useState(false);
-  const onOpen = () => setIsOpen(true);
-  const onClose = () => setIsOpen(false);
-  const [isItemEditMode, setIsItemEditMode] = useState(false);
-  const [confirmDeleteItem, setConfirmDeleteItem] = useState(null);
-  const [confirmDeleteListAlert, setConfirmDeleteListAlert] = useState(null);
-  const navigation = useNavigation();
-  const { height } = useWindowDimensions();
+  const tabBarHeight: number = (() => { try { const { useBottomTabBarHeight } = require("@react-navigation/bottom-tabs"); return useBottomTabBarHeight(); } catch { return 80; } })();
+  const [isOpen, setIsOpen] = useState<boolean>(false);
+  const onOpen = (): void => setIsOpen(true);
+  const onClose = (): void => setIsOpen(false);
+  const [isItemEditMode, setIsItemEditMode] = useState<boolean>(false);
+  const [confirmDeleteItem, setConfirmDeleteItem] = useState<ListItemRow | null>(null);
+  const [confirmDeleteListAlert, setConfirmDeleteListAlert] = useState<{ id: string } | null>(null);
+  const navigation: any = useNavigation();
 
-  const selectedCategory = useListsStore((s) => s.selectedCategory);
-  const setSelectedCategory = useListsStore((s) => s.setSelectedCategory);
-  const selectedList = useListsStore((s) => s.selectedList);
-  const selectedListItems = useListsStore((s) => s.selectedListItems);
-  const search = useListsStore((s) => s.search);
-  const setSearch = useListsStore((s) => s.setSearch);
-  const updateQuantity = useListsStore((s) => s.updateQuantity);
-  const deleteList = useListsStore((s) => s.deleteList);
-  const filteredList = useListsStore((s) => s.getFilteredList());
-  const listTotal = useListsStore((s) => s.getListTotal());
+  const selectedCategory: string = useListsStore((s: any) => s.selectedCategory);
+  const setSelectedCategory: (v: string) => void = useListsStore((s: any) => s.setSelectedCategory);
+  const selectedList: ListRow | null = useListsStore((s: any) => s.selectedList);
+  const selectedListItems: ListItemRow[] = useListsStore((s: any) => s.selectedListItems);
+  const search: string = useListsStore((s: any) => s.search);
+  const setSearch: (v: string) => void = useListsStore((s: any) => s.setSearch);
+  const updateQuantity: (item: ListItemRow, isAdd: boolean) => Promise<void> = useListsStore((s: any) => s.updateQuantity);
+  const deleteList: (id: string) => Promise<void> = useListsStore((s: any) => s.deleteList);
+  const filteredList: ListItemRow[] = useListsStore(useShallow((s: any) => s.getFilteredList()));
+  const listTotal: number = useListsStore((s: any) => s.getListTotal());
 
-  const [selectedSheetOpen, setSelectedSheetOpen] = useState(null);
-  const [selectedTransaction, setSelectedTransaction] = useState(null);
+  const [selectedSheetOpen, setSelectedSheetOpen] = useState<string | null>(null);
+  const [selectedTransaction, setSelectedTransaction] = useState<ListItemRow | null>(null);
 
-  const handleDeleteList = (id) => setConfirmDeleteListAlert({ id });
-  const handleConfirmDeleteList = async () => {
+  const handleDeleteList = (id: string | undefined): void => {
+    if (!id) return;
+    setConfirmDeleteListAlert({ id });
+  };
+  const handleConfirmDeleteList = async (): Promise<void> => {
     if (!confirmDeleteListAlert) return;
     const { ToastAndroid } = require("react-native");
     await deleteList(confirmDeleteListAlert.id);
@@ -95,26 +84,26 @@ export default function List() {
     setConfirmDeleteListAlert(null);
     navigation.navigate("Lists");
   };
-  const handleViewItem = (item) => {
+  const handleViewItem = (item: ListItemRow): void => {
     setSelectedTransaction(item);
     setIsItemEditMode(false);
     setSelectedSheetOpen("editar-item");
     onOpen();
   };
-  const handleEditItem = (item) => {
+  const handleEditItem = (item: ListItemRow): void => {
     setSelectedTransaction(item);
     setIsItemEditMode(true);
     setSelectedSheetOpen("editar-item");
     onOpen();
   };
-  const handleDeleteItem = (item) => setConfirmDeleteItem(item);
-  const handleConfirmDeleteItem = async () => {
+  const handleDeleteItem = (item: ListItemRow): void => setConfirmDeleteItem(item);
+  const handleConfirmDeleteItem = async (): Promise<void> => {
     if (!confirmDeleteItem) return;
-    const storeDeleteItem = useListsStore.getState().deleteItem;
-    await storeDeleteItem(confirmDeleteItem.id, confirmDeleteItem.list_id ?? selectedList?.id);
+    const storeDeleteItem: (id: string, listId: string) => Promise<void> = useListsStore.getState().deleteItem;
+    await storeDeleteItem(confirmDeleteItem.id, (confirmDeleteItem as any).list_id ?? selectedList?.id ?? "");
     setConfirmDeleteItem(null);
   };
-  const onCloseItemModal = () => {
+  const onCloseItemModal = (): void => {
     onClose();
     setIsItemEditMode(false);
   };
@@ -141,8 +130,8 @@ export default function List() {
           <View style={{ gap: 12 }}>
             <View>
               <Text style={{ fontWeight: "700", fontSize: 20, color: text }} numberOfLines={2} adjustsFontSizeToFit minimumFontScale={0.7}>{selectedList?.description}</Text>
-              <Text style={{ fontSize: 14, color: text, marginTop: 4 }}>Local de compra: {selectedList?.location === "" ? "Sem mercado" : selectedList?.location}</Text>
-              <Text style={{ fontSize: 14, color: text }}>Criado em: {selectedList?.date ? new Date(selectedList?.date).toLocaleDateString("pt-BR") : ""}</Text>
+              <Text style={{ fontSize: 14, color: text, marginTop: 4 }}>Local de compra: {selectedList?.location === "" || !selectedList?.location ? "Sem mercado" : selectedList?.location}</Text>
+              <Text style={{ fontSize: 14, color: text }}>Criado em: {selectedList?.date ? new Date(selectedList.date).toLocaleDateString("pt-BR") : ""}</Text>
             </View>
             <View style={{ flexDirection: "row", gap: 12 }}>
               <TouchableOpacity
@@ -170,7 +159,7 @@ export default function List() {
             <View style={{ borderWidth: 1, borderColor: isDark ? "#3f3f46" : "#e4e4e7", borderRadius: 12, overflow: "hidden", backgroundColor: isDark ? "#27272a" : "white", flex: 1, marginLeft: 12, maxWidth: "50%" }}>
               <Picker
                 selectedValue={selectedCategory}
-                onValueChange={(itemValue) => setSelectedCategory(itemValue)}
+                onValueChange={(itemValue: string) => setSelectedCategory(itemValue)}
                 mode="dropdown"
                 dropdownIconColor="#9c44dc"
                 enabled
@@ -188,7 +177,7 @@ export default function List() {
           </View>
 
           {selectedListItems.length > 0 && (
-            <TextInput placeholder="Pesquise os itens..." onChangeText={(t) => setSearch(t)} value={search} editable={true} style={{ marginBottom: 16, borderWidth: 1, borderColor: "#d4d4d8", borderRadius: 4, padding: 8, color: text }} placeholderTextColor="#a1a1aa" />
+            <TextInput placeholder="Pesquise os itens..." onChangeText={(t: string) => setSearch(t)} value={search} editable={true} style={{ marginBottom: 16, borderWidth: 1, borderColor: "#d4d4d8", borderRadius: 4, padding: 8, color: text }} placeholderTextColor="#a1a1aa" />
           )}
 
           {filteredList.length === 0 ? (
@@ -200,10 +189,10 @@ export default function List() {
               </Text>
               <FlatList
                 data={filteredList}
-                keyExtractor={(item) => item.id}
+                keyExtractor={(item: ListItemRow) => item.id}
                 scrollEnabled={false}
                 ItemSeparatorComponent={() => <View style={{ height: 8 }} />}
-                renderItem={({ item }) => (
+                renderItem={({ item }: { item: ListItemRow }) => (
                   <SwipeableRow
                     item={item}
                     onEdit={handleEditItem}
@@ -268,7 +257,7 @@ export default function List() {
       />
 
       <AIComponent />
-            <Modal visible={isOpen} animationType="slide" onRequestClose={onClose} transparent={false} statusBarTranslucent>
+      <Modal visible={isOpen} animationType="slide" onRequestClose={onClose} transparent={false} statusBarTranslucent>
         <SafeAreaView style={{ flex: 1, backgroundColor: bg }} edges={["top","bottom"]}>
           <View style={{ alignItems: "center", paddingTop: 12, paddingBottom: 8 }}>
             <View style={{ width: 36, height: 4, borderRadius: 2, backgroundColor: "#e4e4e7" }} />
@@ -279,15 +268,15 @@ export default function List() {
             </Pressable>
           </View>
           <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : "height"} keyboardVerticalOffset={insets.top + 12} style={{ flex: 1 }}>
-          {selectedSheetOpen === "editar" ? (
-            <EditListForm onClose={onClose} />
-          ) : selectedSheetOpen === "editar-item" ? (
-            <EditItemListItem onClose={onCloseItemModal} selectedTransaction={selectedTransaction} initialEditable={isItemEditMode} />
-          ) : selectedSheetOpen === "adicionar-item" ? (
-            <AddItemListtItem onClose={onClose} />
-          ) : (
-            <ErrorSheet />
-          )}
+            {selectedSheetOpen === "editar" ? (
+              <EditListForm onClose={onClose} />
+            ) : selectedSheetOpen === "editar-item" ? (
+              <EditItemListItem onClose={onCloseItemModal} selectedTransaction={selectedTransaction as any} initialEditable={isItemEditMode} />
+            ) : selectedSheetOpen === "adicionar-item" ? (
+              <AddItemListtItem onClose={onClose} />
+            ) : (
+              <ErrorSheet />
+            )}
             <View style={{ height: 24, width: "100%" }} />
           </KeyboardAvoidingView>
         </SafeAreaView>

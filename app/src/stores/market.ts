@@ -1,17 +1,17 @@
 import { create } from 'zustand';
-import { marketRepo } from '../repositories/market';
+import { marketRepo, type StockRow, type StockDTO } from '../repositories/market';
 
 type MarketState = {
-  stockList: any[];
+  stockList: StockRow[];
   search: string;
   selectedCategory: string;
   load: () => Promise<void>;
-  add: (dto: any) => Promise<void>;
-  update: (id: string, dto: any) => Promise<void>;
+  add: (dto: StockDTO) => Promise<void>;
+  update: (id: string, dto: Partial<StockDTO>) => Promise<void>;
   remove: (id: string) => Promise<void>;
   setSearch: (v: string) => void;
   setSelectedCategory: (v: string) => void;
-  getFiltered: () => any[];
+  getFiltered: () => StockRow[];
 };
 
 export const useMarketStore = create<MarketState>((set, get) => ({
@@ -34,8 +34,8 @@ export const useMarketStore = create<MarketState>((set, get) => ({
   setSearch: (v) => set({ search: v }),
   setSelectedCategory: (v: string) => set({ selectedCategory: v } as any),
   getFiltered: () => {
-    const { stockList, search, selectedCategory } = get() as any;
-    let f = stockList;
+    const { stockList, search, selectedCategory } = get();
+    let f: StockRow[] = stockList;
     if (selectedCategory !== 'Todos' && selectedCategory !== 'Todos os itens') f = f.filter((i) => i.category === selectedCategory);
     if (search) f = f.filter((i) => i.description.includes(search));
     return f;

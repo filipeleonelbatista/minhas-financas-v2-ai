@@ -1,32 +1,73 @@
-import React, { useMemo } from "react";
+import React from "react";
 import { View, Text, TextInput, ScrollView, Pressable } from "react-native";
 import { Picker } from "@react-native-picker/picker";
 import { useFormik } from "formik";
-import * as Yup from "yup";
 import { useMarketStore } from "../stores/market";
-import { useSettingsStore } from "../stores/settings";
+import { useSettingsStore, type SettingsState } from "../stores/settings";
+import { stockSchema } from "../schemas/stock.zod";
 
 const PURPLE_600 = "#9c44dc";
 
-export default function AddShoppingCartItem({ onClose }) {
-  const colorModeState = useSettingsStore((s) => s.colorModeState);
-  const isDark = colorModeState === "dark";
-  const text = isDark ? "#e4e4e7" : "#52525b";
+interface AddShoppingCartItemProps {
+  onClose: () => void;
+}
 
-  const addTransaction = useMarketStore((s) => s.add);
-  const marketSimplifiedItems = useSettingsStore((s) => !!s.marketSimplifiedItems);
+interface FormValues {
+  description: string;
+  amount: string;
+  category: string;
+  quantity: string;
+  quantityDesired: string;
+}
 
-  const formSchema = useMemo(() => {
-    return Yup.object().shape({
-      description: Yup.string().required("O campo Descrição é obrigatório"),
-      amount: Yup.string().required("O campo Valor é obrigatório"),
-      category: Yup.string().required("O campo Categoria é obrigatório"),
-      quantity: Yup.string().required("O campo Quantidade é obrigatório"),
-      quantityDesired: Yup.string(),
-    });
-  }, []);
+export default function AddShoppingCartItem({ onClose }: AddShoppingCartItemProps): React.JSX.Element {
+  const colorModeState = useSettingsStore((s: SettingsState) => s.colorModeState);
+  const isDark: boolean = colorModeState === "dark";
+  const text: string = isDark ? "#e4e4e7" : "#52525b";
 
-  const formik = useFormik({
+  const addTransaction: (dto: any) => Promise<void> = useMarketStore((s: any) => s.add);
+  const marketSimplifiedItems: boolean = useSettingsStore((s: SettingsState) => !!s.marketSimplifiedItems);
+
+  const validate = (values: FormValues): Partial<Record<keyof FormValues, string>> => {
+    const errors: Partial<Record<keyof FormValues, string>> = {};
+    if (!values.description.trim()) {
+      errors.description = "O campo Descrição é obrigatório";
+    }
+    if (!values.amount.trim()) {
+      errors.amount = "O campo Valor é obrigatório";
+    }
+    if (!values.category.trim()) {
+      errors.category = "O campo Categoria é obrigatório";
+    }
+    if (!values.quantity.trim()) {
+      errors.quantity = "O campo Quantidade é obrigatório";
+    }
+    if (values.description.trim() && values.amount.trim() && values.category.trim() && values.quantity.trim()) {
+      const parsedAmount = parseFloat(values.amount.replaceAll(".", "").replace(",", "."));
+      const amountNum = isNaN(parsedAmount) ? 0 : parsedAmount;
+      const qty = parseInt(values.quantity);
+      const qtyDes = values.quantityDesired ? parseInt(values.quantityDesired) : 1;
+      const candidate: Record<string, unknown> = {
+        description: values.description,
+        amount: amountNum,
+        category: values.category,
+        quantity: isNaN(qty) ? 0 : qty,
+        quantityDesired: isNaN(qtyDes) ? 1 : qtyDes,
+      };
+      const res = stockSchema.safeParse(candidate);
+      if (!res.success) {
+        const descIssue = res.error.errors.find((e) => e.path[0] === "description");
+        if (descIssue) errors.description = descIssue.message;
+        const amountIssue = res.error.errors.find((e) => e.path[0] === "amount");
+        if (amountIssue) errors.amount = amountIssue.message;
+        const qtyIssue = res.error.errors.find((e) => e.path[0] === "quantity");
+        if (qtyIssue) errors.quantity = qtyIssue.message;
+      }
+    }
+    return errors;
+  };
+
+  const formik = useFormik<FormValues>({
     initialValues: {
       description: "",
       amount: "0,00",
@@ -34,30 +75,55 @@ export default function AddShoppingCartItem({ onClose }) {
       quantity: "1",
       quantityDesired: "",
     },
-    validationSchema: formSchema,
-    onSubmit: (values) => {
+    validate,
+    onSubmit: (values: FormValues) => {
       handleSubmitForm(values);
     },
   });
 
-  async function handleSubmitForm(formValues) {
-    const data = {
-      amount: parseFloat(
-        formValues.amount.replaceAll(".", "").replace(",", ".")
-      ),
-      quantity: parseInt(formValues.quantity),
+  async function handleSubmitForm(formValues: FormValues): Promise<void> {
+    const parsedAmount = parseFloat(formValues.amount.replaceAll(".", "").replace(",", "."));
+    const qty = parseInt(formValues.quantity);
+    const qtyDesiredRaw = formValues.quantityDesired ? parseInt(formValues.quantityDesired) : 1;
+    const candidate: Record<string, unknown> = {
+      amount: isNaN(parsedAmount) ? 0 : parsedAmount,
+      quantity: isNaN(qty) ? 0 : qty,
       description: formValues.description,
       category: formValues.category,
-      quantityDesired: !!formValues.quantityDesired
-        ? parseInt(formValues.quantityDesired)
-        : "",
+      quantityDesired: isNaN(qtyDesiredRaw) ? 1 : qtyDesiredRaw,
     };
+    const validation = stockSchema.safeParse(candidate);
+    if (!validation.success) {
+      const fieldErrors: Partial<Record<keyof FormValues, string>> = {};
+      for (const issue of validation.error.errors) {
+        const path = issue.path[0] as string;
+        if (path === "description" && !fieldErrors.description) fieldErrors.description = issue.message;
+        if (path === "amount" && !fieldErrors.amount) fieldErrors.amount = issue.message;
+        if (path === "quantity" && !fieldErrors.quantity) fieldErrors.quantity = issue.message;
+      }
+      if (Object.keys(fieldErrors).length > 0) {
+        formik.setErrors(fieldErrors as any);
+        return;
+      }
+    }
+    const sanitized = validation.success ? validation.data : candidate;
+    const data: any = {
+      amount: (sanitized as any).amount,
+      quantity: (sanitized as any).quantity,
+      description: (sanitized as any).description,
+      category: (sanitized as any).category,
+      quantityDesired: (sanitized as any).quantityDesired,
+    };
+    // For simplified mode original sent quantityDesired "" when empty; store will normalize to 1
+    if (!formValues.quantityDesired) {
+      data.quantityDesired = 1;
+    }
     await addTransaction(data);
     onClose();
   }
 
-  function moeda(e) {
-    let value = e;
+  function moeda(e: string): string {
+    let value: string = e;
     value = value.replace(/\D/g, "");
     value = value.replace(/(\d)(\d{2})$/, "$1,$2");
     value = value.replace(/(?=(\d{3})+(\D))\B/g, ".");
@@ -65,7 +131,7 @@ export default function AddShoppingCartItem({ onClose }) {
   }
 
   return (
-    <ScrollView style={{ flex: 1, width: "100%", paddingHorizontal: 16 }} contentContainerStyle={{ paddingBottom: 48, flexGrow: 1 }} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled" keyboardDismissMode="interactive">
+    <ScrollView style={{ flex: 1, width: "100%", paddingHorizontal: 16 }} contentContainerStyle={{ paddingBottom: 48, flexGrow: 1 }} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false} keyboardDismissMode="interactive">
       <Text style={{ fontWeight: "700", fontSize: 24, color: text }}>Adicionar produto ao estoque</Text>
       <Text style={{ color: text, marginBottom: 16 }}>Adicione itens para suas compras de mercado.</Text>
 
@@ -73,7 +139,7 @@ export default function AddShoppingCartItem({ onClose }) {
       <TextInput
         placeholder="Descrição"
         placeholderTextColor="#a1a1aa"
-        onChangeText={(t) => formik.setFieldValue("description", t)}
+        onChangeText={(t: string) => formik.setFieldValue("description", t)}
         value={formik.values.description}
         style={{ color: text, backgroundColor: isDark ? "#3f3f46" : "white", borderWidth: 1, borderColor: isDark ? "#3f3f46" : "#d4d4d8", borderRadius: 8, paddingHorizontal: 12, paddingVertical: 10, marginBottom: 12 }}
         className="bg-white dark:bg-gray-800 rounded-xl p-3 border border-gray-200 dark:border-gray-700"
@@ -86,7 +152,7 @@ export default function AddShoppingCartItem({ onClose }) {
       <View style={{ borderWidth: 1, borderColor: isDark ? "#3f3f46" : "#e4e4e7", borderRadius: 12, overflow: "hidden", backgroundColor: isDark ? "#27272a" : "white", marginBottom: 12 }}>
         <Picker
           selectedValue={formik.values.category ?? "Mercearia"}
-          onValueChange={(itemValue) =>
+          onValueChange={(itemValue: string) =>
             formik.setFieldValue("category", itemValue)
           }
           mode="dropdown"
@@ -115,7 +181,7 @@ export default function AddShoppingCartItem({ onClose }) {
         keyboardType="decimal-pad"
         placeholder="Valor"
         placeholderTextColor="#a1a1aa"
-        onChangeText={(t) => formik.setFieldValue("amount", moeda(t))}
+        onChangeText={(t: string) => formik.setFieldValue("amount", moeda(t))}
         value={formik.values.amount}
         style={{ color: text, backgroundColor: isDark ? "#3f3f46" : "white", borderWidth: 1, borderColor: isDark ? "#3f3f46" : "#d4d4d8", borderRadius: 8, paddingHorizontal: 12, paddingVertical: 10, marginBottom: 12 }}
         className="bg-white dark:bg-gray-800 rounded-xl p-3 border border-gray-200 dark:border-gray-700"
@@ -129,7 +195,7 @@ export default function AddShoppingCartItem({ onClose }) {
         keyboardType="decimal-pad"
         placeholder="Quantidade"
         placeholderTextColor="#a1a1aa"
-        onChangeText={(t) => formik.setFieldValue("quantity", t)}
+        onChangeText={(t: string) => formik.setFieldValue("quantity", t)}
         value={formik.values.quantity}
         style={{ color: text, backgroundColor: isDark ? "#3f3f46" : "white", borderWidth: 1, borderColor: isDark ? "#3f3f46" : "#d4d4d8", borderRadius: 8, paddingHorizontal: 12, paddingVertical: 10, marginBottom: 12 }}
         className="bg-white dark:bg-gray-800 rounded-xl p-3 border border-gray-200 dark:border-gray-700"
@@ -145,7 +211,7 @@ export default function AddShoppingCartItem({ onClose }) {
             keyboardType="decimal-pad"
             placeholder="Quantidade desejada"
             placeholderTextColor="#a1a1aa"
-            onChangeText={(t) =>
+            onChangeText={(t: string) =>
               formik.setFieldValue("quantityDesired", t)
             }
             value={formik.values.quantityDesired}
@@ -158,7 +224,7 @@ export default function AddShoppingCartItem({ onClose }) {
         </>
       )}
       <Pressable
-        onPress={formik.submitForm}
+        onPress={() => formik.submitForm()}
         style={{ backgroundColor: PURPLE_600, marginTop: 20, marginBottom: 32, padding: 12, borderRadius: 12, alignItems: "center", justifyContent: "center" }}
         className="bg-purple-600 rounded-xl p-3 mt-2 mb-8 items-center justify-center active:bg-purple-900"
       >

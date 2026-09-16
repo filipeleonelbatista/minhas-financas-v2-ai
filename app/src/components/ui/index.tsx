@@ -85,9 +85,11 @@ export const RadiantButton: React.FC<IRadiantButton> &
       [theme.highlight],
     );
 
+    const initialW = typeof style === 'object' && style !== null && 'width' in style ? Number((style as any).width) || 0 : 0;
+    const initialH = typeof style === 'object' && style !== null && 'height' in style ? Number((style as any).height) || 0 : 0;
     const [layout, setLayout] = useState<{ width: number; height: number }>({
-      width: 0,
-      height: 0,
+      width: initialW || 0,
+      height: initialH || 0,
     });
 
     const borderGlowShader = useMemo(() => {
@@ -153,22 +155,24 @@ export const RadiantButton: React.FC<IRadiantButton> &
     };
 
     const { width, height } = layout;
-    const cx = width / 2;
-    const cy = height / 2;
+    const cx = (width || effectiveWidth) / 2;
+    const cy = (height || effectiveHeight) / 2;
 
     const innerClip = useMemo(() => {
-      if (!width || !height) return undefined;
+      const w = width || effectiveWidth;
+      const h = height || effectiveHeight;
+      if (!w || !h) return undefined;
       const bw = borderWidth;
       const p = Skia.Path.Make();
       p.addRRect(
         Skia.RRectXY(
-          Skia.XYWHRect(bw, bw, width - bw * 2, height - bw * 2),
+          Skia.XYWHRect(bw, bw, w - bw * 2, h - bw * 2),
           Math.max(borderRadius - bw, 0),
           Math.max(borderRadius - bw, 0),
         ),
       );
       return p;
-    }, [width, height, borderRadius, borderWidth]);
+    }, [width, height, effectiveWidth, effectiveHeight, borderRadius, borderWidth]);
 
     const borderGlowUniforms = useDerivedValue(() => {
       const bandWidthAdjusted = interpolate(
@@ -176,8 +180,10 @@ export const RadiantButton: React.FC<IRadiantButton> &
         [0, 1],
         [glowBandWidth, glowBandWidth * 2],
       );
+      const w = width || effectiveWidth;
+      const h = height || effectiveHeight;
       return {
-        iResolution: [width, height] as [number, number],
+        iResolution: [w, h] as [number, number],
         progress: progress.value,
         borderRadius: borderRadius,
         borderWidth: borderWidth,
@@ -186,7 +192,7 @@ export const RadiantButton: React.FC<IRadiantButton> &
       };
     });
     const dotUniforms = useDerivedValue(() => ({
-      iResolution: [width, height] as [number, number],
+      iResolution: [width || effectiveWidth, height || effectiveHeight] as [number, number],
       angle: progress.value * Math.PI * 2,
     }));
 
@@ -237,35 +243,9 @@ export const RadiantButton: React.FC<IRadiantButton> &
 
     const fallbackBackground = disabled ? "#6b7280" : theme.background;
     const shaderReady = !!borderGlowShader && !!Skia;
-    // Fallback when Skia not ready or layout not measured yet: show solid background
-    if (!hasLayout || !shaderReady) {
-      return (
-        <Animated.View style={animatedPressStyle}>
-          <Pressable
-            onPress={onPress}
-            onPressIn={handlePressIn}
-            onPressOut={handlePressOut}
-            onLayout={handleLayout}
-            disabled={disabled}
-            style={[
-              styles.button,
-              {
-                borderRadius,
-                paddingHorizontal,
-                paddingVertical,
-                opacity: disabled ? 0.5 : 1,
-                backgroundColor: fallbackBackground,
-                minWidth: width || undefined,
-                minHeight: height || undefined,
-              },
-              style,
-            ]}
-          >
-            <View style={styles.content}>{renderChildren()}</View>
-          </Pressable>
-        </Animated.View>
-      );
-    }
+    const effectiveWidth = width || initialW || 56;
+    const effectiveHeight = height || initialH || 56;
+    const hasEffectiveLayout = hasLayout || !!effectiveWidth;
 
     return (
       <Animated.View style={animatedPressStyle}>
@@ -287,7 +267,7 @@ export const RadiantButton: React.FC<IRadiantButton> &
             style,
           ]}
         >
-          {hasLayout && innerClip && (
+          {hasEffectiveLayout && innerClip && (
             <Canvas
               style={{
                 ...StyleSheet.absoluteFillObject,
@@ -295,14 +275,14 @@ export const RadiantButton: React.FC<IRadiantButton> &
             >
               {borderGlowShader && (
                 <Group>
-                  <Rect x={0} y={0} width={width} height={height}>
+                  <Rect x={0} y={0} width={effectiveWidth} height={effectiveHeight}>
                     <Shader
                       source={borderGlowShader}
                       uniforms={borderGlowUniforms}
                     />
                     <BlurMask blur={6} style="normal" />
                   </Rect>
-                  <Rect x={0} y={0} width={width} height={height}>
+                  <Rect x={0} y={0} width={effectiveWidth} height={effectiveHeight}>
                     <Shader
                       source={borderGlowShader}
                       uniforms={borderGlowUniforms}
@@ -315,8 +295,8 @@ export const RadiantButton: React.FC<IRadiantButton> &
                 <Rect
                   x={borderWidth}
                   y={borderWidth}
-                  width={width - borderWidth * 2}
-                  height={height - borderWidth * 2}
+                  width={effectiveWidth - borderWidth * 2}
+                  height={effectiveHeight - borderWidth * 2}
                   color={theme.background}
                 />
 

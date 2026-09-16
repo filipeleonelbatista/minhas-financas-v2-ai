@@ -386,7 +386,7 @@ export default function IAPage() {
         {error && (
           <SolidAlert variant="danger" message={String(error)} onClose={() => setError(null)} style={{ marginHorizontal: 16, marginBottom: 8 }} testID="error-alert" />
         )}
-        <View style={{ position: 'absolute', left: 28, bottom: insets.bottom + 28, zIndex: 10 }}>
+        <View style={{ position: 'absolute', left: 28, bottom: insets.bottom + 26, zIndex: 10 }}>
           <MorphFab.Root direction="up" align="start" spacing={10} triggerColor={"#9c44dc"} color={"#9c44dc"} style={{}}>
             <MorphFab.Trigger size={32} >
               <Feather name="plus" size={14} color="white" />

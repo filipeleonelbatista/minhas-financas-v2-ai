@@ -392,15 +392,12 @@ export default function IAPage() {
             </MorphFab.Trigger>
             <MorphFab.Item value="gastos" onSelect={()=>setInputText("Analise meus gastos e sugira pontos onde eu posso melhorar.")}>
               <MorphFab.ItemIcon><Feather name="dollar-sign" size={14} color="white" /></MorphFab.ItemIcon>
-              <MorphFab.ItemLabel style={{ backgroundColor: isDark ? "#3f3f46" : "#f3e8ff", paddingHorizontal: 8, paddingVertical: 4, borderRadius: 12, marginLeft: 6 }}><Text style={{ fontSize: 11, fontWeight: "600", color: isDark ? "#e4e4e7" : "#581C87" }}>Gastos</Text></MorphFab.ItemLabel>
             </MorphFab.Item>
             <MorphFab.Item value="combustivel" onSelect={()=>setInputText("Analise como posso melhorar meus gastos com combustível.")}>
               <MorphFab.ItemIcon><Feather name="droplet" size={14} color="white" /></MorphFab.ItemIcon>
-              <MorphFab.ItemLabel style={{ backgroundColor: isDark ? "#3f3f46" : "#f3e8ff", paddingHorizontal: 8, paddingVertical: 4, borderRadius: 12, marginLeft: 6 }}><Text style={{ fontSize: 11, fontWeight: "600", color: isDark ? "#e4e4e7" : "#581C87" }}>Combustível</Text></MorphFab.ItemLabel>
             </MorphFab.Item>
             <MorphFab.Item value="mercado" onSelect={()=>setInputText("Analise meus gastos com mercado e sugira pontos onde eu posso melhorar a alimentação.")}>
               <MorphFab.ItemIcon><Feather name="shopping-cart" size={14} color="white" /></MorphFab.ItemIcon>
-              <MorphFab.ItemLabel style={{ backgroundColor: isDark ? "#3f3f46" : "#f3e8ff", paddingHorizontal: 8, paddingVertical: 4, borderRadius: 12, marginLeft: 6 }}><Text style={{ fontSize: 11, fontWeight: "600", color: isDark ? "#e4e4e7" : "#581C87" }}>Mercado</Text></MorphFab.ItemLabel>
             </MorphFab.Item>
           </MorphFab.Root>
         </View>

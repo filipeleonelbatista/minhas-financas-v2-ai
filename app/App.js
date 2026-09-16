@@ -17,6 +17,8 @@ import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import { useSettingsStore } from "./src/stores/settings";
 import Loading from "./src/components/Loading";
+import { ThemeProvider } from "./src/components/organisms/theme-switch/context";
+import { ThemeMode } from "./src/components/organisms/theme-switch/types";
 import { LogBox } from "react-native";
 
 LogBox.ignoreLogs([
@@ -195,20 +197,31 @@ export default function App() {
   if (!appIsReady || !fontsLoaded) {
     return <Loading />;
   }
+  const initialTheme = useSettingsStore.getState().colorModeState === "dark" ? ThemeMode.Dark : ThemeMode.Light;
   return (
     <GestureHandlerRootView style={{ flex: 1 }} onLayout={onLayoutRootView}>
       <SafeAreaProvider>
-        <View
-          style={{
-            height: RNStatusBar.currentHeight,
-            backgroundColor: "#581c87",
+        <ThemeProvider
+          defaultTheme={initialTheme}
+          customLightColors={{ background: "#f5f5f4", text: "#52525b" }}
+          customDarkColors={{ background: "#1c1e21", text: "#e4e4e7" }}
+          onThemeChange={(newTheme) => {
+            const next = newTheme === ThemeMode.Dark ? "dark" : "light";
+            try { useSettingsStore.getState().setColorMode(next); } catch {}
           }}
         >
-          <StatusBar style="light" />
-        </View>
-        <BiometricGate>
-          <Routes />
-        </BiometricGate>
+          <View
+            style={{
+              height: RNStatusBar.currentHeight,
+              backgroundColor: "#581c87",
+            }}
+          >
+            <StatusBar style="light" />
+          </View>
+          <BiometricGate>
+            <Routes />
+          </BiometricGate>
+        </ThemeProvider>
       </SafeAreaProvider>
     </GestureHandlerRootView>
   );

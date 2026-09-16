@@ -62,7 +62,22 @@ export default function AboutUs() {
   };
   const navigation = useNavigation();
   const toggleColorMode = useSettingsStore((s) => s.toggleColorMode);
-  const handleToggleTheme = toggleColorMode;
+  let themeHook: any = null;
+  try {
+    const { useTheme } = require("../components/organisms/theme-switch/context");
+    themeHook = useTheme();
+  } catch { themeHook = null; }
+  const handleToggleTheme = async (e?: any) => {
+    try {
+      if (themeHook?.toggleTheme) {
+        const { AnimationType, EasingType } = require("../components/organisms/theme-switch/types");
+        const touchX = e?.nativeEvent?.pageX ?? undefined;
+        const touchY = e?.nativeEvent?.pageY ?? undefined;
+        await themeHook.toggleTheme({ animationType: AnimationType.CircularBlur, animationDuration: 900, easing: EasingType.EaseInOut, touchX, touchY });
+      }
+    } catch {}
+    return toggleColorMode();
+  };
   // map settings store booleans and handlers
   const s = useSettingsStore();
   const isEnableTitheCard = !!s.isEnableTitheCard;

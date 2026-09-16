@@ -11,5 +11,6 @@ module.exports = {
     "^.*/components/ui/shimmer-wave-text.*$": "<rootDir>/__mocks__/shimmerMock.js",
     "^.*/components/ui/morph-fab.*$": "<rootDir>/__mocks__/morphFabMock.js",
     "^.*/components/ui/border-beam.*$": "<rootDir>/__mocks__/borderBeamMock.js",
+    "^.*/components/organisms/theme-switch.*$": "<rootDir>/__mocks__/themeSwitchMock.js",
   },
 };

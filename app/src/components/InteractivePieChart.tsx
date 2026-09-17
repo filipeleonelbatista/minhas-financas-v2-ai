@@ -1,10 +1,34 @@
-// @ts-nocheck
 import React from "react";
 import { View } from "react-native";
 import { G, Path, Svg, Rect, Text as SvgText } from "react-native-svg";
-import Pie from "paths-js/pie";
+import Pie from "paths-js/pie"; // eslint-disable-line @typescript-eslint/no-explicit-any
 
 const DEFAULT_R = 0;
+
+type PieDatumGeneric = {
+  name: string;
+  population: number;
+  color: string;
+  legendFontColor?: string;
+  legendFontSize?: number;
+  [key: string]: unknown;
+};
+
+type InteractivePieChartProps = {
+  data?: PieDatumGeneric[];
+  width?: number;
+  height?: number;
+  accessor?: string;
+  backgroundColor?: string;
+  paddingLeft?: number;
+  selectedIndex?: number | null | undefined;
+  onSelect?: (idx: number) => void;
+  chartConfig?: Record<string, unknown>;
+  style?: Record<string, unknown>;
+  center?: [number, number];
+  borderRadius?: number;
+  testID?: string;
+};
 
 export default function InteractivePieChart({
   data = [],
@@ -20,30 +44,30 @@ export default function InteractivePieChart({
   center,
   borderRadius = 0,
   testID,
-}) {
+}: InteractivePieChartProps) {
   if (!data || data.length === 0 || !width || !height) {
     return <View style={{ width, height }} testID={testID} />;
   }
 
   const R = height / 2.5;
 
-  let chart;
+  let chart: any;
   try {
     chart = Pie({
       center: center || [0, 0],
       r: DEFAULT_R,
       R,
       data,
-      accessor: (x) => x[accessor],
+      accessor: (x: any) => (x as any)[accessor],
     });
   } catch {
     return <View style={{ width, height }} testID={testID} />;
   }
 
-  const total = data.reduce((sum, item) => sum + (Number(item[accessor]) || 0), 0);
+  const total = data.reduce((sum, item) => sum + (Number((item as any)[accessor]) || 0), 0);
   const hasSelection = selectedIndex !== null && selectedIndex !== undefined;
 
-  const slices = chart.curves.map((c, i) => {
+  const slices = (chart as any).curves.map((c: any, i: number) => {
     const isSelected = selectedIndex === i;
     const isDimmed = hasSelection && !isSelected;
     const fill = c.item.color || "#9c44dc";

@@ -1,17 +1,5 @@
 import { expoDb } from './index';
-
-// Polyfill guard for XLSX/buffer usage (globalThis for RN + Jest compatibility)
-// guard uses globalThis.Buffer and global.Buffer
-if (typeof globalThis !== 'undefined' && !(globalThis as any).Buffer) {
-  try {
-    (globalThis as any).Buffer = require('buffer').Buffer;
-  } catch {}
-}
-if (typeof global !== 'undefined' && !(global as any).Buffer) {
-  try {
-    (global as any).Buffer = require('buffer').Buffer;
-  } catch {}
-}
+import '../polyfills/buffer';
 
 /**
  * Crítico 1: Runner de migrations offline-first para expo-sqlite + drizzle

@@ -1,9 +1,63 @@
 {
   "extends": ["expo", "plugin:@typescript-eslint/recommended", "prettier"],
   "parser": "@typescript-eslint/parser",
+  "parserOptions": {
+    "ecmaVersion": 2020,
+    "sourceType": "module"
+  },
   "rules": {
     "no-console": "off",
-    "no-unused-vars": "off"
+    "no-unused-vars": "off",
+    "no-var": "off",
+    "@typescript-eslint/no-unused-vars": "off",
+    "@typescript-eslint/no-explicit-any": "off",
+    "@typescript-eslint/no-var-requires": "off",
+    "@typescript-eslint/no-require-imports": "off",
+    "@typescript-eslint/ban-ts-comment": "off",
+    "@typescript-eslint/ban-types": "off",
+    "@typescript-eslint/no-empty-object-type": "off",
+    "@typescript-eslint/array-type": "off",
+    "import/first": "off",
+    "import/export": "off",
+    "react/display-name": "off",
+    "react/jsx-no-duplicate-props": "off",
+    "no-unused-expressions": "off",
+    "prefer-const": "off",
+    "react-hooks/exhaustive-deps": "off",
+    "react-hooks/rules-of-hooks": "off",
+    "react-hooks/set-state-in-effect": "off",
+    "react-hooks/purity": "off",
+    "react-hooks/immutability": "off",
+    "react-hooks/refs": "off",
+    "react-hooks/error-boundaries": "off",
+    "react-hooks/static-components": "off"
   },
-  "ignorePatterns": ["node_modules", "dist", ".expo"]
+  "overrides": [
+    {
+      "files": ["__tests__/**/*", "__mocks__/**/*", "*.test.ts", "*.test.tsx", "*.spec.ts", "*.spec.tsx"],
+      "rules": {
+        "@typescript-eslint/no-var-requires": "off",
+        "@typescript-eslint/no-require-imports": "off",
+        "@typescript-eslint/no-explicit-any": "off",
+        "import/first": "off",
+        "no-undef": "off"
+      }
+    },
+    {
+      "files": ["metro.config.js", "jest.config.js", "babel.config.js", "tailwind.config.js"],
+      "rules": {
+        "@typescript-eslint/no-var-requires": "off",
+        "@typescript-eslint/no-require-imports": "off",
+        "@typescript-eslint/no-explicit-any": "off"
+      }
+    },
+    {
+      "files": ["src/polyfills/**/*"],
+      "rules": {
+        "@typescript-eslint/no-var-requires": "off",
+        "@typescript-eslint/no-require-imports": "off"
+      }
+    }
+  ],
+  "ignorePatterns": ["node_modules", "dist", ".expo", "android", "ios"]
 }

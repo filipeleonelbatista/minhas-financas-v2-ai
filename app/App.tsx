@@ -107,7 +107,29 @@ export default function App(): React.JSX.Element {
   useEffect(() => {
     (async () => {
       try {
-        // 0) migrations drizzle one-shot (Crítico 1) - cria 8 tables + alter config antes de qualquer read
+        // 0) Expo Go bundling (opção 2): se SQLite ainda vazio e asset financas.db existe (gerado por `yarn db:seed`), copia para SQLite/
+        try {
+          const FileSystem: any = await import('expo-file-system');
+          const dbPath = (FileSystem.documentDirectory ?? '') + 'SQLite/financas.db';
+          const info = await FileSystem.getInfoAsync(dbPath).catch(() => ({ exists: false }));
+          const hasDb = !!(info as any)?.exists && ((info as any)?.size ?? 0) > 1024;
+          if (!hasDb) {
+            let assetUri: string | null = null;
+            try {
+              const { Asset } = await import('expo-asset');
+              // require só existe após `yarn db:seed` gerar assets/financas.db
+              const mod = require('./assets/financas.db');
+              const asset = Asset.fromModule(mod);
+              await asset.downloadAsync();
+              assetUri = (asset as any).localUri ?? (asset as any).uri ?? null;
+            } catch {}
+            if (assetUri) {
+              await FileSystem.makeDirectoryAsync((FileSystem.documentDirectory ?? '') + 'SQLite', { intermediates: true }).catch(() => {});
+              await FileSystem.copyAsync({ from: assetUri, to: dbPath }).catch(() => {});
+            }
+          }
+        } catch {}
+        // 0b) migrations drizzle one-shot - cria 8 tables + alter config antes de qualquer read
         try {
           const { runMigrations } = await import('./src/db/migrate');
           await runMigrations();
@@ -115,7 +137,7 @@ export default function App(): React.JSX.Element {
         // 1) load settings first (has isBiometricEnabled etc)
         await loadSettings();
         // 2) carrega stores do DB (app limpo: sem auto-seed, sem flag)
-        // Popule via `yarn db:seed` (gera financas.db e faz adb push) e o app carrega direto do sqlite (managed puro)
+        // Popule via `yarn db:seed` (gera financas.db + assets/financas.db e faz adb push) e o app carrega direto do sqlite (managed puro + Expo Go via asset)
         try {
           const { useFinanceStore } = await import('./src/stores/finance');
           const { useRunsStore } = await import('./src/stores/runs');

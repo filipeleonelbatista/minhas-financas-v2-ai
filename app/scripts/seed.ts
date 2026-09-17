@@ -9,9 +9,10 @@ import path from 'path';
 import { execSync } from 'child_process';
 
 const DB_NAME = 'financas.db';
-// Host path: app/financas.db (raiz do projeto app)
+// Host path: app/financas.db (raiz do projeto app) – para adb push (dev-client)
 const hostDbPath = path.resolve(__dirname, '..', DB_NAME);
-// Também tenta expo SQLite default path para web? Mantemos só host.
+// Bundle asset path para Expo Go (opção 2) – app/assets/financas.db
+const assetDbPath = path.resolve(__dirname, '..', 'assets', DB_NAME);
 
 async function ensureBetterSqlite() {
   try {
@@ -289,6 +290,14 @@ async function main() {
   await seedViaDrizzle(sqlite);
   sqlite.close();
   console.log(`[seed] concluído host ${hostDbPath} (${(fs.statSync(hostDbPath).size/1024).toFixed(1)} KB)`);
+  // Também copia para assets/financas.db para Expo Go bundle (opção 2)
+  try {
+    fs.mkdirSync(path.dirname(assetDbPath), { recursive: true });
+    fs.copyFileSync(hostDbPath, assetDbPath);
+    console.log(`[seed] asset copiado → ${assetDbPath} (${(fs.statSync(assetDbPath).size/1024).toFixed(1)} KB) para Expo Go`);
+  } catch (e: any) {
+    console.log('[seed] falha ao copiar asset:', e?.message?.slice(0,200));
+  }
 
   // Push para device se emulador/dispositivo conectado
   const shouldPush = process.argv.includes('--push') || !process.argv.includes('--host-only');

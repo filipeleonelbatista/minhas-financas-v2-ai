@@ -1,6 +1,6 @@
 # Project Status — Minhas Finanças v2
 
-> Atualizado: 2026-09-16 | Branch: `main` | Status: **Fase 1 TS Migration 100% finalizada — strict:true, zod 3.23.8 única, 33 suites/174 PASS, tsc 0 errors, expo-doctor 21/21, managed puro**
+> Atualizado: 2026-09-17 | Branch: `main` | Status: **Fase 1 TS Migration 100% finalizada — strict:true, zod 3.23.8 única, 33 suites/174 PASS, tsc 0 errors, lint 0, expo-doctor 21/21, managed puro — EAS preview rebuild 63dcec50 IN_PROGRESS**
 
 ---
 
@@ -28,7 +28,7 @@
 
 **Scripts quality gate:** `package.json` `lint` (`eslint-config-expo ~57.0.2` --max-warnings 0 sem fallback), `typecheck` (`tsc --noEmit --skipLibCheck` sem fallback), `test`, `test:coverage`, `test:security` (`__tests__/security`).
 
-**Qualidade final (2026-09-16):** `yarn jest --no-coverage` → **33 suites, 174 PASS** (6 stores + security + repos + pages + TS migration). `npx tsc --noEmit` **0 errors** (`strict:true` + `noImplicitAny` + `strictNullChecks`). `npx expo-doctor` **21/21 PASS** (`expo.install.exclude` com `expo-sqlite` + `expo`/`expo-*` patch + `react-native-css-interop`, `ios/android` ausentes). `src/stores/*` `useShallow`, `App.tsx` tipado, `EditFuelForm.tsx` zod.
+**Qualidade final (2026-09-17 — Fix 13 re-verified):** `yarn lint --max-warnings 0` **0 warnings** (24.59s), `yarn typecheck` (`tsc --noEmit --skipLibCheck`) **0 errors** (9.95s), `yarn jest --no-coverage` → **33 suites, 174 PASS** (6 stores + security + repos + pages + TS migration, 9.5s), `yarn test:security` **6/40 PASS**, `npx expo-doctor` **21/21 PASS** (`expo.install.exclude` com `expo-sqlite` + `expo`/`expo-*` patch + `react-native-css-interop`, `ios/android` ausentes), `find app/src -name "*.js"` **0**, `grep yup` **0**, `npx expo export --platform android` **PASS** (2817 modules, 8.2MB). `src/stores/*` `useShallow`, `App.tsx` tipado, `EditFuelForm.tsx` zod. **EAS preview** `63dcec50-327b-4e87-a304-1c88413d1d7c` **IN_PROGRESS** fingerprint `218027f64f8dd7da37967c84e32304fb81afe0db`.
 
 ---
 
@@ -95,8 +95,9 @@
   - [x] `src/pages/Goals.tsx:39,45,249,264,274,320` `noImplicitAny` fix (RadiantButton/ChromaRing + formatCurrency/onChangeGoalDate/openEdit/handleDelete tipados) — `npx tsc --noEmit` **0 errors**
 - [x] **Endurecer `tsconfig.json`:** `strict:true`, `noImplicitAny:true`, `strictNullChecks:true`, `noImplicitThis:true`, `alwaysStrict:true`, `exclude` JS removido (`exclude: ["node_modules"]`); `allowJs:false` mantido.
 - [x] **ESLint:** `eslint-config-expo ~57.0.2` + `eslint-config-prettier` + `@typescript-eslint`, `package.json` `lint` + `typecheck` sem `|| echo` fallback.
-- [x] **Gate:** `yarn typecheck` **PASS 0 errors**, `yarn jest` **33/174 PASS**, `npx expo-doctor` **21/21**, `docs/DOSSIE.md §2.1` atualizado para `typescript 6.0.3 strict:true` + `zod 3.23.8` única (yup removido).
-- [x] **Critério de aceite:** `npx tsc --noEmit` 0 errors, `yarn typecheck` 0 errors, `yarn jest` 33/174 PASS, `src/schemas/*` usados em `repositories/*` via `zod.parse` + `EditFuelForm.tsx` `runSchema` (zod).
+- [x] **Gate (2026-09-17 Fix 13 re-verified):** `yarn lint --max-warnings 0` **PASS 0** (24.59s), `yarn typecheck` **PASS 0 errors** (9.95s), `yarn jest` **33/174 PASS** (9.5s), `yarn test:security` **6/40 PASS**, `npx expo-doctor` **21/21**, `find app/src -name "*.js"` **0**, `grep yup` **0**, `npx expo export --platform android` **PASS** (2817 modules), `docs/DOSSIE.md §2.1` atualizado para `typescript 5.8.3 strict:true` + `zod 3.23.8` única (yup removido).
+- [x] **Critério de aceite:** `npx tsc --noEmit` 0 errors, `yarn typecheck` 0 errors, `yarn lint` 0 warnings, `yarn jest` 33/174 PASS, `yarn test:security` 6/40 PASS, `src/schemas/*` usados em `repositories/*` via `zod.parse` + `EditFuelForm.tsx` `runSchema` (zod).
+- [x] **Fix 13 — Re-run gates + EAS preview rebuild (2026-09-17):** gates re-executados em `app/` — lint 0, typecheck 0, jest 33/174, security 6/40, expo-doctor 21/21, src JS 0, yup 0, expo export PASS. `eas build -p android --profile preview --non-interactive --message "fix(ts): full TS migration harden strict 0"` triggered → **buildId `63dcec50-327b-4e87-a304-1c88413d1d7c` IN_PROGRESS** — logs: https://expo.dev/accounts/filipeleonelbatista/projects/finances/builds/63dcec50-327b-4e87-a304-1c88413d1d7c — fingerprint `218027f64f8dd7da37967c84e32304fb81afe0db`, upload 26.0MB, credentials `AR_FovpIh4`.
 
 ---
 
@@ -114,4 +115,4 @@
 
 ---
 
-© 2026 Filipe Batista — Fase 1 concluída (SAF Android-only, Tour removido, 27/159 + 21/21).
+© 2026 Filipe Batista — Fase 1 concluída (SAF Android-only, Tour removido, 33/174 + 21/21 + EAS 63dcec50 IN_PROGRESS).

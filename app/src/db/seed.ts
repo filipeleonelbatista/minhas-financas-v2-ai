@@ -65,10 +65,9 @@ function daysAgo(days: number) {
 // Seed
 // ---------------------------------------------------------------------------
 export async function seedDatabase(): Promise<SeedResult> {
-  // garante db limpo para testes determinísticos (em produção pode remover o clear)
-  // await clearAll(); // descomente se quiser limpar antes - por padrão seed faz clear
-  // Vamos sempre limpar para garantir idempotência em testes
-  await clearAll();
+  // Limpo: não apaga mais automaticamente (era destrutivo em dev).
+  // Para reset explícito use clearAndSeed(). Para dev via CLI use `yarn db:seed` que chama clearAndSeed.
+  // Em testes, clearAndSeed é chamado explicitamente nos testes que precisam de dados determinísticos.
 
   // 1. CONFIG - singleton com todos os toggles possíveis
   const config = await configRepo.upsert({

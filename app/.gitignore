@@ -23,3 +23,5 @@ package-lock.json
 # Expo managed — android/ios gerados por prebuild, ignorados
 android/
 ios/
+# DB host gerado por yarn db:seed (não comitar)
+financas.db

@@ -114,42 +114,22 @@ export default function App(): React.JSX.Element {
         } catch {}
         // 1) load settings first (has isBiometricEnabled etc)
         await loadSettings();
-        // 2) seed if needed (already there)
-        if (process.env.NODE_ENV !== 'test') {
-          try {
-            const m = await import('./src/db/seed');
-            const res = await m.ensureSeeded?.();
-            if (res) {
-              const { useFinanceStore } = await import('./src/stores/finance');
-              const { useRunsStore } = await import('./src/stores/runs');
-              const { useMarketStore } = await import('./src/stores/market');
-              const { useListsStore } = await import('./src/stores/lists');
-              const { useGoalsStore } = await import('./src/stores/goals');
-              await Promise.all([
-                useFinanceStore.getState().load?.(),
-                useRunsStore.getState().load?.(),
-                useMarketStore.getState().load?.(),
-                useListsStore.getState().load?.(),
-                useGoalsStore.getState().load?.(),
-                loadSettings(),
-              ]);
-            } else {
-              // still preload other stores even without seed
-              const { useFinanceStore } = await import('./src/stores/finance');
-              const { useRunsStore } = await import('./src/stores/runs');
-              const { useMarketStore } = await import('./src/stores/market');
-              const { useListsStore } = await import('./src/stores/lists');
-              const { useGoalsStore } = await import('./src/stores/goals');
-              await Promise.all([
-                useFinanceStore.getState().load?.(),
-                useRunsStore.getState().load?.(),
-                useMarketStore.getState().load?.(),
-                useListsStore.getState().load?.(),
-                useGoalsStore.getState().load?.(),
-              ]);
-            }
-          } catch {}
-        }
+        // 2) carrega stores do DB (app limpo: sem auto-seed, sem flag)
+        // Popule via `yarn db:seed` (gera financas.db e faz adb push) e o app carrega direto do sqlite (managed puro)
+        try {
+          const { useFinanceStore } = await import('./src/stores/finance');
+          const { useRunsStore } = await import('./src/stores/runs');
+          const { useMarketStore } = await import('./src/stores/market');
+          const { useListsStore } = await import('./src/stores/lists');
+          const { useGoalsStore } = await import('./src/stores/goals');
+          await Promise.all([
+            useFinanceStore.getState().load?.(),
+            useRunsStore.getState().load?.(),
+            useMarketStore.getState().load?.(),
+            useListsStore.getState().load?.(),
+            useGoalsStore.getState().load?.(),
+          ]);
+        } catch {}
       } finally {
         setAppIsReady(true);
       }

@@ -16,7 +16,10 @@
     "typecheck": "tsc --noEmit --skipLibCheck",
     "test": "jest --no-coverage",
     "test:coverage": "jest --coverage --coverageReporters=text",
-    "test:security": "jest --testPathPattern='__tests__/security' --no-coverage"
+    "test:security": "jest --testPathPattern='__tests__/security' --no-coverage",
+    "db:seed": "tsx scripts/seed.ts",
+    "db:seed:host": "tsx scripts/seed.ts --host-only",
+    "db:clear": "rm -f financas.db && echo \"DB host limpo (app/financas.db)\""
   },
   "dependencies": {
     "@expo-google-fonts/poppins": "^0.2.3",
@@ -77,6 +80,7 @@
     "@types/react": "~19.2.4",
     "@typescript-eslint/eslint-plugin": "^7.0.0",
     "@typescript-eslint/parser": "^7.0.0",
+    "better-sqlite3": "^13.0.3",
     "drizzle-kit": "^0.31.10",
     "eslint": "^8.57.0",
     "eslint-config-expo": "~57.0.2",
@@ -85,6 +89,7 @@
     "jest-expo": "~57.0.5",
     "react-test-renderer": "19.2.3",
     "tailwindcss": "3.4.17",
+    "tsx": "^4.23.13",
     "typescript": "5.8.3"
   },
   "private": true,

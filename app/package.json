@@ -12,10 +12,10 @@
     "build:apk:local": "eas build -p android --profile preview --local",
     "build:store:local": "eas build -p android --profile production --local",
     "start:emulator": "emulator -avd Pixel_2_API_33",
-    "lint": "eslint . --ext .js,.jsx,.ts,.tsx --max-warnings 0 || echo 'lint warnings ignored for Fase1 incremental TS'",
-    "typecheck": "tsc --noEmit --skipLibCheck || echo 'typecheck warnings ignored for Fase1 incremental TS'",
+    "lint": "eslint . --ext .js,.jsx,.ts,.tsx --max-warnings 0",
+    "typecheck": "tsc --noEmit --skipLibCheck",
     "test": "jest --no-coverage",
-    "test:coverage": "jest --coverage --coverageReporters=text || echo 'coverage done'",
+    "test:coverage": "jest --coverage --coverageReporters=text",
     "test:security": "jest --testPathPattern='__tests__/security' --no-coverage"
   },
   "dependencies": {

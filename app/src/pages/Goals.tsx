@@ -36,13 +36,15 @@ export type GoalRow = {
   category?: string;
 };
 
-let RadiantButton = null;
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+let RadiantButton: any = null;
 try {
   RadiantButton = require("../components/ui").RadiantButton ?? require("../components/ui/index").RadiantButton ?? null;
 } catch {
   try { RadiantButton = require("reacticx").RadiantButton ?? null; } catch {}
 }
-let ChromaRing = null;
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+let ChromaRing: any = null;
 try {
   ChromaRing = require("../components/ui/ChromaRing").ChromaRing ?? require("reacticx").ChromaRing ?? null;
 } catch {}
@@ -246,7 +248,7 @@ export default function Goals(): React.JSX.Element {
   const totalCurrent = useMemo(() => goals.reduce((acc, g) => acc + Number(g.currentAmount||0), 0), [goals]);
   const activeCount = useMemo(() => filterGoalsByStatus(goals, 'Ativas').length, [goals]);
   const concludedCount = useMemo(() => filterGoalsByStatus(goals, 'Concluídas').length, [goals]);
-  const formatCurrency = (value) => Number(value||0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL', minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  const formatCurrency = (value: number) => Number(value||0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL', minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
   const canGoBack = navigation.canGoBack?.() ?? false;
 
@@ -261,7 +263,7 @@ export default function Goals(): React.JSX.Element {
     setEditing(null);
   };
 
-  const onChangeGoalDate = (event, selectedDate) => {
+  const onChangeGoalDate = (_event: unknown, selectedDate?: Date) => {
     if (!selectedDate) return;
     const d = selectedDate;
     setDate(`${d.getDate() < 10 ? '0' + d.getDate() : d.getDate()}/${(d.getMonth() + 1) < 10 ? '0' + (d.getMonth() + 1) : d.getMonth() + 1}/${d.getFullYear()}`);
@@ -271,20 +273,20 @@ export default function Goals(): React.JSX.Element {
     resetForm();
     setShowForm(true);
   };
-  const openEdit = (goal) => {
+  const openEdit = (goal: GoalRow) => {
     setEditing(goal);
     setDescription(goal.description);
     setAmount(moeda((Number(goal.amount).toFixed(2).replace(".", ""))));
     setCurrentAmount(moeda((Number(goal.currentAmount||0).toFixed(2).replace(".", ""))));
     setDate(goal.date ? new Date(goal.date).toLocaleDateString("pt-BR") : "");
     const cat = (goal.category||'outros').toLowerCase();
-    if (DEFAULT_GOAL_CATEGORIES.includes(cat)) {
+    if ((DEFAULT_GOAL_CATEGORIES as readonly string[]).includes(cat)) {
       setSelectedCategory(cat);
       setShowCustomCat(false);
       setCustomCategory("");
     } else {
       setShowCustomCat(true);
-      setCustomCategory(goal.category);
+      setCustomCategory(goal.category ?? "");
       setSelectedCategory(cat);
     }
     setShowForm(true);
@@ -317,7 +319,7 @@ export default function Goals(): React.JSX.Element {
     load();
   };
 
-  const handleDelete = (goal) => {
+  const handleDelete = (goal: GoalRow) => {
     setConfirmDeleteGoal(goal);
   };
 

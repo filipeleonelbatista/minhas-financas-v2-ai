@@ -1,6 +1,6 @@
 # Dossiê Completo — Financas App v2.3.0 (app/ • Managed)
 
-> Gerado em 2026-09-15 | Projeto: `app/` | Expo ~57.0.19 + React 19.2.3 + React Native 0.86.3 + expo-sqlite/drizzle + zod (WatermelonDB/NativeBase/Tour removidos, SAF Android-only, doctor 21/21)
+> Gerado em 2026-09-16 | Projeto: `app/` | Expo ~57.0.19 + React 19.2.3 + React Native 0.86.3 + expo-sqlite/drizzle + zod 3.23.8 + TypeScript 6.0.3 strict:true (WatermelonDB/NativeBase/Tour removidos, SAF Android-only, doctor 21/21)
 
 ---
 
@@ -31,7 +31,7 @@ App React Native (Expo Managed + Prebuild) para **gestão financeira familiar** 
 |  | `expo-secure-store` | ~57.0.3 | Chaves IA por provider |
 |  | `expo-sqlite` | ^57.0.2 | SQLite `openDatabaseSync("financas.db")` + `src/db/migrate.ts` `runMigrations()` via `PRAGMA user_version` (one-shot em `App.js:103`) |
 |  | `drizzle-orm` / `drizzle-kit` | ^0.45.2 / ^0.31.10 | ORM + migrations (`src/db/schema.ts`, `drizzle.config.ts`) |
-|  | `drizzle-zod` / `zod` | ^0.8.3 / ^4.6.5 | Validação `src/schemas/*` (`finance/stock/goal/run/list` + sanitização) |
+|  | `drizzle-zod` / `zod` | ^0.8.3 / ^3.23.8 | Validação `src/schemas/*` (`finance/stock/goal/run/list` + sanitização, única validação — `yup` removido) |
 |  | `zustand` | ^5.0.8 | Stores `settings/finance/runs/market/lists/goals` |
 | Navegação | `@react-navigation/native` | ^6.1.6 | NavigationContainer + theming |
 |  | `@react-navigation/stack` | ^6.3.16 | Stack (Onboarding, MarketStack) |
@@ -45,7 +45,7 @@ App React Native (Expo Managed + Prebuild) para **gestão financeira familiar** 
 |  | `react-native-chart-kit` + `react-native-progress` | 6.12.0 / 5.0.0 | PieChart, LineChart, Progress.Bar em `Reports.js` |
 |  | ~~`react-native-walkthrough-tooltip`~~ | removido 2026-09-15 | Tour spotlight **removido a pedido** (SAF Android-only); Onboarding 7 slides mantido com `CTA glow` |
 |  | `@expo/vector-icons` (Feather, FontAwesome, MaterialCommunityIcons, Fontisto, Ionicons, Octicons) | bundled | Ícones em toda UI |
-| Forms | `formik` + `yup` + `zod` | 2.2.9 / 1.0.2 / 4.6.5 | Validação em `AddItemForm`, `AddFuelForm`, etc. + `src/schemas/*` zod |
+| Forms | `formik` + `zod` | 2.2.9 / 3.23.8 | Validação `zod` única em `src/schemas/*` + `runSchema` em `EditFuelForm.tsx` (yup removido) |
 | Data | `zustand` + `drizzle-orm` + `expo-sqlite` | 5 / 0.45 / 57 | SQLite offline-first (WatermelonDB **removido** em Fase 1 gaps) |
 |  | `@react-native-async-storage/async-storage` | 2.2.0 | `@onboarding` flag + fallback `hasSeenInteractiveTour` |
 |  | `dayjs` + `date-fns` | 1.11.7 / 2.30.0 | Manipulação datas |
@@ -60,7 +60,7 @@ App React Native (Expo Managed + Prebuild) para **gestão financeira familiar** 
 |  | `zustand` + `expo-secure-store` | 5 / 57 | `getProviderKey` por provider |
 | Build | `expo-build-properties` | ~57.0.16 | `compileSdk 36/targetSdk 36`, `kotlinVersion 2.1.0` |
 |  | `jest-expo` | ~57.0.5 | Preset `jest-expo` (mock `walkthrough-tooltip` removido) |
-|  | `eslint` / `eslint-config-expo` | ^8.57 / 9→57 | `npm run lint --max-warnings 0` |
+|  | `eslint` / `eslint-config-expo` | ^8.57 / ~57.0.2 | `npm run lint --max-warnings 0` (sem fallback), `typescript 6.0.3` `strict:true` + `noImplicitAny` + `strictNullChecks` |
 | Babel | `nativewind` preset | — | Sem `plugin-proposal-decorators` (WatermelonDB removido), `nativewind/babel` + `react-native-reanimated/plugin` |
 
 ### 2.2 Configuração de Build
@@ -300,7 +300,7 @@ Seções com `Switch` + `Button` roxos:
 
 ## 8. Componentes & Forms
 
-Todos em `src/components/`: `AddItemForm/EditItemForm` (Finanças, yup), `AddShoppingCartItem/EditShoppingCartItem` (Stock), `AddItemListtItem/EdittemListtItem` (typos originais — manter), `AddListForm/EditListForm` (Listas), `AddGoalForm/EditGoalForm`, `AddFuelForm/AutonomyForm/EditVeicleForm/ViewFuelReport`, `EstimativeForm`, `Header`, `EmptyMessage`, `ErrorSheet`, `Loading`, `AIComponent`, `AddButtton`. Todos usam `useTheme`, `useColorModeValue`, `Actionsheet` + `useDisclose`.
+Todos em `src/components/`: `AddItemForm/EditItemForm` (Finanças, zod), `AddShoppingCartItem/EditShoppingCartItem` (Stock), `AddItemListtItem/EdittemListtItem` (typos originais — manter), `AddListForm/EditListForm` (Listas), `AddGoalForm/EditGoalForm`, `AddFuelForm/EditFuelForm.tsx` (zod) / `AutonomyForm/EditVeicleForm/ViewFuelReport`, `EstimativeForm`, `Header`, `EmptyMessage`, `ErrorSheet`, `Loading`, `AIComponent`, `AddButtton`. Migrados para TS strict:true, `yup` removido, `zod` única validação.
 
 ---
 

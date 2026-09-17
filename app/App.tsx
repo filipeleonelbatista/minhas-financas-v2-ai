@@ -67,6 +67,11 @@ export default function App(): React.JSX.Element {
         setBiometricChecking(false);
         return;
       }
+      if (!LocalAuth) {
+        setBiometricLocked(false);
+        setBiometricChecking(false);
+        return;
+      }
       const hasHardware = await LocalAuth.hasHardwareAsync();
       const isEnrolled = await LocalAuth.isEnrolledAsync();
       if (!hasHardware || !isEnrolled) {

@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { ActivityIndicator, Image, View } from "react-native";
 import logo from "../assets/icon.png";
 

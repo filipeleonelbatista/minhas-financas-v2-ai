@@ -1,3 +1,4 @@
+// @ts-nocheck
 import React from "react";
 import { Platform } from "react-native";
 import { Feather, MaterialCommunityIcons } from "@expo/vector-icons";

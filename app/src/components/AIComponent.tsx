@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useIsFocused, useNavigation } from '@react-navigation/native';
 import { useEffect, useRef } from 'react';

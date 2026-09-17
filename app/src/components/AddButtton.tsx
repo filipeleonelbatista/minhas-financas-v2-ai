@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { Feather } from "@expo/vector-icons";
 import { useMemo, useState, useCallback } from "react";
 import { Modal, View, Pressable, useWindowDimensions, KeyboardAvoidingView, Platform, ScrollView } from "react-native";

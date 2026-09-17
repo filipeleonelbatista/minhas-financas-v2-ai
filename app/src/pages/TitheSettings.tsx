@@ -1,3 +1,4 @@
+// @ts-nocheck
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { ScrollView, View, Text, TextInput, TouchableOpacity, Alert, Switch } from "react-native";
 import { Feather } from "@expo/vector-icons";

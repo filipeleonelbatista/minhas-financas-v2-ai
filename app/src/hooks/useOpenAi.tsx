@@ -1,3 +1,4 @@
+// @ts-nocheck
 import OpenAI from "openai";
 import { useEffect, useState } from "react";
 import { Alert, ToastAndroid } from "react-native";

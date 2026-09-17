@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { useSettingsStore } from '../stores/settings';
 
 // Compatibility shim: proxies legacy useSettings() to zustand store

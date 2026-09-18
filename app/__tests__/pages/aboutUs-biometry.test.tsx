@@ -31,6 +31,16 @@ jest.mock('expo-file-system', () => ({
   writeAsStringAsync: jest.fn().mockResolvedValue(undefined),
   documentDirectory: 'file://doc/',
 }));
+jest.mock('expo-file-system/legacy', () => ({
+  StorageAccessFramework: {
+    createFileAsync: jest.fn().mockResolvedValue('file://test'),
+    writeAsStringAsync: jest.fn().mockResolvedValue(undefined),
+    requestDirectoryPermissionsAsync: jest.fn().mockResolvedValue({ granted: true, directoryUri: 'file://test' }),
+  },
+  readAsStringAsync: jest.fn().mockResolvedValue(''),
+  writeAsStringAsync: jest.fn().mockResolvedValue(undefined),
+  documentDirectory: 'file://doc/',
+}));
 jest.mock('expo-document-picker', () => ({
   getDocumentAsync: jest.fn().mockResolvedValue({ canceled: true }),
 }));

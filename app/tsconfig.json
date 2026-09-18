@@ -16,7 +16,11 @@
     "moduleResolution": "bundler",
     "resolveJsonModule": true,
     "target": "ESNext",
-    "module": "ESNext"
+    "module": "ESNext",
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["src/*"]
+    }
   },
   "include": ["src/**/*.ts", "src/**/*.tsx", "src/**/*.d.ts", "App.tsx", "nativewind-env.d.ts"],
   "exclude": ["node_modules"]

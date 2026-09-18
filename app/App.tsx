@@ -109,7 +109,7 @@ export default function App(): React.JSX.Element {
       try {
         // 0) Expo Go bundling (opção 2): se SQLite ainda vazio e asset financas.db existe (gerado por `yarn db:seed`), copia para SQLite/
         try {
-          const FileSystem: any = await import('expo-file-system');
+          const FileSystem: any = await import('expo-file-system/legacy');
           const dbPath = (FileSystem.documentDirectory ?? '') + 'SQLite/financas.db';
           const info = await FileSystem.getInfoAsync(dbPath).catch(() => ({ exists: false }));
           const hasDb = !!(info as any)?.exists && ((info as any)?.size ?? 0) > 1024;

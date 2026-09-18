@@ -2,6 +2,8 @@ import React, { useEffect, useMemo, useRef, useState, useCallback } from "react"
 import { View, Text, ScrollView, Pressable, TextInput, TouchableOpacity, ActivityIndicator, Modal, useWindowDimensions, KeyboardAvoidingView, BackHandler, Platform } from "react-native";
 import { Feather, MaterialCommunityIcons, Octicons } from "@expo/vector-icons";
 import { useFocusEffect, useIsFocused, useNavigation } from "@react-navigation/native";
+import { BlurView } from "expo-blur";
+import { LinearGradient } from "expo-linear-gradient";
 import LoadingDots from "react-native-loading-dots";
 import Header from "../components/Header";
 import Orb from "../components/ui/Orb";
@@ -307,142 +309,157 @@ export default function IAPage(): React.JSX.Element {
             </TouchableOpacity>
           }
         />
-        {data.length === 0 && !isLoading && (
-          <View style={{ alignItems: "center", marginTop: 8, marginBottom: 8, gap: 8, paddingHorizontal: 16 }}>
-            <Orb size="lg" color="#9c44dc" testID="orb-header" />
-            <Text style={{ color: text, fontSize: 12, textAlign: "center" }}>
-              Ativo: <Text style={{ fontWeight: "700", color: "#9c44dc" }}>{activeLabel}</Text>
-            </Text>
-            <View style={{ backgroundColor: isDark ? "#27272a" : "white", borderRadius: 12, paddingHorizontal: 12, paddingVertical: 6, borderWidth: 1, borderColor: isDark ? "#3f3f46" : "#e5e7eb", marginTop: 4 }}>
-              <Text style={{ fontSize: 11, color: subText, textAlign: "center" }}>Contexto: {filteredList.length} finanças • {FuelList.length} abastecimentos • {MarketList.length} estoque • {GoalsList.length} metas • {ListsList.length} listas</Text>
-            </View>
-          </View>
-        )}
-        <ScrollView
-          ref={scrollViewRef as any}
-          style={{ flex: 1, width: "100%" }}
-          contentContainerStyle={{ paddingBottom: insets.bottom + 120 }}
-          keyboardShouldPersistTaps="handled"
-        >
-          {data.length === 0 && !isLoading ? (
-            <View style={{ width: "100%", gap: 16, paddingHorizontal: 16, alignItems: "center", justifyContent: "center", flex: 1, marginTop: 16 }}>
-              <Text style={{ color: text, fontSize: 18, lineHeight: 24, textAlign: "center", maxWidth: "80%", marginVertical: 16 }}>Converse com um assistente baseado em Inteligência Artificial.</Text>
-
-              <Pressable onPress={() => void handleAskForFinancialTips()} testID="btn-financial-tips" style={({ pressed }: { pressed: boolean }) => ({ backgroundColor: pressed ? "#e9d5ff" : bgCard, borderWidth: 1, borderColor: pressed ? "#9c44dc" : isDark ? "#3f3f46" : "#e5e7eb", shadowColor: "#9c44dc", shadowOpacity: pressed ? 0.2 : 0.08, elevation: 3, borderRadius: 12, width: "90%", paddingHorizontal: 16, paddingVertical: 12 }) as any}>
-                <View style={{ flexDirection: "row", alignItems: "center", gap: 12 }}>
-                  <View style={{ width: 36, height: 36, borderRadius: 18, backgroundColor: isDark ? "#3f3f46" : "#f3e8ff", alignItems: "center", justifyContent: "center" }}>
-                    <Feather name="dollar-sign" size={18} color="#9c44dc" />
-                  </View>
-                  <Text numberOfLines={2} style={{ color: text, fontWeight: "600", flexShrink: 1, maxWidth: "70%" }}>Analise meus gastos e sugira pontos onde eu posso melhorar.</Text>
-                  <Feather name="chevron-right" size={16} color={subText} />
-                </View>
-              </Pressable>
-
-              <Pressable onPress={() => void handleAskForFuelCostsTips()} testID="btn-fuel-tips" style={({ pressed }: { pressed: boolean }) => ({ backgroundColor: pressed ? "#e9d5ff" : bgCard, borderWidth: 1, borderColor: pressed ? "#9c44dc" : isDark ? "#3f3f46" : "#e5e7eb", shadowColor: "#9c44dc", shadowOpacity: pressed ? 0.2 : 0.08, elevation: 3, borderRadius: 12, width: "90%", paddingHorizontal: 16, paddingVertical: 12 }) as any}>
-                <View style={{ flexDirection: "row", alignItems: "center", gap: 12 }}>
-                  <View style={{ width: 36, height: 36, borderRadius: 18, backgroundColor: isDark ? "#3f3f46" : "#f3e8ff", alignItems: "center", justifyContent: "center" }}>
-                    <Feather name="droplet" size={18} color="#9c44dc" />
-                  </View>
-                  <Text numberOfLines={2} style={{ color: text, fontWeight: "600", flexShrink: 1, maxWidth: "70%" }}>Analise como posso melhorar meus gastos com combustível.</Text>
-                  <Feather name="chevron-right" size={16} color={subText} />
-                </View>
-              </Pressable>
-
-              <Pressable onPress={() => void handleAskForMarketCostsTips()} testID="btn-market-tips" style={({ pressed }: { pressed: boolean }) => ({ backgroundColor: pressed ? "#e9d5ff" : bgCard, borderWidth: 1, borderColor: pressed ? "#9c44dc" : isDark ? "#3f3f46" : "#e5e7eb", shadowColor: "#9c44dc", shadowOpacity: pressed ? 0.2 : 0.08, elevation: 3, borderRadius: 12, width: "90%", paddingHorizontal: 16, paddingVertical: 12 }) as any}>
-                <View style={{ flexDirection: "row", alignItems: "center", gap: 12 }}>
-                  <View style={{ width: 36, height: 36, borderRadius: 18, backgroundColor: isDark ? "#3f3f46" : "#f3e8ff", alignItems: "center", justifyContent: "center" }}>
-                    <Feather name="shopping-cart" size={18} color="#9c44dc" />
-                  </View>
-                  <Text numberOfLines={2} style={{ color: text, fontWeight: "600", flexShrink: 1, maxWidth: "70%" }}>Analise meus gastos com mercado e sugira pontos onde eu posso melhorar a alimentação.</Text>
-                  <Feather name="chevron-right" size={16} color={subText} />
-                </View>
-              </Pressable>
-
-              <Text style={{ color: text, fontSize: 14, lineHeight: 16, textAlign: "center", maxWidth: "80%", marginTop: 24 }}>ou digite seu texto para iniciar a conversa.</Text>
-            </View>
-          ) : (
-            <View style={{ alignItems: "center", justifyContent: "center", width: "100%", gap: 16, paddingHorizontal: 16 }}>
-              {data.map((m: ChatMessage, i: number) => {
-                const ts: string = m.ts ? new Date(m.ts).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }) : '';
-                const tokens: number = m.tokens ?? Math.ceil(String(m.text).length / 4);
-                return m.type === "assistant" ? (
-                  <View key={i} style={{ width: "100%", paddingHorizontal: 0, paddingVertical: 12, flexDirection: "row", gap: 8, alignItems: "flex-start" }}>
-                    <Orb size={32 as any} color="#9c44dc" testID={`orb-${i}`} />
-                    <View style={{ flex: 1 }}>
-                      <Markdown style={{ body: { color: text, fontSize: 15, lineHeight: 22 }, strong: { fontWeight: "700", color: isDark ? "#e9d5ff" : "#581C87" } }}>{m.text}</Markdown>
-                      <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginTop: 8 }}>
-                        <Text style={{ color: subText, fontSize: 11 }}>{ts} • {tokens} tokens</Text>
-                      </View>
-                      <View style={{ height: 1, backgroundColor: isDark ? "#3f3f46" : "#e5e7eb", marginTop: 8 }} />
-                    </View>
-                  </View>
-                ) : (
-                  <View key={i} style={{ alignSelf: "flex-end", maxWidth: "75%", backgroundColor: "#a855f7", borderRadius: 16, padding: 12, marginVertical: 8, marginRight: 0 }}>
-                    <Text style={{ color: "white" }}>{m.text}</Text>
-                    <View style={{ flexDirection: "row", justifyContent: "flex-end", marginTop: 6 }}>
-                      <Text style={{ color: "rgba(255,255,255,0.8)", fontSize: 10 }}>{ts} • {tokens} tokens</Text>
-                    </View>
-                  </View>
-                );
-              })}
-              {isLoading && (
-                <View style={{ flexDirection: "row", gap: 4, alignItems: "center", width: "100%", paddingHorizontal: 0, paddingVertical: 12 }}>
-                  <Orb size={32 as any} color="#9c44dc" testID="orb-loading" />
-                                    <ShimmerWaveText
-                    text="Pensando na sua solicitação..."
-                    textColor={isDark ? "#ffffff" : "#000000"}
-                    textStyle={{ fontSize: 13, fontWeight: "600" }}
-                    containerStyle={{ marginLeft: -8, marginTop: -10 }}
-                    shimmerConfig={{ duration: 2600, width: 0.8, colors: ["transparent","rgba(156,68,220,0.25)","rgba(156,68,220,0.85)","rgba(233,213,255,1)","rgba(156,68,220,0.5)","transparent"] }}
-                    floatConfig={{ distance: 6, scaleAmount: 0.15 }}
-                    testID="shimmer-loading"
-                  />
-                </View>
-              )}
+        {/* chatContainer ocupa toda a área abaixo do header; mensagens flex:1 com lista rolável e input absoluto sobreposto */}
+        <View style={{ flex: 1, position: 'relative' }}>
+          {data.length === 0 && !isLoading && (
+            <View style={{ alignItems: "center", marginTop: 8, marginBottom: 8, gap: 8, paddingHorizontal: 16 }}>
+              <Orb size="lg" color="#9c44dc" testID="orb-header" />
+              <Text style={{ color: text, fontSize: 12, textAlign: "center" }}>
+                Ativo: <Text style={{ fontWeight: "700", color: "#9c44dc" }}>{activeLabel}</Text>
+              </Text>
+              <View style={{ backgroundColor: isDark ? "#27272a" : "white", borderRadius: 12, paddingHorizontal: 12, paddingVertical: 6, borderWidth: 1, borderColor: isDark ? "#3f3f46" : "#e5e7eb", marginTop: 4 }}>
+                <Text style={{ fontSize: 11, color: subText, textAlign: "center" }}>Contexto: {filteredList.length} finanças • {FuelList.length} abastecimentos • {MarketList.length} estoque • {GoalsList.length} metas • {ListsList.length} listas</Text>
+              </View>
             </View>
           )}
-          <View style={{ width: "100%", height: 24 }} />
-        </ScrollView>
-        {error && (
-          <SolidAlert variant="danger" message={String(error)} onClose={() => setError(null)} style={{ marginHorizontal: 16, marginBottom: 8 }} testID="error-alert" />
-        )}
-        <View style={{ position: 'absolute', left: 28, bottom: insets.bottom + 26, zIndex: 10 }}>
-          <MorphFab.Root direction="up" align="start" spacing={10} triggerColor={"#9c44dc"} color={"#9c44dc"} style={{}}>
-            <MorphFab.Trigger size={32 as any} >
-              <Feather name="plus" size={14} color="white" />
-            </MorphFab.Trigger>
-            <MorphFab.Item value="gastos" size={32 as any} onSelect={()=>{ setSelectedTool('gastos'); setInputText("Analise meus gastos e sugira pontos onde eu posso melhorar."); }}>
-              <MorphFab.ItemIcon><Feather name="dollar-sign" size={12} color="white" /></MorphFab.ItemIcon>
-            </MorphFab.Item>
-            <MorphFab.Item value="combustivel" size={32 as any} onSelect={()=>{ setSelectedTool('combustivel'); setInputText("Analise como posso melhorar meus gastos com combustível."); }}>
-              <MorphFab.ItemIcon><Feather name="droplet" size={12} color="white" /></MorphFab.ItemIcon>
-            </MorphFab.Item>
-            <MorphFab.Item value="mercado" size={32 as any} onSelect={()=>{ setSelectedTool('mercado'); setInputText("Analise meus gastos com mercado e sugira pontos onde eu posso melhorar a alimentação."); }}>
-              <MorphFab.ItemIcon><Feather name="shopping-cart" size={12} color="white" /></MorphFab.ItemIcon>
-            </MorphFab.Item>
-          </MorphFab.Root>
-        </View>
-        <BorderBeam testID="border-beam" borderRadius={16} borderWidth={1} colors={["#9c44dc","#581C87","#9c44dc"]} duration={3} glow={6} style={{marginHorizontal:16, marginBottom: insets.bottom + 12, alignSelf:'stretch'}}>
-          <View style={{backgroundColor: isDark?'#27272a':'white', borderRadius:16, padding:12, gap:12, width:'100%'}}>
-            <TextInput testID="input-ask" multiline numberOfLines={4} placeholder="Digite sua pergunta aqui..." value={inputText} onChangeText={setInputText} style={{color:text, minHeight:48, maxHeight:120, textAlignVertical:'top', paddingTop:8, paddingBottom:8} as any} placeholderTextColor="#a1a1aa" editable={!isLoading} onSubmitEditing={() => { if (inputText.length > 0 && !isLoading) { setError(null); void handleAskToAi(); } }} />
-            <View style={{flexDirection:'row', alignItems:'center', gap:8}}>
-              <Pressable testID="model-select" disabled={isLoading} onPress={()=>{ if(!isLoading) navigation.navigate("AIProviders"); }} style={{flexDirection:'row', alignItems:'center', gap:4, backgroundColor: isDark?'#3f3f46':'#f3e8ff', paddingHorizontal:10, paddingVertical:6, borderRadius:20, opacity: isLoading?0.5:1, marginLeft: 36, maxWidth: 110, flexShrink: 1} as any}>
-                <Feather name="cpu" size={12} color="#9c44dc" />
-                <Text numberOfLines={1} ellipsizeMode="tail" style={{color:text, fontSize:11, fontWeight:'600', flexShrink: 1}}>{activeLabel} ▾</Text>
-              </Pressable>
-              {selectedTool && (
-                <Pressable onPress={()=>{ setSelectedTool(null); setInputText(""); }} style={{ flexDirection:'row', alignItems:'center', gap:4, backgroundColor: '#9c44dc', borderColor: '#581C87', borderWidth: 1, paddingHorizontal: 8, paddingVertical: 5, borderRadius: 14, maxWidth: 90, flexShrink: 1 } as any}>
-                  <Text numberOfLines={1} ellipsizeMode="tail" style={{ color: 'white', fontSize: 10, fontWeight: '700', flexShrink: 1 }}>{selectedTool==='gastos'?'Finanças':selectedTool==='combustivel'?'Combustível':'Estoque'}</Text>
-                  <Feather name="x" size={10} color="white" />
+          <ScrollView
+            ref={scrollViewRef as any}
+            style={{ flex: 1, width: "100%", zIndex: 1 }}
+            contentContainerStyle={{ paddingBottom: insets.bottom + 120, flexGrow: 1 }}
+            keyboardShouldPersistTaps="handled"
+          >
+            {data.length === 0 && !isLoading ? (
+              <View style={{ width: "100%", gap: 16, paddingHorizontal: 16, alignItems: "center", justifyContent: "center", flex: 1, marginTop: 16 }}>
+                <Text style={{ color: text, fontSize: 18, lineHeight: 24, textAlign: "center", maxWidth: "80%", marginVertical: 16 }}>Converse com um assistente baseado em Inteligência Artificial.</Text>
+
+                <Pressable onPress={() => void handleAskForFinancialTips()} testID="btn-financial-tips" style={({ pressed }: { pressed: boolean }) => ({ backgroundColor: pressed ? "#e9d5ff" : bgCard, borderWidth: 1, borderColor: pressed ? "#9c44dc" : isDark ? "#3f3f46" : "#e5e7eb", shadowColor: "#9c44dc", shadowOpacity: pressed ? 0.2 : 0.08, elevation: 3, borderRadius: 12, width: "90%", paddingHorizontal: 16, paddingVertical: 12 }) as any}>
+                  <View style={{ flexDirection: "row", alignItems: "center", gap: 12 }}>
+                    <View style={{ width: 36, height: 36, borderRadius: 18, backgroundColor: isDark ? "#3f3f46" : "#f3e8ff", alignItems: "center", justifyContent: "center" }}>
+                      <Feather name="dollar-sign" size={18} color="#9c44dc" />
+                    </View>
+                    <Text numberOfLines={2} style={{ color: text, fontWeight: "600", flexShrink: 1, maxWidth: "70%" }}>Analise meus gastos e sugira pontos onde eu posso melhorar.</Text>
+                    <Feather name="chevron-right" size={16} color={subText} />
+                  </View>
                 </Pressable>
-              )}
-              <View style={{flex:1}}/>
-              <TouchableOpacity testID="btn-send" disabled={isLoading || !inputText} onPress={() => { if (inputText.length === 0) setError("Digite uma mensagem para continuar"); else { setError(null); void handleAskToAi(); } }} style={{width:36,height:36,borderRadius:18, backgroundColor: (isLoading || !inputText)?'#d1d5db':'#9c44dc', alignItems:'center', justifyContent:'center', opacity: (isLoading || !inputText)?0.6:1}}>
-                {isLoading ? <ActivityIndicator color="white"/> : <Octicons name="paper-airplane" size={16} color="white"/>}
-              </TouchableOpacity>
+
+                <Pressable onPress={() => void handleAskForFuelCostsTips()} testID="btn-fuel-tips" style={({ pressed }: { pressed: boolean }) => ({ backgroundColor: pressed ? "#e9d5ff" : bgCard, borderWidth: 1, borderColor: pressed ? "#9c44dc" : isDark ? "#3f3f46" : "#e5e7eb", shadowColor: "#9c44dc", shadowOpacity: pressed ? 0.2 : 0.08, elevation: 3, borderRadius: 12, width: "90%", paddingHorizontal: 16, paddingVertical: 12 }) as any}>
+                  <View style={{ flexDirection: "row", alignItems: "center", gap: 12 }}>
+                    <View style={{ width: 36, height: 36, borderRadius: 18, backgroundColor: isDark ? "#3f3f46" : "#f3e8ff", alignItems: "center", justifyContent: "center" }}>
+                      <Feather name="droplet" size={18} color="#9c44dc" />
+                    </View>
+                    <Text numberOfLines={2} style={{ color: text, fontWeight: "600", flexShrink: 1, maxWidth: "70%" }}>Analise como posso melhorar meus gastos com combustível.</Text>
+                    <Feather name="chevron-right" size={16} color={subText} />
+                  </View>
+                </Pressable>
+
+                <Pressable onPress={() => void handleAskForMarketCostsTips()} testID="btn-market-tips" style={({ pressed }: { pressed: boolean }) => ({ backgroundColor: pressed ? "#e9d5ff" : bgCard, borderWidth: 1, borderColor: pressed ? "#9c44dc" : isDark ? "#3f3f46" : "#e5e7eb", shadowColor: "#9c44dc", shadowOpacity: pressed ? 0.2 : 0.08, elevation: 3, borderRadius: 12, width: "90%", paddingHorizontal: 16, paddingVertical: 12 }) as any}>
+                  <View style={{ flexDirection: "row", alignItems: "center", gap: 12 }}>
+                    <View style={{ width: 36, height: 36, borderRadius: 18, backgroundColor: isDark ? "#3f3f46" : "#f3e8ff", alignItems: "center", justifyContent: "center" }}>
+                      <Feather name="shopping-cart" size={18} color="#9c44dc" />
+                    </View>
+                    <Text numberOfLines={2} style={{ color: text, fontWeight: "600", flexShrink: 1, maxWidth: "70%" }}>Analise meus gastos com mercado e sugira pontos onde eu posso melhorar a alimentação.</Text>
+                    <Feather name="chevron-right" size={16} color={subText} />
+                  </View>
+                </Pressable>
+
+                <Text style={{ color: text, fontSize: 14, lineHeight: 16, textAlign: "center", maxWidth: "80%", marginTop: 24 }}>ou digite seu texto para iniciar a conversa.</Text>
+              </View>
+            ) : (
+              <View style={{ alignItems: "center", justifyContent: "center", width: "100%", gap: 16, paddingHorizontal: 16 }}>
+                {data.map((m: ChatMessage, i: number) => {
+                  const ts: string = m.ts ? new Date(m.ts).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }) : '';
+                  const tokens: number = m.tokens ?? Math.ceil(String(m.text).length / 4);
+                  return m.type === "assistant" ? (
+                    <View key={i} style={{ width: "100%", paddingHorizontal: 0, paddingVertical: 12, flexDirection: "row", gap: 8, alignItems: "flex-start" }}>
+                      <Orb size={32 as any} color="#9c44dc" testID={`orb-${i}`} />
+                      <View style={{ flex: 1 }}>
+                        <Markdown style={{ body: { color: text, fontSize: 15, lineHeight: 22 }, strong: { fontWeight: "700", color: isDark ? "#e9d5ff" : "#581C87" } }}>{m.text}</Markdown>
+                        <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginTop: 8 }}>
+                          <Text style={{ color: subText, fontSize: 11 }}>{ts} • {tokens} tokens</Text>
+                        </View>
+                        <View style={{ height: 1, backgroundColor: isDark ? "#3f3f46" : "#e5e7eb", marginTop: 8 }} />
+                      </View>
+                    </View>
+                  ) : (
+                    <View key={i} style={{ alignSelf: "flex-end", maxWidth: "75%", backgroundColor: "#a855f7", borderRadius: 16, padding: 12, marginVertical: 8, marginRight: 0 }}>
+                      <Text style={{ color: "white" }}>{m.text}</Text>
+                      <View style={{ flexDirection: "row", justifyContent: "flex-end", marginTop: 6 }}>
+                        <Text style={{ color: "rgba(255,255,255,0.8)", fontSize: 10 }}>{ts} • {tokens} tokens</Text>
+                      </View>
+                    </View>
+                  );
+                })}
+                {isLoading && (
+                  <View style={{ flexDirection: "row", gap: 4, alignItems: "center", width: "100%", paddingHorizontal: 0, paddingVertical: 12 }}>
+                    <Orb size={32 as any} color="#9c44dc" testID="orb-loading" />
+                                    <ShimmerWaveText
+                      text="Pensando na sua solicitação..."
+                      textColor={isDark ? "#ffffff" : "#000000"}
+                      textStyle={{ fontSize: 13, fontWeight: "600" }}
+                      containerStyle={{ marginLeft: -8, marginTop: -10 }}
+                      shimmerConfig={{ duration: 2600, width: 0.8, colors: ["transparent","rgba(156,68,220,0.25)","rgba(156,68,220,0.85)","rgba(233,213,255,1)","rgba(156,68,220,0.5)","transparent"] }}
+                      floatConfig={{ distance: 6, scaleAmount: 0.15 }}
+                      testID="shimmer-loading"
+                    />
+                  </View>
+                )}
+              </View>
+            )}
+            <View style={{ width: "100%", height: 24 }} />
+          </ScrollView>
+          {error && (
+            <View style={{ position: 'absolute', left: 16, right: 16, bottom: insets.bottom + 100, zIndex: 6 }}>
+              <SolidAlert variant="danger" message={String(error)} onClose={() => setError(null)} testID="error-alert" />
             </View>
+          )}
+          <View style={{ position: 'absolute', left: 28, bottom: insets.bottom + 26, zIndex: 10 }}>
+            <MorphFab.Root direction="up" align="start" spacing={10} triggerColor={"#9c44dc"} color={"#9c44dc"} style={{}}>
+              <MorphFab.Trigger size={32 as any} >
+                <Feather name="plus" size={14} color="white" />
+              </MorphFab.Trigger>
+              <MorphFab.Item value="gastos" size={32 as any} onSelect={()=>{ setSelectedTool('gastos'); setInputText("Analise meus gastos e sugira pontos onde eu posso melhorar."); }}>
+                <MorphFab.ItemIcon><Feather name="dollar-sign" size={12} color="white" /></MorphFab.ItemIcon>
+              </MorphFab.Item>
+              <MorphFab.Item value="combustivel" size={32 as any} onSelect={()=>{ setSelectedTool('combustivel'); setInputText("Analise como posso melhorar meus gastos com combustível."); }}>
+                <MorphFab.ItemIcon><Feather name="droplet" size={12} color="white" /></MorphFab.ItemIcon>
+              </MorphFab.Item>
+              <MorphFab.Item value="mercado" size={32 as any} onSelect={()=>{ setSelectedTool('mercado'); setInputText("Analise meus gastos com mercado e sugira pontos onde eu posso melhorar a alimentação."); }}>
+                <MorphFab.ItemIcon><Feather name="shopping-cart" size={12} color="white" /></MorphFab.ItemIcon>
+              </MorphFab.Item>
+            </MorphFab.Root>
           </View>
-        </BorderBeam>
+          <BorderBeam testID="border-beam" borderRadius={16} borderWidth={1} colors={["#9c44dc","#581C87","#9c44dc"]} duration={3} glow={6} style={{position: 'absolute', left: 16, right: 16, bottom: insets.bottom + 12, zIndex: 5}}>
+            <View style={{backgroundColor: isDark?'#27272a':'white', borderRadius:16, padding:12, gap:12, width:'100%'}}>
+              <TextInput testID="input-ask" multiline numberOfLines={4} placeholder="Digite sua pergunta aqui..." value={inputText} onChangeText={setInputText} style={{color:text, minHeight:48, maxHeight:120, textAlignVertical:'top', paddingTop:8, paddingBottom:8} as any} placeholderTextColor="#a1a1aa" editable={!isLoading} onSubmitEditing={() => { if (inputText.length > 0 && !isLoading) { setError(null); void handleAskToAi(); } }} />
+              <View style={{flexDirection:'row', alignItems:'center', gap:8}}>
+                <Pressable testID="model-select" disabled={isLoading} onPress={()=>{ if(!isLoading) navigation.navigate("AIProviders"); }} style={{flexDirection:'row', alignItems:'center', gap:4, backgroundColor: isDark?'#3f3f46':'#f3e8ff', paddingHorizontal:10, paddingVertical:6, borderRadius:20, opacity: isLoading?0.5:1, marginLeft: 36, maxWidth: 110, flexShrink: 1} as any}>
+                  <Feather name="cpu" size={12} color="#9c44dc" />
+                  <Text numberOfLines={1} ellipsizeMode="tail" style={{color:text, fontSize:11, fontWeight:'600', flexShrink: 1}}>{activeLabel} ▾</Text>
+                </Pressable>
+                {selectedTool && (
+                  <Pressable onPress={()=>{ setSelectedTool(null); setInputText(""); }} style={{ flexDirection:'row', alignItems:'center', gap:4, backgroundColor: '#9c44dc', borderColor: '#581C87', borderWidth: 1, paddingHorizontal: 8, paddingVertical: 5, borderRadius: 14, maxWidth: 90, flexShrink: 1 } as any}>
+                    <Text numberOfLines={1} ellipsizeMode="tail" style={{ color: 'white', fontSize: 10, fontWeight: '700', flexShrink: 1 }}>{selectedTool==='gastos'?'Finanças':selectedTool==='combustivel'?'Combustível':'Estoque'}</Text>
+                    <Feather name="x" size={10} color="white" />
+                  </Pressable>
+                )}
+                <View style={{flex:1}}/>
+                <TouchableOpacity testID="btn-send" disabled={isLoading || !inputText} onPress={() => { if (inputText.length === 0) setError("Digite uma mensagem para continuar"); else { setError(null); void handleAskToAi(); } }} style={{width:36,height:36,borderRadius:18, backgroundColor: (isLoading || !inputText)?'#d1d5db':'#9c44dc', alignItems:'center', justifyContent:'center', opacity: (isLoading || !inputText)?0.6:1}}>
+                  {isLoading ? <ActivityIndicator color="white"/> : <Octicons name="paper-airplane" size={16} color="white"/>}
+                </TouchableOpacity>
+              </View>
+            </View>
+          </BorderBeam>
+          {/* blur bar que corta a navigation bar e cria efeito ligeiramente abaixo do input */}
+          <View testID="chat-blur-bar" pointerEvents="none" style={{ position: 'absolute', left: 0, right: 0, bottom: 0, height: insets.bottom + 36, zIndex: 2 }}>
+            <BlurView intensity={24} tint={isDark ? 'dark' : 'light'} style={{ flex: 1 }}>
+              <LinearGradient
+                colors={isDark ? ['rgba(28,30,33,0)', 'rgba(28,30,33,0.65)', 'rgba(28,30,33,1)'] : ['rgba(245,245,244,0)', 'rgba(245,245,244,0.65)', 'rgba(245,245,244,1)']}
+                locations={[0, 0.5, 1]}
+                style={{ flex: 1 }}
+              />
+            </BlurView>
+          </View>
+        </View>
       </View>
 
       <Modal visible={open} animationType="slide" onRequestClose={() => setOpen(false)} transparent>

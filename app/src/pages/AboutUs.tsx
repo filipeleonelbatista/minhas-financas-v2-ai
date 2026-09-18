@@ -17,7 +17,7 @@ import {
   TouchableOpacity,
   Image,
 } from "react-native";
-import * as FileSystem from "expo-file-system";
+import * as FileSystem from "expo-file-system/legacy";
 // @ts-ignore - SAF types differ across expo versions
 import * as DocumentPicker from "expo-document-picker";
 import { isAllowedImport, parseImport } from "../utils/excel";
@@ -305,26 +305,6 @@ export default function AboutUs(): React.JSX.Element {
     return () => { mounted = false; };
   }, [isFocused]);
 
-  async function getAllDataAsJSON(): Promise<{key: string, value: string | null}[]> {
-    try {
-      // Obtenha todas as chaves do AsyncStorage
-      const keys = await AsyncStorage.getAllKeys();
-
-      // Mapeie as chaves para objetos JSON contendo chave e valor
-      const data = await Promise.all(
-        keys.map(async (key) => {
-          const value = await AsyncStorage.getItem(key);
-          return { key, value };
-        })
-      );
-
-      return data;
-    } catch (error) {
-      console.error("Erro ao obter dados do AsyncStorage: ", error);
-      throw error;
-    }
-  }
-
   async function exportSomeData(data: string, format: string, filePrefix: string): Promise<void> {
     try {
       const currentDate = new Date();
@@ -351,10 +331,21 @@ export default function AboutUs(): React.JSX.Element {
       }
       try {
         if (Platform.OS === 'android') {
-          const directoryUri = selectedFolderToSave;
+          let directoryUri: string = selectedFolderToSave as string;
           if (!directoryUri) {
-            Alert.alert("Selecione pasta", "Escolha a pasta em Configurações → Alterar pasta de exportação");
-            return;
+            try {
+              const perm = await (FileSystem as any).StorageAccessFramework.requestDirectoryPermissionsAsync();
+              if (perm?.granted && perm.directoryUri) {
+                directoryUri = perm.directoryUri;
+                await handleUpdateSelectedFolderToSave(directoryUri);
+              } else {
+                Alert.alert("Selecione pasta", "Escolha a pasta para salvar o arquivo");
+                return;
+              }
+            } catch {
+              Alert.alert("Selecione pasta", "Escolha a pasta em Configurações → Alterar pasta de exportação");
+              return;
+            }
           }
           const createdFile = await (FileSystem as any).StorageAccessFramework.createFileAsync(directoryUri, fileName, "text/*");
           await (FileSystem as any).StorageAccessFramework.writeAsStringAsync(createdFile, data, { encoding: "utf8" });
@@ -374,14 +365,6 @@ export default function AboutUs(): React.JSX.Element {
         `Houve um problema ao exportar ${filePrefix.replace(/[^\w\s]/gi, "")}!`,
         ToastAndroid.SHORT
       );
-    }
-  }
-
-  async function saveStorageToExportedFile() {
-    let storageStringfyData = (await getAllDataAsJSON()) ?? "";
-
-    for (const table of storageStringfyData as any) {
-      await exportSomeData((table as any).value as string, "txt", (table as any).key);
     }
   }
 
@@ -583,10 +566,21 @@ export default function AboutUs(): React.JSX.Element {
       }
       try {
         if (Platform.OS === 'android') {
-          const directoryUri = selectedFolderToSave;
+          let directoryUri: string = selectedFolderToSave as string;
           if (!directoryUri) {
-            Alert.alert("Selecione pasta", "Escolha a pasta em Configurações → Alterar pasta de exportação");
-            return;
+            try {
+              const perm = await (FileSystem as any).StorageAccessFramework.requestDirectoryPermissionsAsync();
+              if (perm?.granted && perm.directoryUri) {
+                directoryUri = perm.directoryUri;
+                await handleUpdateSelectedFolderToSave(directoryUri);
+              } else {
+                Alert.alert("Selecione pasta", "Escolha a pasta para salvar o arquivo");
+                return;
+              }
+            } catch {
+              Alert.alert("Selecione pasta", "Escolha a pasta em Configurações → Alterar pasta de exportação");
+              return;
+            }
           }
           const createdFile = await (FileSystem as any).StorageAccessFramework.createFileAsync(directoryUri, fileName, "text/*");
           await (FileSystem as any).StorageAccessFramework.writeAsStringAsync(createdFile, CSV, { encoding: "utf8" });
@@ -1145,12 +1139,17 @@ export default function AboutUs(): React.JSX.Element {
 
           <TouchableOpacity
             onPress={async () => {
-              const requestedDirPerm =
-                await (FileSystem as any).StorageAccessFramework.requestDirectoryPermissionsAsync();
-              await handleUpdateSelectedFolderToSave(
-                requestedDirPerm.directoryUri
-              );
-              ToastAndroid.show("Pasta selecionada!", ToastAndroid.SHORT);
+              try {
+                const perm = await (FileSystem as any).StorageAccessFramework.requestDirectoryPermissionsAsync();
+                if (perm?.granted && perm.directoryUri) {
+                  await handleUpdateSelectedFolderToSave(perm.directoryUri);
+                  ToastAndroid.show("Pasta selecionada!", ToastAndroid.SHORT);
+                } else {
+                  ToastAndroid.show("Seleção cancelada", ToastAndroid.SHORT);
+                }
+              } catch {
+                ToastAndroid.show("Falha ao selecionar pasta", ToastAndroid.SHORT);
+              }
             }}
             style={{ backgroundColor: theme.colors.purple[600], borderRadius: 999, paddingVertical: 14, paddingHorizontal: 16, flexDirection: "row", alignItems: "center", justifyContent: "center", elevation: 2, gap: 8 }}
             activeOpacity={0.8}
@@ -1158,18 +1157,8 @@ export default function AboutUs(): React.JSX.Element {
             <Feather name="folder" size={20} color="#FFF" />
             <Text style={{ color: "white", fontSize: 16, fontWeight: "600" }}>Alterar pasta de exportação</Text>
           </TouchableOpacity>
-
-          <TouchableOpacity
-            onPress={saveStorageToExportedFile}
-            style={{ backgroundColor: theme.colors.purple[600], borderRadius: 999, paddingVertical: 14, paddingHorizontal: 16, flexDirection: "row", alignItems: "center", justifyContent: "center", elevation: 2, gap: 8 }}
-            activeOpacity={0.8}
-          >
-            <Feather name="file-text" size={20} color="#FFF" />
-            <Text style={{ color: "white", fontSize: 16, fontWeight: "600" }}>{"Exportar finanças antigo"}</Text>
-          </TouchableOpacity>
-
-          <Text style={{color:text, paddingHorizontal:8, textAlign:"center"}}>
-            Essa opção exporta o modelo de finanças do app antigo.
+          <Text style={{color:subText, paddingHorizontal:8, textAlign:"center", fontSize:12}}>
+            Opcional: no Android a pasta será solicitada automaticamente ao exportar, caso ainda não tenha sido escolhida. No iOS o arquivo é salvo em Documentos.
           </Text>
         </View>
 

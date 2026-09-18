@@ -2,7 +2,6 @@ import React, { useState, useEffect } from "react";
 import { View, Text, ScrollView, Pressable, TextInput, TouchableOpacity, Modal, FlatList, useWindowDimensions, KeyboardAvoidingView, Platform } from "react-native";
 import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 import { Feather } from "@expo/vector-icons";
-import { Picker } from "@react-native-picker/picker";
 import { useIsFocused, useNavigation } from "@react-navigation/native";
 import dayjs from "dayjs";
 import isSameOrAfter from "dayjs/plugin/isSameOrAfter";
@@ -22,6 +21,7 @@ import EditListForm from "../components/EditListForm";
 import EditItemListItem from "../components/EdittemListtItem";
 import AddItemListtItem from "../components/AddItemListtItem";
 import { useShallow } from "zustand/react/shallow";
+import ThemedPicker from "../components/ui/ThemedPicker";
 import type { ListRow, ListItemRow } from "../repositories/list";
 
 dayjs.extend(isSameOrAfter);
@@ -154,25 +154,23 @@ export default function List(): React.JSX.Element {
             <View style={{ height: 1, backgroundColor: isDark ? "#3f3f46" : "#e7e5e4", marginTop: 8 }} />
           </View>
 
-          <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
-            <Text style={{ fontWeight: "700", fontSize: 20, color: text }}>Sua lista</Text>
-            <View style={{ borderWidth: 1, borderColor: isDark ? "#3f3f46" : "#e4e4e7", borderRadius: 12, overflow: "hidden", backgroundColor: isDark ? "#27272a" : "white", flex: 1, marginLeft: 12, maxWidth: "50%" }}>
-              <Picker
+          <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", gap: 12 }}>
+            <Text style={{ fontWeight: "700", fontSize: 20, color: text, flexShrink: 1 }}>Sua lista</Text>
+            <View style={{ flex: 1, minWidth: 0 }}>
+              <ThemedPicker
+                testID="list-category-picker"
                 selectedValue={selectedCategory}
-                onValueChange={(itemValue: string) => setSelectedCategory(itemValue)}
-                mode="dropdown"
-                dropdownIconColor="#9c44dc"
-                enabled
-                style={{ width: "100%", color: text, height: 48 }}
-              >
-                <Picker.Item label="Todos os itens" value="Todos os itens" />
-                <Picker.Item label="Carnes" value="Carnes" />
-                <Picker.Item label="Fruteira" value="Fruteira" />
-                <Picker.Item label="Higiêne" value="Higiêne" />
-                <Picker.Item label="Limpeza" value="Limpeza" />
-                <Picker.Item label="Mercearia" value="Mercearia" />
-                <Picker.Item label="Outros" value="Outros" />
-              </Picker>
+                onValueChange={(v: string) => setSelectedCategory(v)}
+                items={[
+                  { label: "Todos os itens", value: "Todos os itens" },
+                  { label: "Carnes", value: "Carnes" },
+                  { label: "Fruteira", value: "Fruteira" },
+                  { label: "Higiêne", value: "Higiêne" },
+                  { label: "Limpeza", value: "Limpeza" },
+                  { label: "Mercearia", value: "Mercearia" },
+                  { label: "Outros", value: "Outros" },
+                ]}
+              />
             </View>
           </View>
 

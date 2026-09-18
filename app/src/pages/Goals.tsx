@@ -12,13 +12,13 @@ import {
 } from "react-native";
 import { Feather } from "@expo/vector-icons";
 import { useIsFocused, useNavigation, useRoute } from "@react-navigation/native";
-import { Picker } from "@react-native-picker/picker";
 import { openThemedDatePicker } from "../utils/datePicker";
 import { goalRepo, DEFAULT_GOAL_CATEGORIES, filterGoalsByStatus, calcGoalProgress, getDaysRemaining } from "../repositories/goal";
 import GoalCard from "../components/ui/GoalCard";
 import SwipeableGoalRow from "../components/SwipeableGoalRow";
 import ThemedAlert from "../components/ui/ThemedAlert";
 import Header from "../components/Header";
+import ThemedPicker from "../components/ui/ThemedPicker";
 import { useSettingsStore, type SettingsState } from "../stores/settings";
 import { useShallow } from "zustand/react/shallow";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -106,27 +106,22 @@ function CategoryPicker({ selected, onSelect, customValue, onCustomChange, showC
   return (
     <View>
       <Text style={{ fontSize: 14, fontWeight: "600", color: text, marginBottom: 4 }}>Categoria</Text>
-      <View style={{ borderWidth: 1, borderColor: isDark ? "#3f3f46" : "#e4e4e7", borderRadius: 12, overflow: "hidden", backgroundColor: isDark ? "#27272a" : "white" }}>
-        <Picker
-          selectedValue={showCustom ? "__custom__" : selected}
-          onValueChange={(itemValue) => {
-            if (itemValue === "__custom__") {
-              setShowCustom(true);
-            } else {
-              setShowCustom(false);
-              onSelect(itemValue);
-            }
-          }}
-          mode="dropdown"
-          dropdownIconColor="#9c44dc"
-          style={{ width: "100%", color: text, height: 48 }}
-        >
-          {allOptions.map(cat => (
-            <Picker.Item key={cat} label={cat.charAt(0).toUpperCase() + cat.slice(1)} value={cat} />
-          ))}
-          <Picker.Item label="+ Outra (personalizada)" value="__custom__" />
-        </Picker>
-      </View>
+      <ThemedPicker
+        testID="goals-category-picker"
+        selectedValue={showCustom ? "__custom__" : selected}
+        onValueChange={(itemValue) => {
+          if (itemValue === "__custom__") {
+            setShowCustom(true);
+          } else {
+            setShowCustom(false);
+            onSelect(itemValue);
+          }
+        }}
+        items={[
+          ...allOptions.map(cat => ({ label: cat.charAt(0).toUpperCase() + cat.slice(1), value: cat })),
+          { label: "+ Outra (personalizada)", value: "__custom__" },
+        ]}
+      />
       {/* Hidden chips for test compatibility (mantém testID category-* ) - invisível mas pressable para testes */}
       <View style={{ position: "absolute", width: 1, height: 1, opacity: 0, overflow: "hidden" }}>
         {DEFAULT_GOAL_CATEGORIES.map(cat => (

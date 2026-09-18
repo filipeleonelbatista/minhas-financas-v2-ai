@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { View, Text, ScrollView, Pressable, TextInput, TouchableOpacity, Modal, FlatList, useWindowDimensions } from "react-native";
 import { Feather, MaterialCommunityIcons } from "@expo/vector-icons";
-import { Picker } from "@react-native-picker/picker";
 import { useIsFocused, useNavigation } from "@react-navigation/native";
 import dayjs from "dayjs";
 import isSameOrAfter from "dayjs/plugin/isSameOrAfter";
@@ -24,6 +23,7 @@ import { Sheet, useSheetRef } from "../components/nativewindui/Sheet";
 import { BottomSheetScrollView } from "@gorhom/bottom-sheet";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useShallow } from "zustand/react/shallow";
+import ThemedPicker from "../components/ui/ThemedPicker";
 import type { StockRow } from "../repositories/market";
 
 let BorderBeam: any = null;
@@ -336,17 +336,20 @@ export default function Market(): React.JSX.Element {
 
           <View style={{ gap: 8 }}>
             <Text style={{ color: text, fontSize: 16, fontWeight: "700" }}>Categoria</Text>
-            <View style={{ borderWidth: 1, borderColor: isDark ? "#3f3f46" : "#e4e4e7", borderRadius: 12, backgroundColor: isDark ? "#27272a" : "white", overflow: "hidden" }}>
-              <Picker selectedValue={selectedCategory} onValueChange={(itemValue: string) => setSelectedCategory(itemValue)} mode="dropdown" dropdownIconColor="#9c44dc" enabled style={{ width: "100%", color: text }}>
-                <Picker.Item label="Todos os itens" value="Todos os itens" />
-                <Picker.Item label="Carnes" value="Carnes" />
-                <Picker.Item label="Fruteira" value="Fruteira" />
-                <Picker.Item label="Higiêne" value="Higiêne" />
-                <Picker.Item label="Limpeza" value="Limpeza" />
-                <Picker.Item label="Mercearia" value="Mercearia" />
-                <Picker.Item label="Outros" value="Outros" />
-              </Picker>
-            </View>
+            <ThemedPicker
+              testID="market-category-picker"
+              selectedValue={selectedCategory}
+              onValueChange={(v: string) => setSelectedCategory(v)}
+              items={[
+                { label: "Todos os itens", value: "Todos os itens" },
+                { label: "Carnes", value: "Carnes" },
+                { label: "Fruteira", value: "Fruteira" },
+                { label: "Higiêne", value: "Higiêne" },
+                { label: "Limpeza", value: "Limpeza" },
+                { label: "Mercearia", value: "Mercearia" },
+                { label: "Outros", value: "Outros" },
+              ]}
+            />
           </View>
 
           <TouchableOpacity onPress={() => filterSheetRef.current?.dismiss()} style={{ backgroundColor: "#9c44dc", borderRadius: 12, padding: 14, alignItems: "center", marginTop: 8 }}>

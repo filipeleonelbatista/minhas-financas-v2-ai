@@ -2,10 +2,9 @@ import React, { useEffect, useState, useRef } from "react";
 import { Feather } from "@expo/vector-icons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useIsFocused, useNavigation } from "@react-navigation/native";
-import * as FileSystem from "expo-file-system";
-import { Alert, Platform, ToastAndroid, useWindowDimensions, View, Text, FlatList, Image, TouchableOpacity } from "react-native";
+import { Platform, useWindowDimensions, View, Text, FlatList, Image, TouchableOpacity } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import Loading from "../components/Loading";
-import { useSettings } from "../hooks/useSettings";
 import CTA from "../components/ui/CTA";
 
 type Slide = {
@@ -22,11 +21,7 @@ export default function Onboarding(): React.JSX.Element {
   const { width } = useWindowDimensions();
   const navigation: any = useNavigation();
   const isFocused: boolean = useIsFocused();
-
-  const { selectedFolderToSave, handleUpdateSelectedFolderToSave } = useSettings() as {
-    selectedFolderToSave: string;
-    handleUpdateSelectedFolderToSave: (v: string) => Promise<void>;
-  };
+  const insets = useSafeAreaInsets();
 
   const [isOnboardingPassed, setIsOnboardingPassed] = useState<OnboardingStatus>("waiting");
   const [currentIndex, setCurrentIndex] = useState<number>(0);
@@ -85,31 +80,14 @@ export default function Onboarding(): React.JSX.Element {
   ];
 
   async function preleavingOnboarding(): Promise<void> {
-    if (Platform.OS !== 'android') {
-      await handleLeaveOnboarding();
-      return;
+    // SAF: pasta de exportação agora é solicitada sob demanda em Configurações/export,
+    // não bloqueia mais o onboarding. Mantido branch Platform.OS para iOS fallback documentDirectory.
+    if (Platform.OS === 'android') {
+      // SAF no Android será pedido lazy no export; não bloquear onboarding
+    } else {
+      // iOS usa documentDirectory direto
     }
-    Alert.alert(
-      "Antes de começar...",
-      `Precisamos definir um local onde vamos salvar as tabelas onde você pode acessar e compartilhar com seus amigos e familiares. confirme a solicitação a seguir e crie uma pasta para salvar se for necessário.`,
-      [
-        {
-          text: "Ok",
-          onPress: async (): Promise<void> => {
-            try {
-              const requestedDirPerm = await (FileSystem as any).StorageAccessFramework.requestDirectoryPermissionsAsync();
-              if (requestedDirPerm.granted) {
-                await handleUpdateSelectedFolderToSave(requestedDirPerm.directoryUri);
-                ToastAndroid.show("Pasta selecionada!", ToastAndroid.SHORT);
-              } else {
-                ToastAndroid.show("Pasta não selecionada, você pode configurar depois.", ToastAndroid.SHORT);
-              }
-            } catch {}
-            await handleLeaveOnboarding();
-          },
-        },
-      ]
-    );
+    await handleLeaveOnboarding();
   }
 
   async function handleLeaveOnboarding(): Promise<void> {
@@ -170,9 +148,9 @@ export default function Onboarding(): React.JSX.Element {
   const isLast: boolean = currentIndex === slides.length - 1;
 
   return (
-    <View className="flex-1 bg-purple-900" style={{ flex: 1, backgroundColor: "#581C87" }} testID="onboarding-container">
-      {/* Header Pular */}
-      <View className="flex-row justify-end px-4 pt-12" style={{ flexDirection: 'row', justifyContent: 'flex-end', paddingHorizontal: 16, paddingTop: 48 }}>
+    <View className="flex-1 bg-purple-900" style={{ flex: 1, backgroundColor: "#581C87", paddingTop: insets.top }} testID="onboarding-container">
+      {/* Header Pular - respeita safe area */}
+      <View className="flex-row justify-end px-4" style={{ flexDirection: 'row', justifyContent: 'flex-end', paddingHorizontal: 16, paddingTop: 12 + insets.top * 0.2, minHeight: 32 }}>
         {!isLast && (
           <TouchableOpacity
             onPress={handleSkip}
@@ -241,8 +219,8 @@ export default function Onboarding(): React.JSX.Element {
         ))}
       </View>
 
-      {/* CTA reacticx + Próximo / Vamos começar */}
-      <View className="px-6 pb-8 items-center" style={{ paddingHorizontal: 24, paddingBottom: 32, alignItems: 'center' }}>
+      {/* CTA reacticx + Próximo / Vamos começar - respeita safe area bottom */}
+      <View className="px-6 items-center" style={{ paddingHorizontal: 24, paddingBottom: Math.max(16, insets.bottom + 16), alignItems: 'center' }}>
         <CTA
           testID="onboarding-cta"
           onPress={handleNext}

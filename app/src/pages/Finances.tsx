@@ -18,7 +18,6 @@ import {
   MaterialCommunityIcons,
 } from "@expo/vector-icons";
 import { openThemedDatePicker } from "../utils/datePicker";
-import { Picker } from "@react-native-picker/picker";
 import { useIsFocused, useNavigation } from "@react-navigation/native";
 import dayjs from "dayjs";
 import isSameOrAfter from "dayjs/plugin/isSameOrAfter";
@@ -37,6 +36,8 @@ import AIComponent from "../components/AIComponent";
 import { Sheet, useSheetRef } from "../components/nativewindui/Sheet";
 import { BottomSheetScrollView } from "@gorhom/bottom-sheet";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { usePagesStore } from "../stores/pages";
+import ThemedPicker from "../components/ui/ThemedPicker";
 import type { FinanceRow } from "../repositories/finance";
 
 dayjs.extend(isSameOrAfter);
@@ -132,12 +133,14 @@ export default function Finances(): React.JSX.Element {
   const navigation: any = useNavigation();
   const isFocused: boolean = useIsFocused();
 
+  const { setSelectedSheet } = usePagesStore();
+  useEffect(() => {
+    if (isFocused) setSelectedSheet("Finanças");
+  }, [isFocused, setSelectedSheet]);
+
   useEffect(() => {
     load();
   }, []);
-
-  // Pages context replacement: track selectedSheet via simple store or just ignore
-  // Keep for FAB: we skip setSelectedSheet
 
   const isKeyboardOpen: boolean = useIsKeyboardOpen();
   const { height } = useWindowDimensions();
@@ -307,16 +310,6 @@ export default function Finances(): React.JSX.Element {
           </View>
         </View>
 
-        {isTitheMenuEnabled && (
-          <View testID="finances-tithe-monthly" style={{ marginHorizontal:16, marginTop:12, backgroundColor: "#f3e8ff", borderRadius:12, padding:12, borderWidth:1, borderColor:"#e9d5ff" }}>
-            <Text style={{ fontWeight:"700", color:"#581C87" }}>Dízimo devido: {Tithe.toLocaleString("pt-BR",{style:"currency",currency:"BRL"})}</Text>
-            <View style={{ flexDirection:"row", gap:8, marginTop:8 }}>
-              <TouchableOpacity testID="finances-tithe-config" onPress={() => navigation.navigate("TitheSettings")} style={{ flex:1, backgroundColor:"#9c44dc", borderRadius:8, padding:10, alignItems:"center" }}><Text style={{ color:"white", fontWeight:"700" }}>Configurar</Text></TouchableOpacity>
-              <TouchableOpacity testID="finances-tithe-pay" onPress={() => navigation.navigate("TitheSettings")} style={{ flex:1, backgroundColor:"white", borderWidth:1, borderColor:"#9c44dc", borderRadius:8, padding:10, alignItems:"center" }}><Text style={{ color:"#9c44dc", fontWeight:"700" }}>Pagar</Text></TouchableOpacity>
-            </View>
-          </View>
-        )}
-
         {filteredList.length > 0 && (
           <TextInput
             placeholder="Pesquise os itens..."
@@ -428,24 +421,34 @@ export default function Finances(): React.JSX.Element {
             </View>
           </View>
 
-          <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
-            <Text style={{ color: text, fontSize: 16, fontWeight: "700" }}>Entradas/Saídas</Text>
-            <Picker selectedValue={selectedtypeofpayment} onValueChange={(itemValue: string) => setselectedtypeofpayment(itemValue)} mode="dropdown" dropdownIconColor={PURPLE_600} enabled style={{ width: "50%", borderRadius: 4, color: text }}>
-              <Picker.Item label="Todas" value="0" />
-              <Picker.Item label="Entradas" value="1" />
-              <Picker.Item label="Saídas" value="2" />
-            </Picker>
+          <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", gap: 12 }}>
+            <Text style={{ color: text, fontSize: 16, fontWeight: "700", flexShrink: 1 }}>Entradas/Saídas</Text>
+            <View style={{ flex: 1, maxWidth: 160 }}>
+              <ThemedPicker
+                testID="finances-tipo-picker"
+                selectedValue={selectedtypeofpayment}
+                onValueChange={(v: string) => setselectedtypeofpayment(v)}
+                items={[
+                  { label: "Todas", value: "0" },
+                  { label: "Entradas", value: "1" },
+                  { label: "Saídas", value: "2" },
+                ]}
+              />
+            </View>
           </View>
 
           {!simpleFinancesItem && (
             <>
-              <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
-                <Text style={{ color: text, fontSize: 16, fontWeight: "700" }}>Categoria de gastos</Text>
-                <Picker selectedValue={selectedPaymentCategory} onValueChange={(itemValue: string) => setSelectedPaymentCategory(itemValue)} mode="dropdown" dropdownIconColor={PURPLE_600} enabled style={{ width: "50%", borderRadius: 4, color: text }}>
-                  {categoriesList.map((cat: string, index: number) => (
-                    <Picker.Item key={index} label={cat} value={cat} />
-                  ))}
-                </Picker>
+              <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", gap: 12 }}>
+                <Text style={{ color: text, fontSize: 16, fontWeight: "700", flexShrink: 1 }}>Categoria de gastos</Text>
+                <View style={{ flex: 1, minWidth: 0 }}>
+                  <ThemedPicker
+                    testID="finances-categoria-picker"
+                    selectedValue={selectedPaymentCategory}
+                    onValueChange={(v: string) => setSelectedPaymentCategory(v)}
+                    items={categoriesList.map((cat: string) => ({ label: cat, value: cat }))}
+                  />
+                </View>
               </View>
               <View style={{ gap: 8 }}>
                 <Text style={{ color: text, fontSize: 16, fontWeight: "700" }}>Status de pagamento</Text>

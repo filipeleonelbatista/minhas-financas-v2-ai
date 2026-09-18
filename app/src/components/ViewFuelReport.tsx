@@ -2,8 +2,8 @@
 import React from "react";
 import { View, Text, TextInput, ScrollView, Pressable } from "react-native";
 import { Feather } from "@expo/vector-icons";
-import { Picker } from "@react-native-picker/picker";
 import { useSettingsStore } from "../stores/settings";
+import ThemedPicker from "./ui/ThemedPicker";
 
 const PURPLE_600 = "#9c44dc";
 
@@ -76,27 +76,23 @@ export default function ViewFuelReport({ selectedValue }) {
       </View>
       <View style={{ gap: 8, marginBottom: 8 }}>
         <Text style={{ color: text }}>Tipo do combustivel</Text>
-        <Picker
+        <ThemedPicker
+          testID="fuel-type-view"
           selectedValue={selectedValue.type ?? "Gasolina comum"}
-          mode="dropdown"
-          dropdownIconColor={PURPLE_600}
+          onValueChange={() => {}}
           enabled={false}
-          style={{
-            width: "100%",
-            borderRadius: 4,
-            color: text,
-          }}
-        >
-          <Picker.Item label="Gasolina comum" value="Gasolina comum" />
-          <Picker.Item label="Gasolina aditivada" value="Gasolina aditivada" />
-          <Picker.Item label="Etanol" value="Etanol" />
-          <Picker.Item label="Etanol aditivada" value="Etanol aditivada" />
-          <Picker.Item label="Carga elétrica" value="Carga elétrica" />
-          <Picker.Item label="GNV" value="GNV" />
-          <Picker.Item label="Dísel" value="Dísel" />
-          <Picker.Item label="Dísel-S10" value="Dísel-S10" />
-          <Picker.Item label="Dísel aditivado" value="Dísel aditivado" />
-        </Picker>
+          items={[
+            { label: "Gasolina comum", value: "Gasolina comum" },
+            { label: "Gasolina aditivada", value: "Gasolina aditivada" },
+            { label: "Etanol", value: "Etanol" },
+            { label: "Etanol aditivada", value: "Etanol aditivada" },
+            { label: "Carga elétrica", value: "Carga elétrica" },
+            { label: "GNV", value: "GNV" },
+            { label: "Dísel", value: "Dísel" },
+            { label: "Dísel-S10", value: "Dísel-S10" },
+            { label: "Dísel aditivado", value: "Dísel aditivado" },
+          ]}
+        />
       </View>
 
       <View style={{ gap: 8, marginBottom: 8 }}>

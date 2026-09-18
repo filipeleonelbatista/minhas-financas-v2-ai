@@ -12,5 +12,7 @@ module.exports = {
     "^.*/components/ui/morph-fab.*$": "<rootDir>/__mocks__/morphFabMock.js",
     "^.*/components/ui/border-beam.*$": "<rootDir>/__mocks__/borderBeamMock.js",
     "^.*/components/organisms/theme-switch.*$": "<rootDir>/__mocks__/themeSwitchMock.js",
+    "^expo-blur$": "<rootDir>/__mocks__/blurMock.js",
+    "^expo-linear-gradient$": "<rootDir>/__mocks__/linearGradientMock.js",
   },
 };

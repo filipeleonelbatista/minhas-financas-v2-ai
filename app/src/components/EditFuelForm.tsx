@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from "react";
 import { Feather } from "@expo/vector-icons";
 import { openThemedDatePicker } from "../utils/datePicker";
-import { Picker } from "@react-native-picker/picker";
 import { useFormik } from "formik";
+import ThemedPicker from "./ui/ThemedPicker";
 import { View, Text, TextInput, ScrollView, Pressable, TouchableOpacity } from "react-native";
 import { useRunsStore } from "../stores/runs";
 import { useSettingsStore } from "../stores/settings";
@@ -175,10 +175,14 @@ export default function EditFuelForm({ onClose, selectedRun, initialEditable = f
       <TextInput editable={isEditable} keyboardType="decimal-pad" placeholder="Valor pago" placeholderTextColor="#a1a1aa" onChangeText={(t) => formik.setFieldValue("amount", moeda(t))} value={formik.values.amount} style={{ color: text, backgroundColor: isDark ? "#3f3f46" : "white", borderWidth: 1, borderColor: isDark ? "#3f3f46" : "#d4d4d8", borderRadius: 8, paddingHorizontal: 12, paddingVertical: 10, opacity: isEditable ? 1 : 0.6, marginBottom: 12 }} />
 
       <Text style={{ fontSize: 14, fontWeight: "600", color: text, marginBottom: 4 }}>Tipo do combustível</Text>
-      <View style={{ borderWidth: 1, borderColor: isDark ? "#3f3f46" : "#e4e4e7", borderRadius: 12, overflow: "hidden", backgroundColor: isDark ? "#27272a" : "white", opacity: isEditable ? 1 : 0.6, marginBottom: 12 }}>
-        <Picker selectedValue={formik.values.type} onValueChange={(v) => formik.setFieldValue("type", v)} mode="dropdown" dropdownIconColor={PURPLE_600} enabled={isEditable} style={{ width: "100%", color: text, height: 48 }}>
-          {types.map((t) => <Picker.Item key={t} label={t} value={t} />)}
-        </Picker>
+      <View style={{ opacity: isEditable ? 1 : 0.6, marginBottom: 12 }}>
+        <ThemedPicker
+          testID="fuel-type-edit"
+          selectedValue={formik.values.type}
+          onValueChange={(v: string) => formik.setFieldValue("type", v)}
+          enabled={isEditable}
+          items={types.map((t) => ({ label: t, value: t }))}
+        />
       </View>
 
       <Text style={{ fontSize: 14, fontWeight: "600", color: text, marginBottom: 4 }}>Data do abastecimento</Text>

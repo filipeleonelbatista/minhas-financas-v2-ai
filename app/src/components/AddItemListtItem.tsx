@@ -3,7 +3,7 @@ import React, { useMemo } from "react";
 import { View, Text, TextInput, ScrollView, Pressable, TouchableOpacity, ToastAndroid } from "react-native";
 import { Feather } from "@expo/vector-icons";
 import { openThemedDatePicker } from "../utils/datePicker";
-import { Picker } from "@react-native-picker/picker";
+import ThemedPicker from "./ui/ThemedPicker";
 import { useFormik } from "formik"
 import { z } from "zod";
 import { stockSchema } from "../schemas/stock.zod";;
@@ -129,28 +129,20 @@ export default function AddItemListItem({ onClose }) {
       )}
 
       <Text style={{ fontSize: 14, fontWeight: "600", color: text, marginBottom: 4 }}>Categoria</Text>
-      <View style={{ borderWidth: 1, borderColor: isDark ? "#3f3f46" : "#e4e4e7", borderRadius: 12, overflow: "hidden", backgroundColor: isDark ? "#27272a" : "white", marginBottom: 12 }}>
-        <Picker
+      <View style={{ marginBottom: 12 }}>
+        <ThemedPicker
+          testID="add-list-item-category"
           selectedValue={formik.values.category ?? "Mercearia"}
-          onValueChange={(itemValue) =>
-            formik.setFieldValue("category", itemValue)
-          }
-          mode="dropdown"
-          dropdownIconColor={PURPLE_600}
-          enabled
-          style={{
-            width: "100%",
-            color: text,
-            height: 48,
-          }}
-        >
-          <Picker.Item label="Carnes" value="Carnes" />
-          <Picker.Item label="Fruteira" value="Fruteira" />
-          <Picker.Item label="Higiêne" value="Higiêne" />
-          <Picker.Item label="Limpeza" value="Limpeza" />
-          <Picker.Item label="Mercearia" value="Mercearia" />
-          <Picker.Item label="Outros" value="Outros" />
-        </Picker>
+          onValueChange={(v: string) => formik.setFieldValue("category", v)}
+          items={[
+            { label: "Carnes", value: "Carnes" },
+            { label: "Fruteira", value: "Fruteira" },
+            { label: "Higiêne", value: "Higiêne" },
+            { label: "Limpeza", value: "Limpeza" },
+            { label: "Mercearia", value: "Mercearia" },
+            { label: "Outros", value: "Outros" },
+          ]}
+        />
       </View>
       {formik.errors.category && (
         <Text style={{ color: "#dc2626", marginBottom: 8 }}>{formik.errors.category}</Text>

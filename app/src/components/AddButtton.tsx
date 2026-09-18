@@ -80,7 +80,7 @@ export default function AddButton() {
       default:
         return <AddItemForm onClose={onClose} />;
     }
-  }, [selectedSheet]);
+  }, [selectedSheet, onClose]);
 
   const fabSize = 64;
   const FabContent = (

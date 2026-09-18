@@ -1,8 +1,8 @@
 import React, { useMemo } from "react";
 import { Feather } from "@expo/vector-icons";
 import { openThemedDatePicker } from "../utils/datePicker";
-import { Picker } from "@react-native-picker/picker";
 import { useFormik } from "formik";
+import ThemedPicker from "./ui/ThemedPicker";
 import { View, Text, TextInput, ScrollView, Pressable, TouchableOpacity, Switch } from "react-native";
 import { useFinanceStore } from "../stores/finance";
 import { useSettingsStore, type SettingsState } from "../stores/settings";
@@ -281,27 +281,13 @@ export default function AddItemForm({ onClose }: AddItemFormProps): React.JSX.El
       {!simpleFinancesItem && (
         <>
           <Text style={{ fontSize: 14, fontWeight: "600", color: text, marginBottom: 4 }}>Categoria</Text>
-          <View style={{ borderWidth: 1, borderColor: isDark ? "#3f3f46" : "#e4e4e7", borderRadius: 12, overflow: "hidden", backgroundColor: isDark ? "#27272a" : "white", marginBottom: 12 }}>
-            <Picker
+          <View style={{ marginBottom: 12 }}>
+            <ThemedPicker
+              testID="add-category-picker"
               selectedValue={formik.values.category ?? "Outros"}
-              onValueChange={(itemValue: string) =>
-                formik.setFieldValue("category", itemValue)
-              }
-              mode="dropdown"
-              dropdownIconColor={PURPLE_600}
-              enabled
-              style={{
-                width: "100%",
-                color: text,
-                height: 48,
-              }}
-            >
-              {categoriesList.map((cat: string, index: number) =>
-                index === 0 ? null : (
-                  <Picker.Item key={index} label={cat} value={cat} />
-                )
-              )}
-            </Picker>
+              onValueChange={(v: string) => formik.setFieldValue("category", v)}
+              items={categoriesList.filter((_, i) => i !== 0).map((cat: string) => ({ label: cat, value: cat }))}
+            />
           </View>
           {formik.errors.category && (
             <Text style={{ color: "#dc2626", marginBottom: 8 }}>{formik.errors.category}</Text>

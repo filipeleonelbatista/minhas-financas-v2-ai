@@ -1,8 +1,8 @@
 import React from "react";
 import { Feather } from "@expo/vector-icons";
 import { openThemedDatePicker } from "../utils/datePicker";
-import { Picker } from "@react-native-picker/picker";
 import { useFormik } from "formik";
+import ThemedPicker from "./ui/ThemedPicker";
 import { View, Text, TextInput, ScrollView, Pressable, TouchableOpacity } from "react-native";
 import { useRunsStore } from "../stores/runs";
 import { useSettingsStore, type SettingsState } from "../stores/settings";
@@ -256,31 +256,23 @@ export default function AddFuelForm({ onClose }: AddFuelFormProps): React.JSX.El
         <Text style={{ color: "#dc2626", marginBottom: 8 }}>{formik.errors.amount}</Text>
       )}
       <Text style={{ fontSize: 14, fontWeight: "600", color: text, marginBottom: 4 }}>Tipo do combustível</Text>
-      <View style={{ borderWidth: 1, borderColor: isDark ? "#3f3f46" : "#e4e4e7", borderRadius: 12, overflow: "hidden", backgroundColor: isDark ? "#27272a" : "white", marginBottom: 12 }}>
-        <Picker
+      <View style={{ marginBottom: 12 }}>
+        <ThemedPicker
+          testID="fuel-type-add"
           selectedValue={formik.values.type ?? "Gasolina comum"}
-          onValueChange={(itemValue: string) =>
-            formik.setFieldValue("type", itemValue)
-          }
-          mode="dropdown"
-          dropdownIconColor={PURPLE_600}
-          enabled
-          style={{
-            width: "100%",
-            color: text,
-            height: 48,
-          }}
-        >
-          <Picker.Item label="Gasolina comum" value="Gasolina comum" />
-          <Picker.Item label="Gasolina aditivada" value="Gasolina aditivada" />
-          <Picker.Item label="Etanol" value="Etanol" />
-          <Picker.Item label="Etanol aditivada" value="Etanol aditivada" />
-          <Picker.Item label="Carga elétrica" value="Carga elétrica" />
-          <Picker.Item label="GNV" value="GNV" />
-          <Picker.Item label="Dísel" value="Dísel" />
-          <Picker.Item label="Dísel-S10" value="Dísel-S10" />
-          <Picker.Item label="Dísel aditivado" value="Dísel aditivado" />
-        </Picker>
+          onValueChange={(v: string) => formik.setFieldValue("type", v)}
+          items={[
+            { label: "Gasolina comum", value: "Gasolina comum" },
+            { label: "Gasolina aditivada", value: "Gasolina aditivada" },
+            { label: "Etanol", value: "Etanol" },
+            { label: "Etanol aditivada", value: "Etanol aditivada" },
+            { label: "Carga elétrica", value: "Carga elétrica" },
+            { label: "GNV", value: "GNV" },
+            { label: "Dísel", value: "Dísel" },
+            { label: "Dísel-S10", value: "Dísel-S10" },
+            { label: "Dísel aditivado", value: "Dísel aditivado" },
+          ]}
+        />
       </View>
       {formik.errors.type && (
         <Text style={{ color: "#dc2626", marginBottom: 8 }}>{formik.errors.type}</Text>

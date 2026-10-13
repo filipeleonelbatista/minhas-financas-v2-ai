@@ -5,6 +5,8 @@
 </br>
 </br>
 
+<img width="100%" src="web/public/banner.png">
+
 # Minhas Finanças v2 — AI
 
 > Monorepo: app Expo offline-first + web PWA em paridade total + docs com landing estática e APK. Stack: Expo SDK 57 • RN 0.86.3 • React 19 • NativeWind 4.1 • expo-sqlite + drizzle-orm • Zustand 5 (stores, sem Context) • TypeScript strict • Firebase (Fase 2).

@@ -5,6 +5,8 @@
 </br>
 </br>
 
+<img width="100%" src="../web/public/banner.png">
+
 # Minhas Finanças — Mobile App (Expo)
 
 > Offline-first Expo app, source of truth of the monorepo. Stack: Expo SDK 57 • RN 0.86.3 • React 19.2 • NativeWind 4.1 • expo-sqlite + drizzle-orm • Zustand 5 (stores, no Context) • strict TypeScript.

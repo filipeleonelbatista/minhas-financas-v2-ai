@@ -21,6 +21,7 @@ type FinanceState = {
   add: (dto: unknown) => Promise<FinanceItem>;
   update: (id: string, dto: unknown) => Promise<FinanceItem | null>;
   remove: (idOrDto: string | { id: string }) => Promise<void>;
+  clear: () => Promise<void>;
   handleFavorite: (idOrDto: string | { id: string }) => Promise<void>;
   setSearch: (v: string) => void;
   setSelectedCategory: (v: string) => void;
@@ -73,6 +74,11 @@ export const useFinanceStore = create<FinanceState>((set, get) => ({
 
   load: async () => {
     set({ transactionsList: coerceList(readJSON(STORAGE_KEYS.finances, [])) });
+  },
+
+  clear: async () => {
+    persist([]);
+    set({ transactionsList: [] });
   },
 
   add: async (dto: unknown) => {

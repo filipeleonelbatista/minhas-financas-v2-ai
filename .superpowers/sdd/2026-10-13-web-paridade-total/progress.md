@@ -30,4 +30,8 @@ Task 5: note: testes de fluxo das stores passaram de primeira (código da Task 2
 
 Task 6: complete (base 44c558e, tests: full suite 6 files → 37/37 pass; `npx vite build` verde)
 Task 6: note: teste de fallback precisou de `setFallbackOrder(["gemini"])` — sem ordem, só o ativo é tentado (semântica correta do mobile). Reenvio automático ao trocar de modelo (mobile) não portado — histórico em sessão + presets cobrem. Header ganhou item IA.
-- [ ] Task 7: Forms RHF+zod + limpeza
+- [x] Task 7: Forms RHF+zod + limpeza
+
+Task 7: complete (base 580921b, tests: full suite 8 files → 44/44 pass; `npm run lint` 0 erros/warnings; `npm run build` verde incluindo tsc -b)
+Task 7: Ruling: contexts viraram adapters tipados sobre as stores (não rewrite das 5 páginas legadas) — migração one-shot das chaves antigas p/ mf-db-v1 sem perda; delete-toasts só disparam com confirm (corrige bug legado). Custo se errado: divergência mobile mínima; nenhuma.
+Task 7: Ruling: zod 3.25 refine() estreita output de nullable (Date|null→Date), incompatível com defaults RHF nas versões instaladas — required-date via submit guard + setError. Deps dayjs/uuid/formik/yup removidas (grep zero imports). Anotações `any` explícitas em páginas legadas = dívida documentada, não padrão novo.

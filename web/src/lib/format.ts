@@ -27,6 +27,20 @@ export function tsToDateInput(ts: number): string {
   return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
 }
 
+/** Date → "DD/MM/YYYY" (período dos filtros). */
+export function formatPeriodDate(d: Date): string {
+  const pad = (n: number) => String(n).padStart(2, "0");
+  return `${pad(d.getDate())}/${pad(d.getMonth() + 1)}/${d.getFullYear()}`;
+}
+
+/** "DD/MM/YYYY" → Date meia-noite local (null se inválida). */
+export function parsePeriodDate(s: string): Date | null {
+  const m = /^(\d{2})\/(\d{2})\/(\d{4})$/.exec((s ?? "").trim());
+  if (!m) return null;
+  const d = new Date(Number(m[3]), Number(m[2]) - 1, Number(m[1]));
+  return Number.isNaN(d.getTime()) ? null : d;
+}
+
 /** timestamp de criação (mobile soma offset 12h; no web os inputs já caem meio-dia local). */
 export function nowTs(): number {
   return Date.now();

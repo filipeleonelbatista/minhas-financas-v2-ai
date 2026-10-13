@@ -4,6 +4,7 @@ import Dashboard from "./pages/Dashboard";
 import Financas from "./pages/Financas";
 import Goals from "./pages/Goals";
 import IAPage from "./pages/IAPage";
+import NotFound from "./pages/NotFound";
 import ListDetail from "./pages/ListDetail";
 import Lists from "./pages/Lists";
 import Reports from "./pages/Reports";
@@ -31,7 +32,7 @@ export default function App() {
         <Route path="/lists/:id" element={<ListDetail />} />
         <Route path="/tithe" element={<TitheSettings />} />
 
-        {/* <Route path="*" element={<NotFound />} /> */}
+        <Route path="*" element={<NotFound />} />
       </Routes>
     </BrowserRouter>
   );

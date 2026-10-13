@@ -45,6 +45,8 @@ export const financeSchema = z.object({
   }),
   date: z.number().int().positive(),
   paymentDate: z.number().int().nullable().optional(),
+  // `about` é legado do web (notas livres) — opcional, preservado nas stores.
+  about: z.string().max(500).optional(),
   paymentStatus: booleanFlag,
   isEnabled: booleanFlag,
   isFavorited: booleanFlag,

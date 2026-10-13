@@ -41,17 +41,17 @@ beforeEach(() => {
 describe("dashboard selectors", () => {
   it("calcHero soma entradas/saídas/saldo", () => {
     const hero = calcHero([
-      { ...tx({ amount: 200 }), id: "a" },
-      { ...tx({ amount: 50, isEnabled: true, category: "Mercado" }), id: "b" },
+      { ...tx({ amount: 200 }) },
+      { ...tx({ amount: 50, isEnabled: true, category: "Mercado" }) },
     ]);
     expect(hero).toEqual({ incomings: 200, expenses: 50, saldo: 150 });
   });
 
   it("expensesByCategory agrega só saídas", () => {
     const by = expensesByCategory([
-      { ...tx({ amount: 200 }), id: "a" },
-      { ...tx({ amount: 30, isEnabled: true, category: "Mercado" }), id: "b" },
-      { ...tx({ amount: 20, isEnabled: true, category: "Mercado" }), id: "c" },
+      { ...tx({ amount: 200 }) },
+      { ...tx({ amount: 30, isEnabled: true, category: "Mercado" }) },
+      { ...tx({ amount: 20, isEnabled: true, category: "Mercado" }) },
     ]);
     expect(by).toEqual([{ category: "Mercado", total: 50 }]);
   });
@@ -60,8 +60,8 @@ describe("dashboard selectors", () => {
     const jan = new Date(2026, 0, 10, 12).getTime();
     const buckets = last6Months(
       [
-        { ...tx({ amount: 300, date: jan }), id: "a" },
-        { ...tx({ amount: 40, isEnabled: true, category: "Mercado", date: NOW }), id: "b" },
+        { ...tx({ amount: 300, date: jan }) },
+        { ...tx({ amount: 40, isEnabled: true, category: "Mercado", date: NOW }) },
       ],
       NOW
     );
@@ -142,3 +142,4 @@ describe("fluxos de paridade via stores", () => {
     expect(useSettingsStore.getState().tithePayments).toHaveLength(1);
   });
 });
+

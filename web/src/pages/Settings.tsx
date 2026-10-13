@@ -1,6 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
+import type { ChangeEvent } from "react";
 import { Label } from "@radix-ui/react-label";
 import { readAndParseCsvFile } from "@/utils/csv";
 import { FaRegFileLines } from "react-icons/fa6";
@@ -63,7 +64,7 @@ function Settings() {
 
     const csvContent = [
       headers.join(','),
-      ...transactionsList.map(obj => `${obj.id},${obj._status ?? ""},${obj._changed ?? ""},${obj.description},${obj.amount},${obj.category},${new Date(obj.date).getTime()},${obj.paymentDate === "" ? obj.paymentDate : new Date(obj.paymentDate).getTime()},${obj.paymentStatus ? "1" : "0"},${obj.isEnabled ? "1" : "0"},${obj.isFavorited ? "1" : "0"}`)
+      ...transactionsList.map(obj => `${obj.id},${obj._status ?? ""},${obj._changed ?? ""},${obj.description},${obj.amount},${obj.category},${new Date(obj.date).getTime()},${obj.paymentDate instanceof Date ? new Date(obj.paymentDate).getTime() : ""},${obj.paymentStatus ? "1" : "0"},${obj.isEnabled ? "1" : "0"},${obj.isFavorited ? "1" : "0"}`)
     ].join('\n');
     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
 
@@ -84,7 +85,7 @@ function Settings() {
     }
   }
 
-  const handleArquivoChange = async (event) => {
+  const handleArquivoChange = async (event: ChangeEvent<HTMLInputElement>) => {
     const arquivoSelecionado = event.target.files?.[0];
 
     if (!arquivoSelecionado) {
@@ -160,7 +161,7 @@ function Settings() {
     }
   }
 
-  const handleArquivoChangeStock = async (event) => {
+  const handleArquivoChangeStock = async (event: ChangeEvent<HTMLInputElement>) => {
     const arquivoSelecionado = event.target.files?.[0];
 
     if (!arquivoSelecionado) {
@@ -234,7 +235,7 @@ function Settings() {
     }
   }
 
-  const handleArquivoChangeRuns = async (event) => {
+  const handleArquivoChangeRuns = async (event: ChangeEvent<HTMLInputElement>) => {
     const arquivoSelecionado = event.target.files?.[0];
 
     if (!arquivoSelecionado) {
@@ -433,3 +434,5 @@ function Settings() {
 }
 
 export default Settings;
+
+

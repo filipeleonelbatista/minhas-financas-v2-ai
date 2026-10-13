@@ -13,6 +13,7 @@ type MarketState = {
   add: (dto: unknown) => Promise<StockRow>;
   update: (id: string, dto: unknown) => Promise<StockRow | null>;
   remove: (id: string) => Promise<void>;
+  clear: () => Promise<void>;
   setSearch: (v: string) => void;
   setSelectedCategory: (v: string) => void;
   getFiltered: () => StockRow[];
@@ -38,6 +39,11 @@ export const useMarketStore = create<MarketState>((set, get) => ({
 
   load: async () => {
     set({ stockList: coerceList(readJSON(STORAGE_KEYS.stock, [])) });
+  },
+
+  clear: async () => {
+    writeJSON(STORAGE_KEYS.stock, []);
+    set({ stockList: [] });
   },
 
   add: async (dto: unknown) => {

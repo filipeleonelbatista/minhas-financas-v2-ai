@@ -24,7 +24,7 @@ export type SettingsState = ConfigZod & {
   markAsPaid: (month: number, year: number) => Promise<TithePayment>;
 };
 
-function getInitialColorMode(): string {
+function getInitialColorMode(): "light" | "dark" {
   try {
     if (
       typeof window !== "undefined" &&
@@ -39,7 +39,7 @@ function getInitialColorMode(): string {
   return "light";
 }
 
-function coerceConfig(raw: unknown, fallbackMode: string): ConfigZod {
+function coerceConfig(raw: unknown, fallbackMode: "light" | "dark"): ConfigZod {
   const defaults = configSchema.parse({});
   try {
     const merged =
@@ -73,7 +73,19 @@ function parseTitheCategories(raw: string): string[] {
 }
 
 function persistConfig(s: SettingsState): void {
-  const { tithePayments: _omit, load: _l, toggleColorMode: _t, setColorMode: _s, update: _u, getTitheCategories: _g, getMonthlyTithePreview: _p, markAsPaid: _m, ...config } = s;
+  const config = { ...(s as unknown as Record<string, unknown>) };
+  for (const k of [
+    "tithePayments",
+    "load",
+    "toggleColorMode",
+    "setColorMode",
+    "update",
+    "getTitheCategories",
+    "getMonthlyTithePreview",
+    "markAsPaid",
+  ]) {
+    delete config[k];
+  }
   writeJSON(STORAGE_KEYS.config, config);
 }
 

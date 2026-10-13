@@ -27,6 +27,7 @@ type RunsState = {
   add: (dto: unknown) => Promise<RunRow>;
   update: (id: string, dto: unknown) => Promise<RunRow | null>;
   remove: (idOrDto: string | { id: string }) => Promise<void>;
+  clear: () => Promise<void>;
   getEstimative: (veicleAutonomy: number | string) => number;
   calcEstimative: (run: RunRow | null | undefined, veicleAutonomy: number | string) => number;
 };
@@ -49,6 +50,11 @@ export const useRunsStore = create<RunsState>((set, get) => ({
 
   load: async () => {
     set({ runsList: coerceList(readJSON(STORAGE_KEYS.runs, [])) });
+  },
+
+  clear: async () => {
+    writeJSON(STORAGE_KEYS.runs, []);
+    set({ runsList: [] });
   },
 
   add: async (dto: unknown) => {

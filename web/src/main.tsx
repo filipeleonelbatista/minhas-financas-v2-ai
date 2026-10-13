@@ -5,6 +5,7 @@ import "./global.css";
 
 import { ThemeProvider } from "@/components/theme-provider";
 import { ReloadPrompt } from "@/components/ReloadPrompt";
+import { StoreSync } from "@/components/StoreSync";
 import { PaymentsContextProvider } from "./context/PaymentsContext";
 import { Toaster } from "@/components/ui/toaster"
 import { StockContextProvider } from "./context/StockContext.tsx";
@@ -18,6 +19,7 @@ ReactDOM.createRoot(document.getElementById("root")!).render(
         <PaymentsContextProvider>
           <RunsContextProvider>
             <StockContextProvider>
+              <StoreSync />
               <App />
               <Toaster />
               <ReloadPrompt />

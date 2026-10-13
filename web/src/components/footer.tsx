@@ -7,7 +7,7 @@ function Footer() {
         <Ad />
       </div>
       <footer className="bottom-0 p-4 flex flex-col items-center space-y-1">
-        <p>Ver.: 1.4.4</p>
+        <p>Ver.: 1.4.5</p>
         <nav className="flex flex-wrap items-center justify-center gap-x-4 gap-y-1 text-xs">
           <a
             className="text-purple-600 font-semibold"

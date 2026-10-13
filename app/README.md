@@ -1,193 +1,155 @@
-# Financas App v2.3.0 — Fase 1 (NativeWind + expo-sqlite) + Gaps 9/9
+<a href="https://github.com/filipeleonelbatista/minhas-financas-v2-ai/blob/main/app/README_EN.md" target="_blank">
+  <img src="https://raw.githubusercontent.com/filipeleonelbatista/filipeleonelbatista/master/assets/usa_flag.png" width="28px" />
+  Version in English
+</a>
+</br>
+</br>
 
-> **Status 2026-10-13: Fase 1 100% + TS strict — 35 suites 187 testes PASS** (ver `../docs/documentacao/project-status.md`). `app/` **Managed** offline-first (WatermelonDB/NativeBase/Tour/Reports removidos — Dashboard é a tela oficial de gráficos). `com.finances` `2.3.1` (`versionCode 231`, `compileSdk 36/targetSdk 36`, Expo SDK 57, RN 0.86.3).
+# Minhas Finanças — App Mobile (Expo)
 
-> 📚 **Dossiê:** `../docs/documentacao/DOSSIE.md` (stacks/telas/schemas) • **Roadmap:** `../docs/documentacao/ROADMAP.md` (Fase 1 ✅) • **Spec:** `../docs/documentacao/superpowers/specs/2026-08-28-fase1-redesign-offline-design.md` + `../docs/documentacao/superpowers/plans/2026-09-03-fase1-gaps.md` • **Status:** `../docs/documentacao/project-status.md`
-> 🤖 **Guia para agentes/LLM:** `AGENTS.md` (regras, SOLID/TDD, quality gate `test:security`)
+> App Expo offline-first, fonte da verdade do monorepo. Stack: Expo SDK 57 • RN 0.86.3 • React 19.2 • NativeWind 4.1 • expo-sqlite + drizzle-orm • Zustand 5 (stores, sem Context) • TypeScript strict.
 
-> **Gaps entregues 2026-09-03 + ajustes 2026-10-13:** splash gate `SplashScreen.preventAutoHideAsync` + `Promise.all` stores, biometria `Privacidade` switch `biometry-switch` com guard `isBiometricAvailable`, dízimo `tithePercent/titheCategories` no hero + header `heart` (`header-tithe-heart`) + card mensal `finances-tithe-monthly` (CTAs Configurar/Pagar), SAF iOS branch `Platform.OS === 'android'`, `openai ^4.28.0`, fallbacks Gemini vivos (`3.8-flash` + migração). Tour spotlight e tela Reports dedicada **removidos de escopo** — Dashboard (painel Início) é a tela oficial de gráficos.
+> **Status 2026-10-13:** Fase 1 100% — `tsc` 0 errors, `eslint` 0 warnings, **35 suites / 191 testes PASS**. Versão **2.3.1 (versionCode 231)** em `app.json`. Tour spotlight e tela Reports dedicada removidos de escopo — Dashboard (painel Início) é a tela oficial de gráficos.
+
+[Site online](https://minhasfinancas.vercel.app/)
+[Link do Aplicativo na Google Play](https://play.google.com/store/apps/details?id=com.finances)
+
+# Indice
+
+- [Sobre](#-sobre)
+- [Objetivo](#objetivo)
+- [Tecnologias](#tecnologias)
+- [Instalação](#instalação)
+- [API da OpenAI](#api-da-openai)
+- [Estrutura e Scripts](#estrutura-e-scripts)
+- [Docs](#docs)
+
+## 🔖&nbsp; Sobre
+
+Aplicativo para gerenciar as finanças da minha família. Com este app eu gerencio entradas e saídas das contas, controle de
+estoque de produtos da casa e hodômetro do carro para acompanhar os custos de abastecimento. Na parte das contas tem uma
+integração com a OpenAI para gerar análises baseadas nos dados inseridos pelo usuário.
+
+Este é o app mobile do monorepo [Minhas Finanças v2 — AI](../README.md): 7 domínios offline — Dashboard Início, Finanças,
+Mercado/Estoque, Listas 2 níveis, Corridas, Metas, Dízimo JFA e Config. O `web/` replica estas mesmas regras em PWA.
+
+[Link do Site](https://minhasfinancas.vercel.app/)
+[Link do Aplicativo na Google Play](https://play.google.com/store/apps/details?id=com.finances)
+
+## Objetivo
+
+Criei este app para ajudar minha família a gerenciar melhor as finanças pessoais. Baseado no DevFinances da Rocketseat usei os
+conhecimentos adquiridos para desenvolver e ampliar meus conhecimentos com IA e Tailwind entre outras tecnologias usadas.
+Tive um total de 100 Downloads na loja da Google Play e algo em torno de 10 usuários mensais.
+O projeto segue em desenvolvimento para poder monetizar ele. Esta versão final para portfólio.
+
+Falo mais [NESTE POST](https://www.linkedin.com/posts/filipeleonelbatista_ia-ai-inteligenciaartificial-activity-7085289369468571648-43Bp?utm_source=share&utm_medium=member_desktop) do meu LinkedIn.
 
 ---
+## Tecnologias
 
-## 1. Requisitos
+Esse projeto foi desenvolvido com as seguintes principais tecnologias:
 
-- **Node** 20 LTS (testado em 20.x; Node 22 também funciona mas EAS usa 20) + `yarn` 1.22 ou `npm` 10
-- **Java 17** (Gradle 7.4+ para `android/` ejectado) + **Android SDK** `platform-tools`, `build-tools 33`, `platforms android-33`
-- **Xcode 15+** apenas para iOS (`expo run:ios`)
-- **Expo CLI**: `npm i -g eas-cli` + `npx expo --version` (SDK 57)
-- **Chave OpenAI** opcional (para IA): criar em https://platform.openai.com/account/api-keys (SDK `openai ^4.28.0` via `src/utils/aiProviders.ts`)
+- [Expo SDK 57](https://expo.dev/) + [React Native 0.86.3](https://reactnative.dev/) + [React 19.2](https://react.dev/)
+- [TypeScript 5.8 strict](https://www.typescriptlang.org/)
+- [NativeWind 4.1](https://www.nativewind.dev/) + [TailwindCSS 3.4](https://tailwindcss.com/)
+- [expo-sqlite](https://docs.expo.dev/versions/latest/sdk/sqlite/) + [drizzle-orm](https://orm.drizzle.team/) + [drizzle-zod](https://orm.drizzle.team/docs/zod)
+- [Zustand 5](https://zustand-demo.pmnd.rs/) (stores, sem Context)
+- [Zod 3.23](https://zod.dev/) (`src/schemas/*`)
+- [openai ^4.28.0](https://github.com/openai/openai-node) (via `src/utils/aiProviders.ts`, com fallbacks Gemini vivos)
+- [expo-file-system](https://docs.expo.dev/versions/latest/sdk/filesystem/) + [expo-document-picker](https://docs.expo.dev/versions/latest/sdk/documentpicker/) + [expo-secure-store](https://docs.expo.dev/versions/latest/sdk/securestore/) + [expo-local-authentication](https://docs.expo.dev/versions/latest/sdk/local-authentication/) (SAF, CSV, chave IA, biometria)
+- [react-native-chart-kit](https://github.com/indiespirit/react-native-chart-kit) + [react-native-svg](https://github.com/software-mansion/react-native-svg) (gráficos do Dashboard)
+- [Jest 29](https://jestjs.io/) + [Testing Library](https://testing-library.com/) (35 suites / 191 testes)
+- [date-fns](https://date-fns.org/) (única lib de data na Fase 1; `dayjs` legado em remoção)
 
-> ⚠️ **Não use Expo Go.** `expo-sqlite`/`expo-secure-store` exigem código nativo → só via `dev-client` / `expo run:*`. `npx expo-doctor` deve dar **21/21**.
+Regras de negócio (não violar sem RFC — ver `AGENTS.md` §2): `Total = entradas - saídas`, Dízimo 10% com prefixo, filtros em cascata, datas como timestamp + offset 12h, moeda `pt-BR BRL`, auto-lançamento de combustível, cascade delete de listas.
 
 ---
+## Instalação
 
-## 2. Como Rodar (hoje — Expo 57)
+O projeto roda com [Node.js](https://nodejs.org/) v20+.
 
-```bash
-# 1. Clonar e entrar
+Instruções para instalar as dependências e iniciar o projeto.
+
+### Mobile
+
+```sh
 cd app
+npm install --legacy-peer-deps   # repo usa yarn.lock; npm precisa da flag (peer react 18 x 19)
+npx expo prebuild --clean        # sincroniza android/ com app.json + plugins
+npx expo run:android             # build nativo + emulador (requer JDK 17)
+```
 
-# 2. Instalar (use yarn pois há yarn.lock; npm também funciona)
-yarn install
-# ou
+Alternativas:
+
+```sh
+npx expo start                   # Metro (Expo Go tem limitações: expo-sqlite/secure-store exigem dev-client)
+yarn android                     # = expo run:android
+yarn ios                         # = expo run:ios (requer Xcode 15+)
+yarn build:apk                   # eas build -p android --profile preview (APK)
+yarn build:store                 # eas build -p android --profile production (AAB)
+```
+
+> ⚠️ **Não use Expo Go.** `expo-sqlite`/`expo-secure-store` exigem código nativo → só via `dev-client` / `expo run:*`.
+> **Primeiro run:** o Onboarding pede a **pasta de exportação** (SAF). Sem ela, Exportar/Importar CSV falha.
+
+### Web (paridade)
+
+Precisa acessar a pasta `web/` do monorepo ([ver README](../web/README.md)):
+
+```sh
+cd web
 npm install
-
-# 3. Prebuild (sincroniza android/ com app.json + plugins)
-npx expo prebuild --clean
-# alternativa
-yarn prebuild  # script "prebuild": "expo prebuild"
-
-# 4a. Rodar em emulador/dispositivo com dev-client (RECOMENDADO)
-yarn android          # = expo run:android  (builda nativo + instala)
-# ou
-yarn ios              # = expo run:ios
-
-# 4b. Dev-client via EAS (para testar em device físico sem Android Studio)
-yarn build:dev        # eas build -p android --profile development
-# instale o APK gerado, depois:
-yarn start            # expo start --dev-client
-
-# 4c. Web (limitado — WatermelonDB não funciona em web)
-yarn web              # expo start --web
-
-# 5. Outros scripts
-yarn clean-android    # cd android && ./gradlew clean
-yarn build:apk        # eas build -p android --profile preview (APK)
-yarn build:store      # eas build -p android --profile production (AAB)
-yarn start:emulator   # emulator -avd Pixel_2_API_33
+npm run dev
 ```
 
-**Primeiro run:** O Onboarding pedirá para escolher a **pasta de exportação** (SAF). Sem ela, Exportar/Importar CSV falhará. Aceite e crie uma pasta (ex: `Financas/exports`).
+## API da OpenAI
 
----
+Dentro do aplicativo mobile você precisará ter sua chave da API para colocar em Configurações e habilitar o botão da inteligência artificial.
 
-## 3. Modernização — Atualizando Expo / React / Libs
+Detalhes: chave digitada em `Configurações → Habilitar IA (Beta)` (`src/utils/aiProviders.ts`), validada e armazenada com `expo-secure-store`. Sem créditos, o app exibe `Não foi possível fazer a pesquisa`.
 
-Este app está em **Expo 57 (RN 0.86.3, React 19.2.3, Kotlin 2.1.0, compileSdk 36/targetSdk 36)** — **atualizado** (ex-Expo 48 EOL). Play Store `targetSdk 35+` já atendido. Histórico abaixo para referência.
-
-### 3.1 Roteiro Recomendado (1 major por PR, com testes verdes)
+## Estrutura e Scripts
 
 ```
-Expo 48 → 49 → 50 → 51 → 52 → 53 (atual LTS 2025)
-RN   0.71 → 0.72 → 0.73 → 0.74 → 0.76 → 0.77
-React 18.2 → 18.3 → 19 (só em Expo 53+)
-Kotlin 1.6 → 1.8 → 1.9
-WatermelonDB 0.26 → 0.28+ (suporte RN 0.76+)
-openai 3.3 → 5.x
-native-base 3.4 → gluestack-ui 2.x (breaking)
+App.tsx → providers → rotas (Stack + bottom-tabs + market-stack) → pages/* → stores/* → repositories/* → db/schema.ts
+src/db/ (expo-sqlite + drizzle, 8 tabelas + migrações via PRAGMA user_version)
+src/schemas/* (zod) • src/stores/* (zustand) • src/repositories/* (prepared statements)
+__tests__/ (unit/integration/security) • scripts/seed.ts
 ```
-
-### 3.2 Passo-a-passo por upgrade
-
-```bash
-# 0. Travar baseline: commit limpo + backup branch
-git checkout -b chore/expo-48-to-49
-
-# 1. Usar ferramenta oficial Expo (faz 90% do trabalho)
-npx expo install expo@^49.0.0 --fix
-npx expo-doctor              # corrige o que quebrar
-
-# Alternativa moderna (Expo 52+):
-npx expo install expo@latest --fix
-# ou
-npm install expo@^53
-
-# 2. Conferir breaking changes do SDK
-# https://docs.expo.dev/workflow/upgrading-expo-sdk-walkthrough/
-# Exemplos:
-# - Expo 49: expo@49 exige metro@0.76, reanimated@3.3, react-native@0.72
-# - Expo 50: requer Node 18+, dropa expo-media-library legado
-# - Expo 52: New Architecture opcional, Kotlin 1.9
-# - Expo 53: React 19 opt-in
-
-# 3. Atualizar WatermelonDB decorator plugin
-# babel.config.js: trocar "@babel/plugin-proposal-decorators" -> "@babel/plugin-transform-decorators" em Expo 51+
-
-# 4. Prebuild limpo
-npx expo prebuild --clean
-cd android && ./gradlew clean && cd ..
-
-# 5. Testar
-yarn android   # ou yarn ios
-# Verificar: Finanças, Estoque, Listas, Import/Export CSV (com SAF), IA (chave OpenAI)
-
-# 6. Subir PR, CI verde (lint + test:coverage + expo-doctor), merge, repetir para próximo major
-```
-
-### 3.3 Libs que exigem atenção manual
-
-| Lib | De | Para | Como migrar |
-|---|---|---|---|
-| `native-base` | 3.4.28 (arquivado) | `gluestack-ui` ou `nativewind` | Seguir https://gluestack.io/docs/migration/nativebase — componentes `Box/VStack/HStack/Text/Button` mudam import. Fazer em PR isolado. |
-| `openai` | 3.3.0 (`Configuration`, `OpenAIApi`) | 5.x (`new OpenAI()`) | `src/hooks/useOpenAi.js:13` e `src/pages/IAPage.js:64` trocar para `import OpenAI from 'openai'` + `new OpenAI({apiKey, dangerouslyAllowBrowser:true})` + `openai.chat.completions.create({model:'gpt-3.5-turbo'})` |
-| `expo-media-library` + `expo-file-system` + `expo-document-picker` | SAF legado | Expo 53 `expo-file-system/next` | Em 33+ `WRITE_EXTERNAL_STORAGE` não funciona; manter SAF mas remover `WRITE_EXTERNAL_STORAGE` de `app.json:30` quando `targetSdk 34+` |
-| `@react-native-community/datetimepicker` | 6.7.3 | 8.x | API `DateTimePickerAndroid.open` virou `DateTimePickerAndroid.open` com `value` obrigatório — testado |
-| `react-native-chart-kit` | 6.12 | 6.12 (ok) | Verificar compat RN 0.76 (requer `react-native-svg` 15+) |
-
-### 3.4 Checklist pós-upgrade
-
-- [ ] `npx expo-doctor` sem erros
-- [ ] `yarn android` e `yarn ios` buildam sem `gradle` error
-- [ ] Onboarding escolhe pasta SAF e Exportar/Importar CSV funciona (testar API 29, 33, 34)
-- [ ] WatermelonDB CRUD em cada domínio (Finanças, Combustível, Estoque, Listas, Goals) persiste após reload
-- [ ] IA chat responde com chave válida
-- [ ] `../docs/documentacao/DOSSIE.md` §2.1 e `app.json` version bump atualizados
-
----
-
-## 4. Variáveis & Configuração
-
-- **OpenAI API Key:** digitada em `Configurações → Habilitar IA (Beta) → Chave de API` (`AboutUs.js:632`). Validada com `createChatCompletion Olá mundo` (`useOpenAi.js:19`). Armazenada em `config.apiKey` (WatermelonDB). Sem créditos, `openaiErrorHandler` mostra `Não foi possível fazer a pesquisa`.
-- **Pasta de exportação:** `config.selectedFolderToSave` (URI SAF). Alterável em `Configurações → Alterar pasta de exportação` ou no Onboarding.
-- **EAS:** `eas.json` profiles `development` (internal, dev-client), `preview` (APK), `production` (AAB). `projectId` já configurado.
-
----
-
-## 5. Scripts (package.json:4)
 
 | Script | Comando | Descrição |
 |---|---|---|
-| `prebuild` | `expo prebuild` | Regenera `android/`/`ios/` |
-| `clean-android` | `cd android && ./gradlew clean` | Limpa build |
-| `android:build:apk` | `./gradlew assembleRelease` | APK local |
-| `android:build:aab` | `./gradlew bundleRelease` | AAB local |
-| `start` | `expo start --dev-client` | Metro para dev-client |
 | `android` | `expo run:android` | Build + run nativo |
 | `ios` | `expo run:ios` | Build + run iOS |
-| `build:dev` | `eas build -p android --profile development` | Build dev-client remoto |
 | `build:apk` | `eas build -p android --profile preview` | APK remoto |
 | `build:store` | `eas build -p android --profile production` | AAB remoto |
+| `lint` | `eslint --max-warnings 0` | Lint sem warnings |
+| `typecheck` | `tsc --noEmit` | Typecheck strict |
+| `test` / `test:coverage` | `jest` | Testes + coverage |
+| `test:security` | `jest __tests__/security` | XSS/SQL/prompt/Excel |
+
+## Docs
+
+- Guia de agentes: `AGENTS.md` (regras, SOLID/TDD, quality gate `test:security`)
+- Dossiê: `../docs/documentacao/DOSSIE.md` • Roadmap: `../docs/documentacao/ROADMAP.md`
+- Status canônico: `../docs/documentacao/project-status.md`
 
 ---
 
-## 6. Estrutura Resumida
-
-```
-App.js → NativeBaseProvider → Pages/Settings/Payments/Runs/Lists/Market/Goals → Routes
-src/routes.js (Stack) + src/bottom-tab-routes.js (Tabs) + src/market-stack-routes.js (Stock→Lists→List)
-src/databases/ (WatermelonDB 7 tabelas, version 25)
-src/context/* (Repositories) + src/hooks/* (facades)
-src/pages/* (8 telas) + src/components/* (20+ forms/cards)
-../docs/documentacao/DOSSIE.md (dossiê) + AGENTS.md (regras/SOLID/TDD)
-```
-
----
-
-## 7. Troubleshooting
-
-- **Metro: `Plugin proposal-decorators not found`** → `yarn add -D @babel/plugin-proposal-decorators@^7.22.7` (ou `transform-decorators` em Expo 51+)
-- **Android: `Could not find WatermelonDB`** → `npx expo prebuild --clean` + `yarn android`. Nunca `expo start` puro.
-- **Export falha silenciosamente** → Verifique se `selectedFolderToSave` não está vazio (Onboarding). Em Android 13+ conceda `Allow access to media` quando pedir.
-- **iOS: `StorageAccessFramework is not available`** → Bug conhecido (../docs/documentacao/DOSSIE.md 7.2). Export em iOS precisa fallback para `FileSystem.documentDirectory` (usar `Platform.OS` guard).
-- **`openai.createChatCompletion is not a function`** → Você atualizou `openai` para 4+ sem migrar `useOpenAi.js` — veja §3.3.
-
----
-
-## 8. Próximos Passos Sugeridos
-
-1. Configurar `jest` + `eslint` + `typecheck` (ver `AGENTS.md:5.4` Quality Gate)
-2. Corrigir `itemsSchema desiredQuantity` mismatch (migration 26)
-3. Migrar `openai` 3→5 e `native-base` → `gluestack-ui` em PRs separados
-4. Subir Expo 48→53 incremental (§3.2)
-
-PRs bem-vindos — siga `AGENTS.md:6` workflow + conventional commits.
+<h3 align="center" >Vamos nos conectar 😉</h3>
+<p align="center">
+  <a href="https://www.linkedin.com/in/filipeleonelbatista/">
+    <img alt="LinkedIn" width="22px" src="https://github.com/filipeleonelbatista/filipeleonelbatista/blob/master/assets/052-linkedin.svg" />
+  </a>&ensp;
+  <a href="mailto:filipe.x2016@gmail.com">
+    <img alt="Email" width="22px" src="https://github.com/filipeleonelbatista/filipeleonelbatista/blob/master/assets/gmail.svg" />
+  </a>&ensp;
+  <a href="https://instagram.com/filipeleonelbatista">
+    <img alt="Instagram" width="22px" src="https://github.com/filipeleonelbatista/filipeleonelbatista/blob/master/assets/044-instagram.svg" />
+  </a>
+</p>
+<br />
+<p align="center">
+    Desenvolvido 💜 por Filipe Batista
+</p>

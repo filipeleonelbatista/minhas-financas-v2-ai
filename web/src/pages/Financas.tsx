@@ -93,8 +93,8 @@ function Financas() {
     <div className="w-full h-full flex flex-col bg-gray-100 dark:bg-gray-900 items-center">
       <Header title="Financa" />
       <div
-        className="w-full max-w-[800px] px-2 grid sm:grid-rows-3 md:grid-cols-3 sm:grid-cols-none md:grid-rows-none gap-4 mt-[-64px] mb-2">
-        <div className="w-full px-4 py-3 flex flex-col rounded bg-white dark:bg-gray-800 drop-shadow-lg">
+        className="w-full max-w-[800px] px-2 flex gap-4 overflow-x-auto mt-[-64px] mb-2 pb-1">
+        <div className="min-w-[220px] flex-1 px-4 py-3 flex flex-col rounded bg-white dark:bg-gray-800 drop-shadow-lg">
           <div className="w-full flex flex-row items-center justify-between">
             <p className="text-xl">Entradas</p>
             <FiArrowUpCircle className="w-8 h-8 text-green-500" />
@@ -104,7 +104,7 @@ function Financas() {
           </p>
         </div>
 
-        <div className="w-full px-4 py-3 flex flex-col rounded bg-white dark:bg-gray-800 drop-shadow-lg">
+        <div className="min-w-[220px] flex-1 px-4 py-3 flex flex-col rounded bg-white dark:bg-gray-800 drop-shadow-lg">
           <div className="w-full flex flex-row items-center justify-between">
             <p className="text-xl">Saidas</p>
             <FiArrowDownCircle className="w-8 h-8 text-red-500" />
@@ -114,7 +114,7 @@ function Financas() {
           </p>
         </div>
 
-        <div className="w-full px-4 py-3 flex flex-col rounded bg-purple-700 drop-shadow-lg">
+        <div className="min-w-[220px] flex-1 px-4 py-3 flex flex-col rounded bg-purple-700 drop-shadow-lg">
           <div className="w-full flex flex-row items-center justify-between">
             <p className="text-xl text-white">Total</p>
             <FiDollarSign className="w-8 h-8 text-white" />
@@ -124,7 +124,7 @@ function Financas() {
           </p>
         </div>
         {isEnableTotalHistoryCard && (
-          <div className="w-full px-4 py-3 flex flex-col rounded bg-purple-700 drop-shadow-lg">
+          <div className="min-w-[220px] flex-1 px-4 py-3 flex flex-col rounded bg-purple-700 drop-shadow-lg">
             <div className="w-full flex flex-row items-center justify-between">
               <p className="text-xl text-white">Saldo</p>
               <FiDollarSign className="w-8 h-8 text-white" />
@@ -135,7 +135,7 @@ function Financas() {
           </div>
         )}
         {isEnableTitheCard && (
-          <div className="w-full px-4 py-3 flex flex-col rounded bg-purple-700 drop-shadow-lg">
+          <div className="min-w-[220px] flex-1 px-4 py-3 flex flex-col rounded bg-purple-700 drop-shadow-lg">
             <div className="w-full flex flex-row items-center justify-between">
               <p className="text-xl text-white">Dízimo</p>
               <FiDollarSign className="w-8 h-8 text-white" />

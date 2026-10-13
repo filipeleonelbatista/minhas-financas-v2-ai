@@ -7,7 +7,6 @@ import IAPage from "./pages/IAPage";
 import NotFound from "./pages/NotFound";
 import ListDetail from "./pages/ListDetail";
 import Lists from "./pages/Lists";
-import Reports from "./pages/Reports";
 import Settings from "./pages/Settings";
 import Stock from "./pages/Stock";
 import TitheSettings from "./pages/TitheSettings";
@@ -20,10 +19,8 @@ export default function App() {
       <Routes>
         <Route path="/" element={<Dashboard />} />
         <Route path="/financas" element={<Financas />} />
-        <Route path="/reports" element={<Reports />} />
         <Route path="/settings" element={<Settings />} />
         <Route path="/stock" element={<Stock />} />
-        {/* <Route path="/investiments" element={<Simulador />} /> */}
         <Route path="/runs" element={<Runs />} />
         <Route path="/goals" element={<Goals />} />
         <Route path="/ia" element={<IAPage />} />

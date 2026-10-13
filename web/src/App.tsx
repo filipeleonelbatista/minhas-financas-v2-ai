@@ -30,6 +30,7 @@ export default function App() {
         <Route path="/ai-providers" element={<AIProviders />} />
         <Route path="/lists" element={<Lists />} />
         <Route path="/lists/:id" element={<ListDetail />} />
+        <Route path="/stock/lists/:id" element={<ListDetail />} />
         <Route path="/tithe" element={<TitheSettings />} />
 
         <Route path="*" element={<NotFound />} />

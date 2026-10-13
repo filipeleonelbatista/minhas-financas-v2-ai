@@ -1,0 +1,97 @@
+import { useListsStore, type ListItemRow } from "@/stores/lists";
+import { CiCircleMinus, CiCirclePlus, CiMoneyBill } from "react-icons/ci";
+import { IoBagHandleOutline, IoTrashOutline } from "react-icons/io5";
+import { LuPen } from "react-icons/lu";
+import FormEditListItem from "./form-edit-list-item";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "./ui/dialog";
+
+
+function ListItemCard({ item, index, listId }: { item: ListItemRow; index: number; listId: string }) {
+  const updateQuantity = useListsStore((s) => s.updateQuantity);
+  const deleteItem = useListsStore((s) => s.deleteItem);
+
+  const formatCurrency = (value: number) => {
+    return value.toLocaleString("pt-BR", {
+      style: "currency",
+      currency: "BRL",
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+      useGrouping: true,
+    });
+  };
+
+  return (
+    <div
+      key={index}
+      className="relative px-4 py-3 flex flex-row gap-4 rounded items-center bg-white dark:bg-gray-800 drop-shadow-lg"
+    >
+      <div className="flex flex-row gap-2 absolute top-2 right-4">
+        <p
+          data-instock={item.quantityDesired <= item.quantity}
+          className="px-4 py-0.5 data-[instock=false]:border-red-600 data-[instock=true]:border-green-600 data-[instock=false]:text-red-600 data-[instock=true]:text-green-600 font-semibold border-[1px] rounded-full text-xs"
+        >
+          {item.quantityDesired <= item.quantity ? "Em estoque" : "Em falta"}
+        </p>
+        <button
+          className="cursor-pointer"
+          onClick={() => {
+            if (confirm("Deseja realmente excluir este item? Essa ação é permanente.")) {
+              void deleteItem(item.id, listId);
+            }
+          }}
+        >
+          <IoTrashOutline className="w-4 h-4 text-gray-600 dark:text-gray-100 transition-all duration-400 ease-in-out hover:text-red-600 dark:hover:text-redd-300" />
+        </button>
+        <Dialog>
+          <DialogTrigger className="cursor-pointer">
+            <LuPen className="w-4 h-4 text-gray-600 dark:text-gray-100 transition-all duration-400 ease-in-out hover:text-gray-900" />
+          </DialogTrigger>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Editar produto</DialogTitle>
+              <DialogDescription>
+                Edite itens para suas compras do mercado.
+              </DialogDescription>
+            </DialogHeader>
+            <FormEditListItem selectedTransaction={item} listId={listId} />
+          </DialogContent>
+        </Dialog>
+      </div>
+      <IoBagHandleOutline className="w-8 h-8 text-gray-800 dark:text-white" />
+      <div className="w-full flex flex-row items-center justify-between">
+        <div>
+          <h3 className="text-xl font-thin">{item.description}</h3>
+          <p className="text-sm font-semibold">
+            {item.category}
+          </p>
+          <div className="flex gap-1 items-center">
+            <CiMoneyBill className="text-2xl" />
+            <p>{formatCurrency(item.amount)}</p>
+          </div>
+          <p><small>Qtd. desejada: {item.quantityDesired}</small></p>
+          <div className="flex flex-row space-x-2 items-center">
+            <button onClick={() => item.quantity > 0 && void updateQuantity(item, false)}>
+              <CiCircleMinus className="w-8 h-8 text-green-600" />
+            </button>
+            <p>{item.quantity}</p>
+            <button onClick={() => void updateQuantity(item, true)}>
+              <CiCirclePlus className="w-8 h-8 text-red-600" />
+            </button>
+          </div>
+        </div>
+        <p className="font-semibold">
+          {formatCurrency(item.amount * item.quantity)}
+        </p>
+      </div>
+    </div>
+  );
+}
+
+export default ListItemCard;

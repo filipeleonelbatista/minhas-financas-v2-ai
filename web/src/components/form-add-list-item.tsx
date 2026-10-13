@@ -1,0 +1,163 @@
+/** Form de adicionar item na lista — espelha `app/src/components/AddItemListtItem.tsx`. */
+import { Controller, useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
+import { useListsStore } from "@/stores/lists";
+import { useToast } from "@/components/ui/use-toast";
+import { nowTs } from "@/lib/format";
+import { parseBRMoney } from "@/lib/normalize";
+import { Button } from "./ui/button";
+import { Input } from "./ui/input";
+import { Label } from "./ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "./ui/select";
+
+const STOCK_CATEGORIES = ["Carnes", "Fruteira", "Higiêne", "Limpeza", "Mercearia", "Outros"];
+
+const formSchema = z.object({
+  description: z.string().trim().min(1, "O campo Descrição é obrigatório"),
+  amount: z.string().min(1, "O campo Valor é obrigatório"),
+  category: z.string().min(1, "O campo Categoria é obrigatório"),
+  quantity: z.string().min(1, "O campo Quantidade é obrigatório"),
+  quantityDesired: z.string().optional().default(""),
+  location: z.string().optional().default(""),
+});
+
+type FormValues = z.infer<typeof formSchema>;
+
+function moeda(e: string): string {
+  let value = e;
+  value = value.replace(/\D/g, "");
+  value = value.replace(/(\d)(\d{2})$/, "$1,$2");
+  value = value.replace(/(?=(\d{3})+(\D))\B/g, ".");
+  return value;
+}
+
+function FieldError({ message }: { message?: string }) {
+  if (!message) return null;
+  return <p className="text-sm text-red-600 dark:text-red-300">{message}</p>;
+}
+
+function FormAddListItem({ listId, defaultLocation }: { listId: string; defaultLocation?: string | null }) {
+  const { toast } = useToast();
+  const addItem = useListsStore((s) => s.addItem);
+
+  const {
+    control,
+    register,
+    handleSubmit,
+    formState: { errors },
+  } = useForm<FormValues>({
+    resolver: zodResolver(formSchema),
+    defaultValues: {
+      description: "",
+      amount: "0,00",
+      category: "Mercearia",
+      quantity: "1",
+      quantityDesired: "1",
+      location: defaultLocation ?? "",
+    },
+  });
+
+  const onSubmit = async (v: FormValues) => {
+    try {
+      await addItem({
+        list_id: listId,
+        description: v.description,
+        amount: parseBRMoney(v.amount),
+        category: v.category,
+        quantity: Math.max(0, parseInt(v.quantity || "0", 10)),
+        quantityDesired: v.quantityDesired ? parseInt(v.quantityDesired, 10) : 1,
+        location: v.location || defaultLocation || null,
+        date: nowTs(),
+      });
+      toast({ description: "Item adicionado!", variant: "success" });
+      document.getElementById("close-dialog")?.click();
+    } catch {
+      toast({ description: "Verifique os campos do item.", variant: "destructive" });
+    }
+  };
+
+  return (
+    <form
+      onSubmit={(e) => void handleSubmit(onSubmit)(e)}
+      className="w-full max-h-96 overflow-auto flex flex-col space-y-4 p-2"
+    >
+      <div>
+        <Label htmlFor="description">Descrição</Label>
+        <Input id="description" placeholder="Descrição" {...register("description")} />
+        <FieldError message={errors.description?.message} />
+      </div>
+
+      <div className="w-full flex flex-col gap-1">
+        <p className="text-md font-bold dark:text-white text-gray-800 mb-2">Categorias</p>
+        <Controller
+          name="category"
+          control={control}
+          render={({ field }) => (
+            <Select value={field.value} onValueChange={field.onChange}>
+              <SelectTrigger className="w-full">
+                <SelectValue placeholder="Categorias" />
+              </SelectTrigger>
+              <SelectContent>
+                {STOCK_CATEGORIES.map((c) => (
+                  <SelectItem key={c} value={c}>
+                    {c}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          )}
+        />
+        <FieldError message={errors.category?.message} />
+      </div>
+
+      <div>
+        <Label>Valor</Label>
+        <Controller
+          name="amount"
+          control={control}
+          render={({ field }) => (
+            <Input
+              id="amount"
+              inputMode="numeric"
+              placeholder="Valor"
+              value={field.value}
+              onChange={(event) => field.onChange(moeda(event.target.value))}
+            />
+          )}
+        />
+        <FieldError message={errors.amount?.message} />
+      </div>
+
+      <div>
+        <Label htmlFor="quantity">Quantidade</Label>
+        <Input id="quantity" inputMode="numeric" placeholder="Quantidade" {...register("quantity")} />
+        <FieldError message={errors.quantity?.message} />
+      </div>
+
+      <div>
+        <Label htmlFor="quantityDesired">Quantidade desejada</Label>
+        <Input id="quantityDesired" inputMode="numeric" placeholder="Quantidade desejada" {...register("quantityDesired")} />
+        <FieldError message={errors.quantityDesired?.message} />
+      </div>
+
+      <div>
+        <Label htmlFor="location">Local de compra</Label>
+        <Input id="location" placeholder="Local de compra" {...register("location")} />
+        <FieldError message={errors.location?.message} />
+      </div>
+
+      <Button type="submit" className="bg-purple-600 hover:bg-purple-900">
+        Adicionar
+      </Button>
+    </form>
+  );
+}
+
+export default FormAddListItem;

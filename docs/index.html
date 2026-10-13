@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Minhas Finanças — controle financeiro offline-first</title>
+  <meta name="description" content="Finanças, mercado, combustível, metas e dízimo com IA multi-provider. 100% offline no Android ou online no navegador." />
+  <meta name="theme-color" content="#581C87" />
+  <link rel="icon" type="image/png" href="./assets/icon.png" />
+  <script>
+    try {
+      var t = localStorage.getItem("mf-site-theme");
+      if (t === "dark" || (!t && window.matchMedia("(prefers-color-scheme: dark)").matches)) {
+        document.documentElement.classList.add("dark");
+      }
+    } catch (e) {}
+  </script>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              50: "#faf5ff",
+              100: "#f3e8ff",
+              200: "#e9d5ff",
+              300: "#d8b4fe",
+              500: "#a855f7",
+              600: "#9c44dc",
+              700: "#7e22ce",
+              800: "#6b21a8",
+              900: "#581C87",
+              950: "#2e1065"
+            }
+          }
+        }
+      }
+    };
+  </script>
+  <link rel="stylesheet" href="./assets/site.css" />
+</head>
+<body class="bg-stone-100 text-zinc-600 dark:bg-zinc-900 dark:text-zinc-300">
+  <!-- Header -->
+  <header class="sticky top-0 z-50 border-b border-zinc-200 bg-white/90 backdrop-blur dark:border-zinc-800 dark:bg-zinc-900/90">
+    <div class="mx-auto flex max-w-6xl items-center justify-between gap-4 px-4 py-3">
+      <a href="./index.html" class="flex items-center gap-3">
+        <img src="./assets/icon.png" alt="Logo Minhas Finanças" class="h-10 w-10 rounded-2xl" />
+        <span class="text-lg font-bold text-brand-900 dark:text-white">Minhas Finanças</span>
+      </a>
+      <nav class="hidden items-center gap-6 text-sm font-medium lg:flex">
+        <a href="#recursos" class="hover:text-brand-600 dark:hover:text-brand-300">Recursos</a>
+        <a href="#painel" class="hover:text-brand-600 dark:hover:text-brand-300">Painel</a>
+        <a href="#metas" class="hover:text-brand-600 dark:hover:text-brand-300">Metas</a>
+        <a href="#ia" class="hover:text-brand-600 dark:hover:text-brand-300">IA</a>
+        <a href="#seguranca" class="hover:text-brand-600 dark:hover:text-brand-300">Segurança</a>
+        <a href="#faq" class="hover:text-brand-600 dark:hover:text-brand-300">FAQ</a>
+      </nav>
+      <div class="flex items-center gap-2">
+        <button data-theme-toggle aria-label="Alternar tema claro/escuro" class="rounded-full border border-zinc-300 p-2 hover:border-brand-600 dark:border-zinc-700 dark:hover:border-brand-300">
+          <span data-theme-icon>
+            <svg data-icon="moon" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z" /></svg>
+            <svg data-icon="sun" xmlns="http://www.w3.org/2000/svg" class="hidden h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.36 6.36l-.71-.71M6.34 6.34l-.71-.71m12.02 12.02l-.71.71M6.34 17.66l-.71.71M16 12a4 4 0 11-8 0 4 4 0 018 0z" /></svg>
+          </span>
+        </button>
+        <a href="#download" class="rounded-full bg-brand-600 px-4 py-2 text-sm font-bold text-white hover:bg-brand-700">Baixar</a>
+      </div>
+    </div>
+  </header>
+
+  <!-- Hero -->
+  <section class="hero-gradient overflow-hidden text-white">
+    <div class="mx-auto grid max-w-6xl items-center gap-12 px-4 py-16 sm:py-24 lg:grid-cols-2">
+      <div class="reveal">
+        <span class="inline-block rounded-full bg-white/15 px-3 py-1 text-xs font-semibold tracking-wide">v2.3.1 • Offline-first • Android + Web</span>
+        <h1 class="mt-4 text-4xl font-extrabold leading-tight sm:text-6xl">
+          Suas finanças <span class="text-gradient">sob controle</span>, sem depender de internet
+        </h1>
+        <p class="mt-5 max-w-xl text-base text-brand-100 sm:text-xl">
+          Finanças, mercado, combustível, metas e dízimo — com gráficos no painel Início e IA multi-provider para dicas. Seus dados ficam no seu aparelho, não na nuvem.
+        </p>
+        <div class="mt-8 flex flex-wrap gap-3">
+          <a href="https://expo.dev/artifacts/eas/TZqom4Tv-08itde1qFPitkLQYaV2-kWLxOkX87niyHU.apk" target="_blank" rel="noopener" class="cta-glow rounded-full bg-white px-7 py-3 font-bold text-brand-900 shadow hover:bg-brand-50">
+            Baixar APK (Android)
+          </a>
+          <a href="https://minhasfinancas.vercel.app" target="_blank" rel="noopener" class="rounded-full border-2 border-white/70 px-7 py-3 font-bold text-white hover:bg-white/10">
+            Usar online
+          </a>
+        </div>
+        <p class="mt-4 text-xs text-brand-200">APK v2.3.1 (231) • ~150 MB • pacote com.finances • grátis • sem conta</p>
+      </div>
+      <div class="reveal reveal-delay-1 relative mx-auto w-60 sm:w-72">
+        <div class="phone-frame overflow-hidden rounded-[2.5rem] border-8 border-zinc-900 bg-zinc-900">
+          <img src="./assets/splash.png" alt="Tela inicial do app Minhas Finanças" class="h-auto w-full" />
+        </div>
+        <div class="floaty absolute -left-16 top-10 hidden rounded-2xl bg-white p-3 text-zinc-800 shadow-xl sm:block">
+          <p class="text-xs text-zinc-500">Saldo</p>
+          <p class="text-lg font-extrabold text-emerald-600">R$ 1.200,00</p>
+        </div>
+        <div class="floaty-slow absolute -right-14 top-1/3 hidden rounded-2xl bg-white p-3 text-zinc-800 shadow-xl sm:block">
+          <p class="text-xs text-zinc-500">🎯 Viagem • 70%</p>
+          <div class="mt-1 h-2 w-28 overflow-hidden rounded-full bg-zinc-200"><div class="h-full w-[70%] rounded-full bg-brand-600"></div></div>
+        </div>
+        <div class="floaty absolute -left-10 bottom-10 hidden rounded-full bg-zinc-900 px-4 py-2 text-sm font-bold shadow-xl sm:block" style="animation-delay: 1.2s">
+          🤖 IA com 5 provedores
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Stats -->
+  <section class="border-b border-zinc-200 dark:border-zinc-800">
+    <div class="reveal mx-auto grid max-w-6xl grid-cols-2 gap-6 px-4 py-12 text-center sm:grid-cols-4">
+      <div><p class="text-4xl font-extrabold text-brand-700 dark:text-brand-300"><span data-count="100" data-suffix="%">0%</span></p><p class="mt-1 text-sm">offline no aparelho</p></div>
+      <div><p class="text-4xl font-extrabold text-brand-700 dark:text-brand-300"><span data-count="5">0</span></p><p class="mt-1 text-sm">provedores de IA</p></div>
+      <div><p class="text-4xl font-extrabold text-brand-700 dark:text-brand-300"><span data-count="14">0</span></p><p class="mt-1 text-sm">categorias de gastos</p></div>
+      <div><p class="text-4xl font-extrabold text-brand-700 dark:text-brand-300"><span data-count="0">0</span></p><p class="mt-1 text-sm">dados enviados sem login</p></div>
+    </div>
+  </section>
+
+  <!-- Recursos -->
+  <section id="recursos" class="mx-auto max-w-6xl px-4 py-16 sm:py-20">
+    <div class="reveal text-center">
+      <h2 class="text-3xl font-extrabold text-zinc-900 dark:text-white sm:text-4xl">Tudo em um só lugar</h2>
+      <p class="mx-auto mt-2 max-w-2xl">Quatro domínios integrados, painel com gráficos, exportação CSV e modo escuro.</p>
+    </div>
+    <div class="mt-10 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
+      <div class="reveal card-hover rounded-2xl border border-zinc-200 bg-white p-6 dark:border-zinc-800 dark:bg-zinc-800">
+        <p class="text-3xl">💰</p>
+        <h3 class="mt-3 font-bold text-zinc-900 dark:text-white">Finanças</h3>
+        <p class="mt-1 text-sm">Entradas e saídas em 14 categorias, filtros por período, tipo, status e favoritos, com saldo e dízimo calculados.</p>
+      </div>
+      <div class="reveal reveal-delay-1 card-hover rounded-2xl border border-zinc-200 bg-white p-6 dark:border-zinc-800 dark:bg-zinc-800">
+        <p class="text-3xl">📊</p>
+        <h3 class="mt-3 font-bold text-zinc-900 dark:text-white">Painel Início</h3>
+        <p class="mt-1 text-sm">Saúde financeira, pizza por categoria, linha de 6 meses, abastecimentos e metas urgentes em uma tela.</p>
+      </div>
+      <div class="reveal reveal-delay-2 card-hover rounded-2xl border border-zinc-200 bg-white p-6 dark:border-zinc-800 dark:bg-zinc-800">
+        <p class="text-3xl">🛒</p>
+        <h3 class="mt-3 font-bold text-zinc-900 dark:text-white">Mercado e Listas</h3>
+        <p class="mt-1 text-sm">Estoque com quantidade desejada, listas de compras geradas do estoque e exportação individual por lista.</p>
+      </div>
+      <div class="reveal reveal-delay-3 card-hover rounded-2xl border border-zinc-200 bg-white p-6 dark:border-zinc-800 dark:bg-zinc-800">
+        <p class="text-3xl">⛽</p>
+        <h3 class="mt-3 font-bold text-zinc-900 dark:text-white">Combustível</h3>
+        <p class="mt-1 text-sm">Hodômetro, autonomia, estimativa de km restante e lançamento automático em Finanças.</p>
+      </div>
+      <div class="reveal card-hover rounded-2xl border border-zinc-200 bg-white p-6 dark:border-zinc-800 dark:bg-zinc-800">
+        <p class="text-3xl">🎯</p>
+        <h3 class="mt-3 font-bold text-zinc-900 dark:text-white">Metas que saem do papel</h3>
+        <p class="mt-1 text-sm">Viagem, carro, computador ou reserva: progresso, prazo, aportes e lembrete do que vence em 30 dias.</p>
+      </div>
+      <div class="reveal reveal-delay-1 card-hover rounded-2xl border border-zinc-200 bg-white p-6 dark:border-zinc-800 dark:bg-zinc-800">
+        <p class="text-3xl">📤</p>
+        <h3 class="mt-3 font-bold text-zinc-900 dark:text-white">Exportação CSV</h3>
+        <p class="mt-1 text-sm">Leve seus dados para onde quiser: exporte e importe por domínio, com proteção anti-malware no Excel.</p>
+      </div>
+      <div class="reveal reveal-delay-2 card-hover rounded-2xl border border-zinc-200 bg-white p-6 dark:border-zinc-800 dark:bg-zinc-800">
+        <p class="text-3xl">🌙</p>
+        <h3 class="mt-3 font-bold text-zinc-900 dark:text-white">Modo escuro</h3>
+        <p class="mt-1 text-sm">Tema claro, escuro ou automático seguindo o sistema, em todas as telas.</p>
+      </div>
+      <div class="reveal reveal-delay-3 card-hover rounded-2xl border border-zinc-200 bg-white p-6 dark:border-zinc-800 dark:bg-zinc-800">
+        <p class="text-3xl">📴</p>
+        <h3 class="mt-3 font-bold text-zinc-900 dark:text-white">Offline-first</h3>
+        <p class="mt-1 text-sm">Tudo funciona sem internet. Só a IA e a versão online precisam de rede.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Painel detalhe -->
+  <section id="painel" class="border-y border-zinc-200 bg-white dark:border-zinc-800 dark:bg-zinc-800/50">
+    <div class="mx-auto grid max-w-6xl items-center gap-10 px-4 py-16 sm:py-20 lg:grid-cols-2">
+      <div class="reveal order-2 rounded-2xl border border-zinc-200 bg-stone-100 p-6 dark:border-zinc-700 dark:bg-zinc-900 lg:order-1">
+        <p class="text-sm font-bold text-zinc-500 dark:text-zinc-400">Gastos por categoria • mês atual</p>
+        <div class="mt-4 flex h-48 items-end justify-around gap-2">
+          <div class="flex h-full flex-col items-center justify-end gap-1"><div class="bar-anim w-10 rounded-t-lg bg-brand-900 sm:w-12" style="height: 92%"></div><span class="text-xs">Moradia</span></div>
+          <div class="flex h-full flex-col items-center justify-end gap-1"><div class="bar-anim w-10 rounded-t-lg bg-brand-700 sm:w-12" style="height: 68%; transition-delay: .1s"></div><span class="text-xs">Mercado</span></div>
+          <div class="flex h-full flex-col items-center justify-end gap-1"><div class="bar-anim w-10 rounded-t-lg bg-brand-600 sm:w-12" style="height: 52%; transition-delay: .2s"></div><span class="text-xs">Transp.</span></div>
+          <div class="flex h-full flex-col items-center justify-end gap-1"><div class="bar-anim w-10 rounded-t-lg bg-brand-500 sm:w-12" style="height: 38%; transition-delay: .3s"></div><span class="text-xs">Saúde</span></div>
+          <div class="flex h-full flex-col items-center justify-end gap-1"><div class="bar-anim w-10 rounded-t-lg bg-brand-300 sm:w-12" style="height: 24%; transition-delay: .4s"></div><span class="text-xs">Outros</span></div>
+        </div>
+      </div>
+      <div class="reveal order-1 lg:order-2">
+        <h2 class="text-3xl font-extrabold text-zinc-900 dark:text-white sm:text-4xl">O painel que responde: para onde foi meu dinheiro?</h2>
+        <ul class="mt-6 space-y-4">
+          <li class="flex gap-3"><span class="text-xl">💜</span><span><strong class="text-zinc-900 dark:text-white">Hero Saldo/Entradas/Saídas/Dízimo</strong> — os 4 números que importam, sempre visíveis.</span></li>
+          <li class="flex gap-3"><span class="text-xl">🥧</span><span><strong class="text-zinc-900 dark:text-white">Pizza por categoria</strong> — toque na fatia e veja o valor exato com 2 casas.</span></li>
+          <li class="flex gap-3"><span class="text-xl">📈</span><span><strong class="text-zinc-900 dark:text-white">Linha de 6 meses</strong> — entradas vs saídas e evolução dos abastecimentos.</span></li>
+          <li class="flex gap-3"><span class="text-xl">⏰</span><span><strong class="text-zinc-900 dark:text-white">Metas urgentes</strong> — o que vence em até 30 dias, com progresso.</span></li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- Metas -->
+  <section id="metas" class="mx-auto max-w-6xl px-4 py-16 sm:py-20">
+    <div class="grid items-center gap-10 lg:grid-cols-2">
+      <div class="reveal order-2 rounded-2xl border border-zinc-200 bg-white p-6 dark:border-zinc-800 dark:bg-zinc-800 sm:p-8 lg:order-1">
+        <p class="text-sm font-bold text-zinc-500 dark:text-zinc-400">Suas metas • aportes deste mês</p>
+        <div class="mt-5 space-y-5">
+          <div>
+            <div class="flex items-center justify-between text-sm"><span class="font-bold text-zinc-900 dark:text-white">✈️ Viagem em família</span><span class="text-zinc-500">R$ 3.500 / R$ 5.000</span></div>
+            <div class="mt-1 h-3 overflow-hidden rounded-full bg-zinc-200 dark:bg-zinc-700"><div class="fill-anim h-full rounded-full bg-brand-600" style="--w: 70%"></div></div>
+            <p class="mt-1 text-xs text-zinc-500">70% • Restam 45 dias</p>
+          </div>
+          <div>
+            <div class="flex items-center justify-between text-sm"><span class="font-bold text-zinc-900 dark:text-white">🚗 Carro novo</span><span class="text-zinc-500">R$ 7.000 / R$ 20.000</span></div>
+            <div class="mt-1 h-3 overflow-hidden rounded-full bg-zinc-200 dark:bg-zinc-700"><div class="fill-anim h-full rounded-full bg-brand-500" style="--w: 35%; transition-delay: .15s"></div></div>
+            <p class="mt-1 text-xs text-zinc-500">35% • Restam 120 dias</p>
+          </div>
+          <div>
+            <div class="flex items-center justify-between text-sm"><span class="font-bold text-zinc-900 dark:text-white">🛟 Reserva de emergência</span><span class="text-zinc-500">R$ 5.400 / R$ 6.000</span></div>
+            <div class="mt-1 h-3 overflow-hidden rounded-full bg-zinc-200 dark:bg-zinc-700"><div class="fill-anim h-full rounded-full bg-emerald-500" style="--w: 90%; transition-delay: .3s"></div></div>
+            <p class="mt-1 text-xs text-zinc-500">90% • Restam 12 dias ⚡</p>
+          </div>
+        </div>
+      </div>
+      <div class="reveal order-1 lg:order-2">
+        <h2 class="text-3xl font-extrabold text-zinc-900 dark:text-white sm:text-4xl">Sonhos com plano viram conquistas 🎯</h2>
+        <p class="mt-3">Defina o valor, o prazo e acompanhe cada aporte com barra de progresso. O painel Início destaca o que vence nos próximos 30 dias para você nunca perder o ritmo.</p>
+        <ul class="mt-6 space-y-4">
+          <li class="flex gap-3"><span class="text-xl">🗂️</span><span><strong class="text-zinc-900 dark:text-white">Categorias prontas + personalizadas</strong> — viagem, carro, computador, investimento ou a sua.</span></li>
+          <li class="flex gap-3"><span class="text-xl">💵</span><span><strong class="text-zinc-900 dark:text-white">Aportes e retiradas</strong> — registre depósitos e ajuste o saldo da meta.</span></li>
+          <li class="flex gap-3"><span class="text-xl">🔎</span><span><strong class="text-zinc-900 dark:text-white">Filtros Todas/Ativas/Concluídas</strong> — foque no que está em andamento.</span></li>
+          <li class="flex gap-3"><span class="text-xl">⏰</span><span><strong class="text-zinc-900 dark:text-white">Contagem regressiva</strong> — “Restam X dias” em cada meta com prazo.</span></li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- Dízimo (menção opcional) -->
+  <section id="dizimo" class="border-y border-zinc-200 bg-white dark:border-zinc-800 dark:bg-zinc-800/50">
+    <div class="reveal mx-auto flex max-w-3xl flex-col items-center gap-2 px-4 py-10 text-center">
+      <p class="text-2xl">🙏</p>
+      <p class="text-zinc-900 dark:text-white"><strong>É religioso?</strong> O app também tem <strong>controle de dízimo opcional</strong> — percentual customizável, base por ganhos e escrituras JFA — que pode ser habilitado em Configurações.</p>
+      <a href="./faq.html" class="text-sm font-semibold text-brand-600 underline dark:text-brand-300">Tirar dúvidas na central de ajuda →</a>
+    </div>
+  </section>
+
+  <!-- IA -->
+  <section id="ia" class="border-y border-zinc-200 bg-white dark:border-zinc-800 dark:bg-zinc-800/50">
+    <div class="mx-auto max-w-6xl px-4 py-16 text-center sm:py-20">
+      <div class="reveal">
+        <h2 class="text-3xl font-extrabold text-zinc-900 dark:text-white sm:text-4xl">IA que entende seus números 🤖</h2>
+        <p class="mx-auto mt-2 max-w-2xl">Converse sobre gastos, combustível e mercado. Se um provedor falhar ou estourar a cota, o app tenta o próximo sozinho. Sua chave, sua escolha — guardada no cofre do aparelho.</p>
+      </div>
+      <div class="reveal mt-8 flex flex-wrap justify-center gap-2 text-sm font-semibold">
+        <span class="rounded-full bg-brand-100 px-4 py-2 text-brand-900 dark:bg-brand-900 dark:text-brand-100">OpenAI</span>
+        <span class="rounded-full bg-brand-100 px-4 py-2 text-brand-900 dark:bg-brand-900 dark:text-brand-100">Gemini</span>
+        <span class="rounded-full bg-brand-100 px-4 py-2 text-brand-900 dark:bg-brand-900 dark:text-brand-100">Anthropic</span>
+        <span class="rounded-full bg-brand-100 px-4 py-2 text-brand-900 dark:bg-brand-900 dark:text-brand-100">OpenRouter</span>
+        <span class="rounded-full bg-brand-100 px-4 py-2 text-brand-900 dark:bg-brand-900 dark:text-brand-100">Zen</span>
+      </div>
+      <div class="mx-auto mt-10 grid max-w-4xl gap-5 text-left sm:grid-cols-3">
+        <div class="reveal rounded-2xl border border-zinc-200 p-5 dark:border-zinc-700"><p class="font-bold text-zinc-900 dark:text-white">🛡️ Anti-injection</p><p class="mt-1 text-sm">Dados e instruções separados por delimitadores, com bloqueio de prompts maliciosos.</p></div>
+        <div class="reveal reveal-delay-1 rounded-2xl border border-zinc-200 p-5 dark:border-zinc-700"><p class="font-bold text-zinc-900 dark:text-white">🔑 Chave no cofre</p><p class="mt-1 text-sm">Chaves em armazenamento criptografado por hardware, nunca em texto puro.</p></div>
+        <div class="reveal reveal-delay-2 rounded-2xl border border-zinc-200 p-5 dark:border-zinc-700"><p class="font-bold text-zinc-900 dark:text-white">⏱️ Sem sustos</p><p class="mt-1 text-sm">Limite de uso por minuto e respostas curtas para controlar custo.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Segurança -->
+  <section id="seguranca" class="mx-auto max-w-6xl px-4 py-16 sm:py-20">
+    <div class="reveal text-center">
+      <h2 class="text-3xl font-extrabold text-zinc-900 dark:text-white sm:text-4xl">Privacidade de verdade, não de marketing</h2>
+      <p class="mx-auto mt-2 max-w-2xl">Sem conta, sem rastreadores, sem nuvem obrigatória.</p>
+    </div>
+    <div class="mt-10 grid gap-5 md:grid-cols-2">
+      <div class="reveal flex gap-4 rounded-2xl border border-zinc-200 bg-white p-6 dark:border-zinc-800 dark:bg-zinc-800">
+        <span class="text-2xl">👆</span>
+        <div><p class="font-bold text-zinc-900 dark:text-white">Biometria opcional</p><p class="mt-1 text-sm">Bloqueie o app com digital, rosto ou PIN do sistema.</p></div>
+      </div>
+      <div class="reveal reveal-delay-1 flex gap-4 rounded-2xl border border-zinc-200 bg-white p-6 dark:border-zinc-800 dark:bg-zinc-800">
+        <span class="text-2xl">🗄️</span>
+        <div><p class="font-bold text-zinc-900 dark:text-white">Banco local</p><p class="mt-1 text-sm">SQLite no aparelho. Nenhum dado financeiro sai sem o seu login explícito.</p></div>
+      </div>
+      <div class="reveal flex gap-4 rounded-2xl border border-zinc-200 bg-white p-6 dark:border-zinc-800 dark:bg-zinc-800">
+        <span class="text-2xl">🧹</span>
+        <div><p class="font-bold text-zinc-900 dark:text-white">Entradas sanitizadas</p><p class="mt-1 text-sm">Proteção anti-XSS, anti-SQL injection e validação com schemas em cada campo.</p></div>
+      </div>
+      <div class="reveal reveal-delay-1 flex gap-4 rounded-2xl border border-zinc-200 bg-white p-6 dark:border-zinc-800 dark:bg-zinc-800">
+        <span class="text-2xl">📎</span>
+        <div><p class="font-bold text-zinc-900 dark:text-white">Importação segura</p><p class="mt-1 text-sm">Planilhas com macro bloqueadas, fórmulas removidas e limite de tamanho.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Como instalar -->
+  <section class="border-y border-zinc-200 bg-white dark:border-zinc-800 dark:bg-zinc-800/50">
+    <div class="mx-auto max-w-6xl px-4 py-16 sm:py-20">
+      <div class="reveal text-center">
+        <h2 class="text-3xl font-extrabold text-zinc-900 dark:text-white sm:text-4xl">Comece em 2 minutos</h2>
+      </div>
+      <div class="mt-10 grid gap-5 md:grid-cols-3">
+        <div class="reveal rounded-2xl border border-zinc-200 p-6 dark:border-zinc-700">
+          <p class="text-4xl font-extrabold text-brand-600 dark:text-brand-300">1</p>
+          <p class="mt-2 font-bold text-zinc-900 dark:text-white">Baixe o APK</p>
+          <p class="mt-1 text-sm">Toque em Baixar, abra o arquivo e permita “instalar apps desconhecidos” quando o Android pedir. É o instalador oficial gerado pelo EAS.</p>
+        </div>
+        <div class="reveal reveal-delay-1 rounded-2xl border border-zinc-200 p-6 dark:border-zinc-700">
+          <p class="text-4xl font-extrabold text-brand-600 dark:text-brand-300">2</p>
+          <p class="mt-2 font-bold text-zinc-900 dark:text-white">Ou use no navegador</p>
+          <p class="mt-1 text-sm">Abra a versão online e instale como PWA: no Chrome, menu ⋮ → “Instalar app”. Funciona offline depois da primeira carga.</p>
+        </div>
+        <div class="reveal reveal-delay-2 rounded-2xl border border-zinc-200 p-6 dark:border-zinc-700">
+          <p class="text-4xl font-extrabold text-brand-600 dark:text-brand-300">3</p>
+          <p class="mt-2 font-bold text-zinc-900 dark:text-white">Lance e acompanhe</p>
+          <p class="mt-1 text-sm">Adicione uma entrada e uma saída pelo botão +, veja o painel Início e exporte um CSV para testar o backup.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- FAQ -->
+  <section id="faq" class="mx-auto max-w-3xl px-4 py-16 sm:py-20">
+    <div class="reveal mt-8 text-center">
+      <h2 class="text-3xl font-extrabold text-zinc-900 dark:text-white sm:text-4xl">Perguntas frequentes</h2>
+      <p class="mt-2">Ou <a href="./faq.html" class="font-semibold text-brand-600 underline dark:text-brand-300">busque na central de ajuda →</a></p>
+    </div>
+    <div class="mt-8 space-y-3">
+      <details class="faq reveal rounded-2xl border border-zinc-200 bg-white p-5 dark:border-zinc-800 dark:bg-zinc-800">
+        <summary class="flex items-center justify-between font-bold text-zinc-900 dark:text-white">É grátis?</summary>
+        <p class="mt-2 text-sm">Sim. O app é gratuito e funciona 100% offline sem conta. Recursos de família compartilhada (online) são pagos à parte, quando disponíveis.</p>
+      </details>
+      <details class="faq reveal rounded-2xl border border-zinc-200 bg-white p-5 dark:border-zinc-800 dark:bg-zinc-800">
+        <summary class="flex items-center justify-between font-bold text-zinc-900 dark:text-white">Preciso de internet?</summary>
+        <p class="mt-2 text-sm">Não para usar o app: finanças, mercado, combustível, metas e dízimo funcionam offline. Internet só é necessária para a IA e para a versão online.</p>
+      </details>
+      <details class="faq reveal rounded-2xl border border-zinc-200 bg-white p-5 dark:border-zinc-800 dark:bg-zinc-800">
+        <summary class="flex items-center justify-between font-bold text-zinc-900 dark:text-white">Meus dados vão para a nuvem?</summary>
+        <p class="mt-2 text-sm">Não. Sem login, nada sai do aparelho. O backup é feito por você via exportação CSV.</p>
+      </details>
+      <details class="faq reveal rounded-2xl border border-zinc-200 bg-white p-5 dark:border-zinc-800 dark:bg-zinc-800">
+        <summary class="flex items-center justify-between font-bold text-zinc-900 dark:text-white">Tem para iPhone?</summary>
+        <p class="mt-2 text-sm">Hoje o app é distribuído para Android (APK) e Web (PWA, que funciona no iPhone pelo Safari). Versão iOS na App Store está em avaliação.</p>
+      </details>
+      <details class="faq reveal rounded-2xl border border-zinc-200 bg-white p-5 dark:border-zinc-800 dark:bg-zinc-800">
+        <summary class="flex items-center justify-between font-bold text-zinc-900 dark:text-white">Como funciona a IA?</summary>
+        <p class="mt-2 text-sm">Você cadastra sua chave de um dos 5 provedores (OpenAI, Gemini, Anthropic, OpenRouter ou Zen). O app injeta seus dados no prompt com proteção anti-injection e tenta outro provedor se um falhar.</p>
+      </details>
+    </div>
+  </section>
+
+  <!-- Download -->
+  <section id="download" class="hero-gradient text-white">
+    <div class="mx-auto grid max-w-6xl gap-6 px-4 py-16 sm:py-20 md:grid-cols-2">
+      <div class="reveal rounded-2xl bg-white/10 p-6 backdrop-blur sm:p-8">
+        <h3 class="text-xl font-extrabold sm:text-2xl">📱 App Android (APK)</h3>
+        <p class="mt-2 text-sm text-brand-100">Versão 2.3.1 (231) • ~150 MB • pacote <code>com.finances</code>. Instale direto, sem Play Store.</p>
+        <a href="https://expo.dev/artifacts/eas/TZqom4Tv-08itde1qFPitkLQYaV2-kWLxOkX87niyHU.apk" target="_blank" rel="noopener" class="mt-4 inline-block rounded-full bg-white px-6 py-3 font-bold text-brand-900 hover:bg-brand-50">Baixar financas-2.3.1-231.apk</a>
+      </div>
+      <div class="reveal reveal-delay-1 rounded-2xl bg-white/10 p-6 backdrop-blur sm:p-8">
+        <h3 class="text-xl font-extrabold sm:text-2xl">🌐 Usar online (PWA)</h3>
+        <p class="mt-2 text-sm text-brand-100">A mesma experiência no navegador, instalável como app, com dados locais no dispositivo.</p>
+        <a href="https://minhasfinancas.vercel.app" target="_blank" rel="noopener" class="mt-4 inline-block rounded-full border-2 border-white/70 px-6 py-3 font-bold text-white hover:bg-white/10">Abrir minhasfinancas.vercel.app</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="border-t border-zinc-200 dark:border-zinc-800">
+    <div class="mx-auto flex max-w-6xl flex-col items-center gap-3 px-4 py-8 text-center text-sm">
+      <img src="./assets/icon.png" alt="Logo Minhas Finanças" class="h-12 w-12 rounded-2xl" />
+      <nav class="flex flex-wrap justify-center gap-x-5 gap-y-2 font-medium">
+        <a href="./termos.html" class="hover:text-brand-600 dark:hover:text-brand-300">Termos de Uso</a>
+        <a href="./privacidade.html" class="hover:text-brand-600 dark:hover:text-brand-300">Privacidade</a>
+        <a href="./suporte.html" class="hover:text-brand-600 dark:hover:text-brand-300">Suporte</a>
+        <a href="./faq.html" class="hover:text-brand-600 dark:hover:text-brand-300">FAQ</a>
+      </nav>
+      <p>Desenvolvido com ❤️ por <a class="font-semibold text-brand-600 dark:text-brand-300" href="https://filipeleonelbatista.github.io/" target="_blank" rel="noopener">Filipe Batista</a></p>
+      <p class="text-xs text-zinc-500">© <span data-year>2026</span> Minhas Finanças • Offline-first • <a href="./documentacao/project-status.md" class="underline">Status do projeto</a></p>
+    </div>
+  </footer>
+  <script src="./assets/site.js"></script>
+</body>
+</html>

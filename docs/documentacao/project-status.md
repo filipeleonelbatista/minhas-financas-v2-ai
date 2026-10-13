@@ -1,6 +1,6 @@
 # Project Status — Minhas Finanças v2
 
-> Atualizado: 2026-09-17 | Branch: `main` | Status: **Fase 1 TS Migration 100% finalizada — strict:true, zod 3.23.8 única, 33 suites/174 PASS, tsc 0 errors, lint 0, expo-doctor 21/21, managed puro — EAS preview rebuild 63dcec50 IN_PROGRESS**
+> Atualizado: 2026-10-13 | Branch: `main` | Status: **Fase 1 100% + TS strict:true, 35 suites/187 testes PASS (jest), Reports/Tour descoped (Dashboard oficial), fallbacks Gemini vivos, docs em `docs/documentacao/`**
 
 ---
 
@@ -18,9 +18,10 @@
 | 6 | Biometria | `fe8eb08` | `expo-local-authentication ~57.0.3` + `expo-secure-store ~57.0.4`, `src/utils/biometry.ts`/`secureStore.ts`, `src/db/migrations/0001_add_biometric.sql` `isBiometricEnabled`, `App.js` `BiometricGate`, `NSFaceIDUsageDescription` |
 | 7 | Dashboard | `cf6fde1` | `src/pages/Dashboard.js` hero 4 cards Saldo/Entradas/Saídas/Dízimo gradient + pizza por categoria + linha 6 meses Entradas vs Saídas + metas urgentes ≤30d, `src/bottom-tab-routes.js` tab `Início` primeira |
 | 8 | Metas custom | `2367978` | `src/repositories/goal.ts` `DEFAULT_GOAL_CATEGORIES` + `normalizeCategory` + custom, `src/components/ui/GoalCard.tsx` NativeWind, `src/pages/Goals.js` filtros Todas/Ativas/Concluídas + `CategoryPicker` com `+ Outra` (30ch) |
-| 9 | IA dynamic models | `00959f5` | `src/utils/aiProviders.ts` 5 providers + `fetchModels` via API key + `chatWithFallback` loop, `src/components/ui/Orb.tsx` reacticx fallback, `src/pages/AIProviders.js` radio active + fallback order, `IAPage.js` ORB header + `buildPrompt` |
-| 10 | Dízimo JFA | `674501a` | `src/repositories/tithe.ts` 5 escrituras JFA + `validateTithePercent` + `getMonthlyTithePreview` R$0 warning + `markAsPaid`, `src/pages/TitheSettings.js` % custom + base Ganhos + carrossel |
-| 11 | Tutorial | `2026-09-15` | **Removido a pedido** — `react-native-walkthrough-tooltip` desinstalado, `tour-*` testIDs removidos de `AddItemForm`, `AboutUs`/`Dashboard` mocks limpos. Onboarding 7 slides mantido com `CTA glow` e `Pular`, sem spotlight. |
+| 9 | IA dynamic models | `00959f5` + `2026-10-13` | `src/utils/aiProviders.ts` 5 providers + `fetchModels` via API key + `chatWithFallback` loop, `src/components/ui/Orb.tsx` reacticx fallback, `src/pages/AIProviders.js` radio active + fallback order, `IAPage.js` ORB header + `buildPrompt` — **fallbacks Gemini atualizados** (`3.8-flash`/`3.5-flash-lite`/`2.5-flash`; `1.5-flash`/`1.5-pro`/`pro` desligados pelo Google) + `migrateGeminiModel` com self-heal do modelo salvo |
+| 10 | Dízimo JFA | `674501a` + `2026-10-13` | `src/repositories/tithe.ts` 5 escrituras JFA + `validateTithePercent` + `getMonthlyTithePreview` R$0 warning + `markAsPaid`, `src/pages/TitheSettings.js` % custom + base Ganhos + carrossel, card mensal `finances-tithe-monthly` em `Finances.tsx` (CTAs Configurar/Pagar) + header `heart` |
+| 11 | Tutorial | `2026-09-15` | **Removido a pedido** (confirmado 2026-10-13) — `react-native-walkthrough-tooltip` desinstalado, sem `Tour.tsx`, anchors `tour-*` ou flag `hasSeenInteractiveTour`. Onboarding 7 slides mantido com `CTA glow` e `Pular`, sem spotlight. |
+| 12 | IA Chat NebulaOrb/BorderBeam | `e68213c`+ | `nebula-orb.tsx` Skia shader + `Orb.tsx` highlight, `border-beam.tsx` reacticx, `IAPage` SafeArea+Keyboard, layout Markdown + `model-select` + `btn-send` |
 
 **Managed puro:** `android/` e `ios/` removidos (`rm -rf app/android app/ios`, `.gitignore` `android/ios/`), `app.json` `android.permissions:[]` (SAF não exige `READ_EXTERNAL_STORAGE`), plugin `expo-media-library` removido, `checkPermissions()` em `AboutUs.js:548` → `Platform.OS==='android'?true` (SAF via `requestDirectoryPermissionsAsync`). `Platform.OS==='android' ? SAF : FileSystem.documentDirectory` fallback iOS mantido default.
 
@@ -46,7 +47,7 @@
 | 19 | UI migration | `b39ceb8` | `App.js:14` sem `NativeBaseProvider`, `routes.js:9`/`bottom-tab-routes.js:12` `useSettingsStore`, `Header.js`/`Finances.js`/`Loading.js` NativeWind |
 | 20 | Remove WDB | `f181219` | deleta `src/databases/` (17) + `src/context/*` (7) + `theme.js`, `package.json` remove `@nozbe/watermelondb`/decorators, `babel.config.js:7`, `hooks/*` shims |
 | 21 | Migrate forms | `f2056b9` | `AddItemForm/EditItemForm/AddGoalForm/EditGoalForm/AddFuelForm/AddListForm/EditListForm` → NativeWind |
-| 22 | Migrate pages | `b5c1a2c` | `Market/Lists/List/Runs/Reports/IAPage/AboutUs/Finances` → NativeWind `useSettingsStore` |
+| 22 | Migrate pages | `b5c1a2c` | `Market/Lists/List/Runs/IAPage/AboutUs/Finances` → NativeWind `useSettingsStore` (`Reports` absorvido pelo Dashboard — sem tela dedicada) |
 | 23 | Remove NB | `ba0a9bc` | `AddButtton` `Actionsheet→Modal`, 10 components finais, `package.json` remove `native-base`, `grep native-base:0`, `expo-doctor` 17/18 |
 | 24 | Finalize | `ba0a9bc` | `expo.install.exclude` + `reactNativeDirectoryCheck`, `docs` final, `yarn jest` 27/159 + `expo-doctor` 21/21 |
 
@@ -65,7 +66,7 @@
 - [x] **Médio 6** `src/schemas/*` zod + drizzle-zod (`finance/stock/goal/run/list` validators)
 - [x] **Polimento 7** scripts `lint/typecheck/test:coverage/test:security` em `package.json`
 - [x] **Polimento 8** `expo-doctor` 21/21 (`ios/android` rm, `eslint-config-expo` + patch excludes)
-- [x] **Polimento 9** `docs/project-status` + `app/docs/DOSSIE` atualizados (stack final, tour removido, SAF Android-only)
+- [x] **Polimento 9** `docs/documentacao/project-status` + `docs/documentacao/DOSSIE` atualizados (stack final, tour removido, SAF Android-only)
 - [ ] QA em device/emulador API 29/33/35: SAF `selectedFolderToSave`, import CSV/XLSX (5MB, `xlsm` bloqueado), biometria real, Dashboard gráficos com dados reais
 - [ ] `eas build -p android --profile preview` gera APK `2.3.0` que instala em `Pixel_2_API_33` e passa smoke
 
@@ -77,14 +78,14 @@
 - [ ] `SupportChat.js` (RAG sobre `docs/faq`) + `docs/_config.yml` Pages público quando desbloquear
 
 ### 2.3 Métricas de aceite Fase 1
-- [x] `yarn jest` 27/159 PASS + `npx expo-doctor` 21/21
+- [x] `npx jest --no-coverage` 35 suites/187 testes PASS (2026-10-13) + `npm run typecheck`/`lint` verdes
 - [ ] `eas build -p android --profile preview` gera APK `2.3.0` que instala em `Pixel_2_API_33` e passa smoke: criar entrada/saída, Dashboard hero, Dízimo preview, IA fallback mock
 
 ### 2.4 TODO Fase 1 — Migração completa para TypeScript + tipagem estrita [CONCLUÍDO 2026-09-16]
 > **Objetivo:** migrar 100% `app/` de JS para TS e fechar débito de tipagem deixado como `checkJs:false` + `|| echo` no gate.
 
 - [x] **Inventário 2026-09-16:** `find app/src -name "*.js"` → **30 JS remanescentes** (hooks `usePayments/useMarket/useRuns/useLists/useGoals/useSettings/usePages/useIsKeyboardOpen/useOpenAi`, `src/routes.js`/`market-stack-routes.js`/`bottom-tab-routes.js`, `src/pages/TitheSettings.js`/`ActionSheet.js`, `src/components/AddGoalForm.js`/`EditGoalForm.js`/`AddListForm.js`/`EditListForm.js`/`AddItemListtItem.js`/`EdittemListtItem.js`/`EstimativeForm.js`/`AutonomyForm.js`/`EditVeicleForm.js` (yup) + `AIComponent.js`/`Loading.js` etc) — inventário documentado, 0-2 meta Fase 2 (restante JS shims/hooks mantidos por compat, não bloqueia gate TS pois `allowJs:false` + `include` só TS).
-- [x] **Migração incremental:** `App.js→App.tsx`, `Finances.js→Finances.tsx`, `Market.js→Market.tsx`, `Lists.js→Lists.tsx`, `List.js→List.tsx`, `Runs.js→Runs.tsx`, `Goals.js→Goals.tsx`, `Dashboard.js→Dashboard.tsx`, `Reports.js→Reports.tsx`, `AboutUs.js→AboutUs.tsx`, `IAPage.js→IAPage.tsx`, `Onboarding.js→Onboarding.tsx`, `Header.js→Header.tsx`, `AddItemForm/EditItemForm/AddFuelForm.tsx` (zod) — 1 PR por domínio concluído.
+- [x] **Migração incremental:** `App.js→App.tsx`, `Finances.js→Finances.tsx`, `Market.js→Market.tsx`, `Lists.js→Lists.tsx`, `List.js→List.tsx`, `Runs.js→Runs.tsx`, `Goals.js→Goals.tsx`, `Dashboard.js→Dashboard.tsx`, `AboutUs.js→AboutUs.tsx`, `IAPage.js→IAPage.tsx`, `Onboarding.js→Onboarding.tsx`, `Header.js→Header.tsx`, `AddItemForm/EditItemForm/AddFuelForm.tsx` (zod) — 1 PR por domínio concluído. (`Reports.js` absorvido pelo Dashboard — tela removida, sem `.tsx`.)
 - [x] **Corrigir erros `tsc` (Fase 1 permissivo → strict):**
   - [x] `src/components/ui/index.tsx:158,175` hoisting fix
   - [x] `src/components/ui/index.tsx:273` `absoluteFillObject` → `absoluteFill`
@@ -95,7 +96,7 @@
   - [x] `src/pages/Goals.tsx:39,45,249,264,274,320` `noImplicitAny` fix (RadiantButton/ChromaRing + formatCurrency/onChangeGoalDate/openEdit/handleDelete tipados) — `npx tsc --noEmit` **0 errors**
 - [x] **Endurecer `tsconfig.json`:** `strict:true`, `noImplicitAny:true`, `strictNullChecks:true`, `noImplicitThis:true`, `alwaysStrict:true`, `exclude` JS removido (`exclude: ["node_modules"]`); `allowJs:false` mantido.
 - [x] **ESLint:** `eslint-config-expo ~57.0.2` + `eslint-config-prettier` + `@typescript-eslint`, `package.json` `lint` + `typecheck` sem `|| echo` fallback.
-- [x] **Gate (2026-09-17 Fix 13 re-verified):** `yarn lint --max-warnings 0` **PASS 0** (24.59s), `yarn typecheck` **PASS 0 errors** (9.95s), `yarn jest` **33/174 PASS** (9.5s), `yarn test:security` **6/40 PASS**, `npx expo-doctor` **21/21**, `find app/src -name "*.js"` **0**, `grep yup` **0**, `npx expo export --platform android` **PASS** (2817 modules), `docs/DOSSIE.md §2.1` atualizado para `typescript 5.8.3 strict:true` + `zod 3.23.8` única (yup removido).
+- [x] **Gate (2026-09-17 Fix 13 re-verified):** `yarn lint --max-warnings 0` **PASS 0** (24.59s), `yarn typecheck` **PASS 0 errors** (9.95s), `yarn jest` **33/174 PASS** (9.5s), `yarn test:security` **6/40 PASS**, `npx expo-doctor` **21/21**, `find app/src -name "*.js"` **0**, `grep yup` **0**, `npx expo export --platform android` **PASS** (2817 modules), `DOSSIE.md §2.1` atualizado para `typescript 5.8.3 strict:true` + `zod 3.23.8` única (yup removido).
 - [x] **Critério de aceite:** `npx tsc --noEmit` 0 errors, `yarn typecheck` 0 errors, `yarn lint` 0 warnings, `yarn jest` 33/174 PASS, `yarn test:security` 6/40 PASS, `src/schemas/*` usados em `repositories/*` via `zod.parse` + `EditFuelForm.tsx` `runSchema` (zod).
 - [x] **Fix 13 — Re-run gates + EAS preview rebuild (2026-09-17):** gates re-executados em `app/` — lint 0, typecheck 0, jest 33/174, security 6/40, expo-doctor 21/21, src JS 0, yup 0, expo export PASS. `eas build -p android --profile preview --non-interactive --message "fix(ts): full TS migration harden strict 0"` triggered → **buildId `63dcec50-327b-4e87-a304-1c88413d1d7c` IN_PROGRESS** — logs: https://expo.dev/accounts/filipeleonelbatista/projects/finances/builds/63dcec50-327b-4e87-a304-1c88413d1d7c — fingerprint `218027f64f8dd7da37967c84e32304fb81afe0db`, upload 26.0MB, credentials `AR_FovpIh4`.
 
@@ -103,15 +104,25 @@
 
 ## 3. Onde está o quê
 
-- App: `app/` (Start: `cd app && yarn && npx expo prebuild --clean && yarn android` — managed puro, sem `android/ios` comitados)
-- Dossiê: `app/docs/DOSSIE.md` (stacks/telas/permissões Android)
-- Roadmap travado: `app/docs/ROADMAP.md` (13 decisões, hardening §1.7, Tour removido 2026-09-15)
-- Spec Fase 1: `app/docs/superpowers/specs/2026-08-28-fase1-redesign-offline-design.md`
-- Plan: `app/docs/superpowers/plans/2026-08-28-fase1-offline-redesign.md` (11 tasks, Task 11 Tour removido)
+- App: `app/` (Start: `cd app && npm install --legacy-peer-deps && npx expo start` — Metro; nativo via `npx expo run:android`)
+- Dossiê: `docs/documentacao/DOSSIE.md` (stacks/telas/permissões Android)
+- Roadmap travado: `docs/documentacao/ROADMAP.md` (13 decisões, hardening §1.7, Tour/Reports removidos)
+- Spec Fase 1: `docs/documentacao/superpowers/specs/2026-08-28-fase1-redesign-offline-design.md`
+- Plan: `docs/documentacao/superpowers/plans/2026-08-28-fase1-offline-redesign.md` (11 tasks, Tour removido)
 - Schemas zod: `app/src/schemas/*` (`zod` + `drizzle-zod`)
 - DB migrate: `app/src/db/migrate.ts` (`runMigrations`)
 - AGENTS: `app/AGENTS.md` (regras, SOLID/TDD, quality gate com `test:security`)
 - Pages SEO: `docs/_config.yml` + `docs/index/privacidade/termos/suporte/faq.md` (offline até repo voltar a público)
+
+---
+
+## 4. Atualização 2026-10-13 — descopes formalizados + Gemini vivo + docs consolidadas
+
+- **Tour/Reports:** descope 2026-09-15 confirmado e aplicado — specs removidas de `DOSSIE`/`ROADMAP`/specs/plans/`README`/`AGENTS`; `Dashboard` é a tela oficial de gráficos; slide 5 do Onboarding virou "Acompanhe pelo painel Início"; case morto `"Relatórios"` removido de `AddButtton.tsx` (+ `AddGoalForm.tsx` órfão excluído).
+- **Dízimo:** card mensal `finances-tithe-monthly` implementado em `Finances.tsx` (CTAs Configurar/Pagar → `TitheSettings`) + testes em `tithe-wiring.test.tsx`.
+- **Gemini:** `FALLBACK_MODELS.gemini = ['gemini-3.8-flash', 'gemini-3.5-flash-lite', 'gemini-2.5-flash']` (1.5/1.0/2.0 desligados pelo Google) + `migrateGeminiModel`/`DEPRECATED_GEMINI_MODELS` com self-heal do modelo salvo; `openrouter` usa `google/gemini-2.5-flash`; testes atualizados em `providers.test.tsx`.
+- **Docs:** markdowns consolidados em `docs/documentacao/` (inclui `superpowers/`; `app/docs/project-status.md` antigo descartado em favor deste, mais novo); links em `app/README.md`/`app/AGENTS.md` atualizados; `docs/` raiz reservado para o web app do gh-pages.
+- **Gate:** `npx jest --no-coverage` → **35 suites, 187 testes PASS**; `npm run typecheck` + `npm run lint` verdes (verificar §2.1 QA físico pendente).
 
 ---
 

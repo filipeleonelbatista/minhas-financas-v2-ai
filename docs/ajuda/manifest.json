@@ -1,0 +1,20 @@
+[
+  {
+    "id": "dossie",
+    "title": "Dossiê técnico",
+    "desc": "Telas, regras de negócio, segurança, stacks e permissões.",
+    "file": "documentacao/DOSSIE.md"
+  },
+  {
+    "id": "roadmap",
+    "title": "Roadmap do produto",
+    "desc": "Fases, Família online, preços, decisões e hardening.",
+    "file": "documentacao/ROADMAP.md"
+  },
+  {
+    "id": "status",
+    "title": "Status do projeto",
+    "desc": "O que foi entregue em cada fase, métricas e próximos passos.",
+    "file": "documentacao/project-status.md"
+  }
+]

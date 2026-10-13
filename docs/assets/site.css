@@ -1,0 +1,291 @@
+/* Minhas Finanças — estilos complementares (o grueso vem do Tailwind CDN) */
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  -webkit-font-smoothing: antialiased;
+}
+
+.hero-gradient {
+  background: linear-gradient(135deg, #581c87 0%, #7e22ce 45%, #9c44dc 100%);
+}
+
+.dark .hero-gradient {
+  background: linear-gradient(135deg, #2e1065 0%, #581c87 55%, #7e22ce 100%);
+}
+
+.text-gradient {
+  background: linear-gradient(90deg, #e9d5ff, #ffffff);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.phone-frame {
+  box-shadow: 0 25px 60px -12px rgba(88, 28, 135, 0.55);
+}
+
+.card-hover {
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.card-hover:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 16px 32px -12px rgba(156, 68, 220, 0.45);
+}
+
+/* Reveal on scroll (ativado via site.js) */
+.reveal {
+  opacity: 0;
+  transform: translateY(28px);
+  transition: opacity 0.7s ease, transform 0.7s ease;
+}
+
+.reveal.visible {
+  opacity: 1;
+  transform: none;
+}
+
+.reveal-delay-1 { transition-delay: 0.12s; }
+.reveal-delay-2 { transition-delay: 0.24s; }
+.reveal-delay-3 { transition-delay: 0.36s; }
+
+/* Flutuação dos cards sobre o mockup */
+@keyframes floaty {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-12px); }
+}
+
+.floaty {
+  animation: floaty 5s ease-in-out infinite;
+}
+
+.floaty-slow {
+  animation: floaty 7s ease-in-out infinite;
+}
+
+/* Brilho pulsante no CTA principal */
+@keyframes glow-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(255, 255, 255, 0.55); }
+  50% { box-shadow: 0 0 0 12px rgba(255, 255, 255, 0); }
+}
+
+.cta-glow {
+  animation: glow-pulse 2.4s ease-out infinite;
+}
+
+/* Barras do mini-gráfico */
+.bar-anim {
+  transform-origin: bottom;
+  transform: scaleY(0.15);
+  transition: transform 1s ease;
+}
+
+.visible .bar-anim,
+.bar-anim.visible {
+  transform: scaleY(1);
+}
+
+/* Barras de progresso das metas */
+.fill-anim {
+  width: 0;
+  transition: width 1.2s ease;
+}
+
+.visible .fill-anim {
+  width: var(--w, 50%);
+}
+
+details.faq > summary {
+  cursor: pointer;
+  list-style: none;
+}
+
+details.faq > summary::-webkit-details-marker {
+  display: none;
+}
+
+details.faq > summary::after {
+  content: "+";
+  font-weight: 800;
+  font-size: 1.25rem;
+  color: #9c44dc;
+}
+
+details.faq[open] > summary::after {
+  content: "–";
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .reveal {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+  .fill-anim {
+    width: var(--w, 50%);
+    transition: none;
+  }
+  .floaty,
+  .floaty-slow,
+  .cta-glow {
+    animation: none;
+  }
+  html {
+    scroll-behavior: auto;
+  }
+}
+
+.prose-legal h2 {
+  font-size: 1.25rem;
+  font-weight: 700;
+  margin-top: 2rem;
+  margin-bottom: 0.75rem;
+}
+
+.prose-legal p,
+.prose-legal li {
+  line-height: 1.75;
+}
+
+.prose-legal ul {
+  list-style: disc;
+  padding-left: 1.5rem;
+  margin: 0.5rem 0;
+}
+
+/* Documento markdown renderizado (central de ajuda) */
+.doc-body {
+  line-height: 1.75;
+  overflow-wrap: break-word;
+}
+
+.doc-body h1 {
+  font-size: 1.75rem;
+  font-weight: 800;
+  margin-bottom: 1rem;
+}
+
+.doc-body h2 {
+  font-size: 1.35rem;
+  font-weight: 700;
+  margin-top: 2rem;
+  margin-bottom: 0.75rem;
+}
+
+.doc-body h3 {
+  font-size: 1.1rem;
+  font-weight: 700;
+  margin-top: 1.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.doc-body p {
+  margin: 0.75rem 0;
+}
+
+.doc-body ul,
+.doc-body ol {
+  padding-left: 1.5rem;
+  margin: 0.5rem 0;
+}
+
+.doc-body ul {
+  list-style: disc;
+}
+
+.doc-body ol {
+  list-style: decimal;
+}
+
+.doc-body li {
+  margin: 0.25rem 0;
+}
+
+.doc-body blockquote {
+  border-left: 4px solid #9c44dc;
+  padding: 0.5rem 1rem;
+  margin: 1rem 0;
+  background: rgba(156, 68, 220, 0.08);
+  border-radius: 0 0.5rem 0.5rem 0;
+}
+
+.doc-body code {
+  background: rgba(0, 0, 0, 0.07);
+  padding: 0.1rem 0.35rem;
+  border-radius: 0.375rem;
+  font-size: 0.85em;
+}
+
+.dark .doc-body code {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.doc-body pre {
+  background: #1c1917;
+  color: #e7e5e4;
+  padding: 1rem;
+  border-radius: 0.75rem;
+  overflow-x: auto;
+  margin: 1rem 0;
+  font-size: 0.85rem;
+}
+
+.doc-body pre code {
+  background: transparent;
+  padding: 0;
+}
+
+.doc-body table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 1rem 0;
+  font-size: 0.85rem;
+  display: block;
+  overflow-x: auto;
+}
+
+.doc-body th,
+.doc-body td {
+  border: 1px solid rgba(0, 0, 0, 0.12);
+  padding: 0.5rem 0.75rem;
+  text-align: left;
+  vertical-align: top;
+}
+
+.dark .doc-body th,
+.dark .doc-body td {
+  border-color: rgba(255, 255, 255, 0.14);
+}
+
+.doc-body th {
+  background: rgba(156, 68, 220, 0.12);
+  font-weight: 700;
+}
+
+.doc-body hr {
+  margin: 1.5rem 0;
+  opacity: 0.3;
+}
+
+.doc-body a {
+  color: #9c44dc;
+  text-decoration: underline;
+}
+
+.dark .doc-body a {
+  color: #d8b4fe;
+}
+
+mark {
+  background: #facc15;
+  color: #1c1917;
+  padding: 0 0.15rem;
+  border-radius: 0.25rem;
+}
+
+.dark mark {
+  background: #a16207;
+  color: #fefce8;
+}

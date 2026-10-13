@@ -1,6 +1,6 @@
 # Spec — Fase 1 Redesign Offline-First — Finanças App v2.3.0
 
-> Data: 2026-08-28 | Base: `docs/ROADMAP.md:1` (A' Managed) + `docs/DOSSIE.md` + 13 respostas travadas | Target: Android `2.3.0` managed 100% offline
+> Data: 2026-08-28 | Base: `ROADMAP.md:1` (A' Managed) + `DOSSIE.md` + 13 respostas travadas | Target: Android `2.3.0` managed 100% offline
 
 ---
 
@@ -44,11 +44,11 @@ Entregar **Fase 1** como **refactor completo** APK `2.3.0` na Play Store (Androi
 | `src/pages/AIProviders.js` | 5 providers + modelos + teste | navigation via Configurações |
 | `src/pages/TitheSettings.js` | % + base checkboxes + escrituras JFA + `Marcar pago` | usa `config` |
 | `src/pages/Dashboard.js` | **Novo** resumo financeiro + gráficos + metas | consome 4 repos, tab inicial |
-| `src/pages/Goals.js` | **Evolução** de `GoalsContext.js:1` + `Reports.js:479` metas | CRUD categorias (viagem/carro/computador/investimento) + `goalRepo` |
+| `src/pages/Goals.js` | **Evolução** das metas (antes em `GoalsContext.js` + `Reports.js`) | CRUD categorias (viagem/carro/computador/investimento) + `goalRepo` |
 | `src/components/ui/CTA.tsx` | Wrap reacticx CTA | `<CTA onPress>` |
 | `src/components/ui/Orb.tsx` | Wrap reacticx Orb | `<Orb size>` |
 | `src/components/GoalCard.tsx` | Card meta + progress + prazo + CTA reacticx | NativeWind |
-| `src/components/Tour.tsx` | Spotlight `AddButton` + Inputs | `startTour()` |
+| ~~`src/components/Tour.tsx`~~ | Removido de escopo 2026-09-15 (confirmado 2026-10-13) — sem spotlight; Onboarding 7 slides + `Pular` | — |
 
 ---
 
@@ -63,10 +63,10 @@ Entregar **Fase 1** como **refactor completo** APK `2.3.0` na Play Store (Androi
 
 ## 5. Tela por Tela (mantendo formatos, NativeWind base)
 
-- **Dashboard (novo, tab inicial “Início”):** Hero `Saldo/Entradas/Saídas/Dízimo` (cards com `LinearGradient` roxo) + **gráficos** `reanimated`/`react-native-chart-kit` (ou `victory-native`): Pizza gastos por categoria (mês), Linha últimos 6 meses Entradas vs Saídas, Barra abastecimentos (últimos 8) + **resumo Metas** (3 metas próximas do vencimento com `GoalCard` + progress). CTA `Ver Relatórios` → `Reports.js`. Dados de `financeRepo.queryFiltered` (mês atual) + `goalRepo.listActive()`.
-- **Onboarding:** 7 slides repaginados **NativeWind** + CTA reacticx + `Pular` + spotlight após (coach marks).
+- **Dashboard (novo, tab inicial “Início”, tela oficial de gráficos):** Hero `Saldo/Entradas/Saídas/Dízimo` (cards com `LinearGradient` roxo) + **gráficos** `reanimated`/`react-native-chart-kit`: Pizza gastos por categoria (mês), Linha últimos 6 meses Entradas vs Saídas, Barra abastecimentos (últimos 8) + **resumo Metas** (3 metas próximas do vencimento com `GoalCard` + progress). A antiga tela `Reports.js` foi absorvida (sem rota/CTA). Dados de `financeRepo.queryFiltered` (mês atual) + `goalRepo.listActive()`.
+- **Onboarding:** 7 slides repaginados **NativeWind** + CTA reacticx + `Pular` (sem spotlight — removido de escopo).
 - **Finanças:** cards + filtros + `filteredList` via repo + card `Dízimo devido R$ Y` (se habilitado) + Viewer tooltip A (Fase 2 prep).
-- **Metas/Objetivos (evolução de `GoalsContext.js:1` + `Reports.js:479`):** Sim, já existe — na Fase 1 evolui para **tela dedicada `Goals.js`** (ou aba em Dashboard): CRUD `description | targetAmount | currentAmount | deadline | categoryIcon (viagem/carro/computador/investimento/férias)` + `Progress.Bar` + `Restam X dias` + CTA `Depositar` (incrementa `currentAmount`) + filtro `Ativas/Concluídas`. Persiste em `goals` (`drizzle`) com novos campos `icon, category`. Dashboard consome as 3 mais urgentes.
+- **Metas/Objetivos:** Sim, já existe — na Fase 1 evolui para **tela dedicada `Goals.js`** (ou aba em Dashboard): CRUD `description | targetAmount | currentAmount | deadline | categoryIcon (viagem/carro/computador/investimento/férias)` + `Progress.Bar` + `Restam X dias` + CTA `Depositar` (incrementa `currentAmount`) + filtro `Ativas/Concluídas`. Persiste em `goals` (`drizzle`) com novos campos `icon, category`. Dashboard consome as 3 mais urgentes.
 - **IA:** FAB `Orb` pulsante substitui `AIComponent.js:8` pulse/tilt; `IAPage` ORB header + modelo picker.
 - **Dízimo:** switch habilita ícone `heart` + tela `%` + base `Ganhos` checkboxes + R$0 warning + escrituras JFA carrossel.
 
@@ -85,7 +85,7 @@ Entregar **Fase 1** como **refactor completo** APK `2.3.0` na Play Store (Androi
 
 ## 7. Quality Gate
 
-Ver `AGENTS.md:5.4` — `lint` (no-danger, no-formula) + `typecheck` + `test:coverage` + `test:security` + `expo-doctor` + `audit`. `hasSeenInteractiveTour` e `isBiometricEnabled` em `config`.
+Ver `AGENTS.md:5.4` — `lint` (no-danger, no-formula) + `typecheck` + `test:coverage` + `test:security` + `expo-doctor` + `audit`. `isBiometricEnabled` em `config`.
 
 ---
 

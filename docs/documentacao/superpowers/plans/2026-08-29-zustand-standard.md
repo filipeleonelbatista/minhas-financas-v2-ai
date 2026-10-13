@@ -437,7 +437,7 @@ export const useSettingsStore = create<SettingsState>((set,get)=>({
 - Modify: `App.js:14,113,149,165`
 - Modify: `src/routes.js:9`
 - Modify: `src/bottom-tab-routes.js:12`
-- Modify: `src/pages/Finances.js:49`, `Market.js:45`, `Lists.js:40`, `List.js:42`, `Runs.js:43`, `Reports.js:38`, `IAPage.js:46`, `AboutUs.js:52` + 15 forms (`AddItemForm.js:23`...)
+- Modify: `src/pages/Finances.js:49`, `Market.js:45`, `Lists.js:40`, `List.js:42`, `Runs.js:43`, `IAPage.js:46`, `AboutUs.js:52` + 15 forms (`AddItemForm.js:23`...)
 - Delete: `src/hooks/useSettings.ts` (old compat) ou redirect para store
 
 - [ ] **Step 1: App.js remover providers**
@@ -519,7 +519,7 @@ Expected: sem `Untested on New Architecture: @nozbe/watermelondb`, `jest-expo` o
 **Files:**
 - Modify: `__tests__/**` atualizar mocks (remover `__mocks__/@nozbe/watermelondb`)
 - Modify: `jest.config.js:4` garantir `transformIgnorePatterns` inclui `zustand`
-- Modify: `app/docs/ROADMAP.md:130`, `docs/project-status.md:1`
+- Modify: `docs/documentacao/ROADMAP.md:130`, `project-status.md:1`
 
 - [ ] **Step 1: Ajustar jest config**
 

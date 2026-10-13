@@ -9,3 +9,5 @@ app/.store/
 app/node_modules/
 .DS_Store
 app/android/
+
+docs/app/*.apk

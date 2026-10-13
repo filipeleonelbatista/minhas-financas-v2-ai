@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Política de Privacidade — Minhas Finanças</title>
+  <meta name="description" content="Como o Minhas Finanças trata seus dados. Offline-first, só sincroniza se você assinar Família. LGPD, direitos e exclusão." />
+  <meta name="theme-color" content="#581C87" />
+  <link rel="icon" type="image/png" href="./assets/icon.png" />
+  <script>
+    try {
+      var t = localStorage.getItem("mf-site-theme");
+      if (t === "dark" || (!t && window.matchMedia("(prefers-color-scheme: dark)").matches)) {
+        document.documentElement.classList.add("dark");
+      }
+    } catch (e) {}
+  </script>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              50: "#faf5ff",
+              100: "#f3e8ff",
+              200: "#e9d5ff",
+              300: "#d8b4fe",
+              500: "#a855f7",
+              600: "#9c44dc",
+              700: "#7e22ce",
+              800: "#6b21a8",
+              900: "#581C87",
+              950: "#2e1065"
+            }
+          }
+        }
+      }
+    };
+  </script>
+  <link rel="stylesheet" href="./assets/site.css" />
+</head>
+<body class="bg-stone-100 text-zinc-600 dark:bg-zinc-900 dark:text-zinc-300">
+  <header class="sticky top-0 z-50 border-b border-zinc-200 bg-white/90 backdrop-blur dark:border-zinc-800 dark:bg-zinc-900/90">
+    <div class="mx-auto flex max-w-3xl items-center justify-between gap-4 px-4 py-3">
+      <a href="./index.html" class="flex items-center gap-3">
+        <img src="./assets/icon.png" alt="Logo Minhas Finanças" class="h-10 w-10 rounded-2xl" />
+        <span class="text-lg font-bold text-brand-900 dark:text-white">Minhas Finanças</span>
+      </a>
+      <button data-theme-toggle aria-label="Alternar tema claro/escuro" class="rounded-full border border-zinc-300 p-2 hover:border-brand-600 dark:border-zinc-700 dark:hover:border-brand-300">
+        <span data-theme-icon>
+          <svg data-icon="moon" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z" /></svg>
+          <svg data-icon="sun" xmlns="http://www.w3.org/2000/svg" class="hidden h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.36 6.36l-.71-.71M6.34 6.34l-.71-.71m12.02 12.02l-.71.71M6.34 17.66l-.71.71M16 12a4 4 0 11-8 0 4 4 0 018 0z" /></svg>
+        </span>
+      </button>
+    </div>
+  </header>
+
+  <main class="mx-auto max-w-3xl px-4 py-10">
+    <p class="text-sm"><a href="./index.html" class="text-brand-600 hover:underline dark:text-brand-300">← Voltar ao início</a></p>
+    <h1 class="mt-2 text-3xl font-extrabold text-zinc-900 dark:text-white">Política de Privacidade</h1>
+    <p class="mt-2 rounded-xl bg-brand-50 p-3 text-sm text-brand-900 dark:bg-brand-950 dark:text-brand-100">
+      Última atualização: 2026-08-28 | Controlador: Filipe Leonel Batista | Contato:
+      <a class="font-semibold underline" href="mailto:filipe.x2016@gmail.com">filipe.x2016@gmail.com</a> | DPO: mesmo contato
+    </p>
+    <article class="prose-legal mt-4 rounded-2xl border border-zinc-200 bg-white p-6 dark:border-zinc-800 dark:bg-zinc-800 sm:p-8">
+      <h2>1. Resumo</h2>
+      <p>Este app é <strong>primariamente offline</strong> (banco local no aparelho). Dados de finanças, estoque, combustível e metas ficam no seu dispositivo. A exportação CSV vai para a pasta que você escolheu. <strong>Sem login, nenhum dado é enviado a servidor.</strong> Só ao optar pelo recurso <strong>Família</strong> (login + assinatura) os dados dos workspaces <strong>Família</strong> são sincronizados via Firebase (<code>financas-v2</code>, região <code>southamerica-east1</code>).</p>
+
+      <h2>2. Dados coletados</h2>
+      <p><strong>Offline (sempre):</strong> tudo fica local — não coletamos.</p>
+      <p><strong>Online opt-in Família:</strong></p>
+      <ul>
+        <li>E-mail, UID Firebase, workspaces e transações dos workspaces <strong>Família</strong>, status de assinatura e convites.</li>
+        <li>Base legal (LGPD art. 7): execução de contrato (Família paga) e consentimento (tela de login).</li>
+      </ul>
+
+      <h2>3. Compartilhamento</h2>
+      <p>Com <strong>Google Firebase</strong> e <strong>RevenueCat</strong> apenas para autenticação, sincronização e cobrança, conforme as políticas deles. Não vendemos dados.</p>
+
+      <h2>4. Retenção e downgrade</h2>
+      <p>Dados <strong>Família</strong> até você sair da família ou excluir a conta. Sair/cancelar gera um snapshot <strong>arquivado offline</strong> (badge “Sincronização pausada”) até <strong>Remover da lista</strong>. Re-convite sobrescreve. Admin que sai provoca exclusão irreversível, com aviso.</p>
+
+      <h2>5. Seus direitos (LGPD)</h2>
+      <p>Acesso, correção, exclusão, portabilidade (export CSV) e revogação. Use <strong>Configurações → Apagar</strong> no app ou o e-mail acima. Retenção de logs fiscais conforme a lei.</p>
+
+      <h2>6. Segurança</h2>
+      <p>Chaves de IA em cofre seguro do aparelho, biometria opcional, regras de acesso por papel (<code>admin/editor/viewer</code>), sanitização anti-XSS/SQL/prompt injection, Excel anti-malware e limite de uso da IA.</p>
+
+      <h2>7. Crianças</h2>
+      <p>Não coletamos dados de menores sem consentimento do responsável.</p>
+
+      <hr class="my-6 border-zinc-200 dark:border-zinc-700" />
+      <p class="text-sm">Dúvidas: <a class="text-brand-600 hover:underline dark:text-brand-300" href="./suporte.html">Suporte</a> | <a class="text-brand-600 hover:underline dark:text-brand-300" href="./termos.html">Termos</a> | <a class="text-brand-600 hover:underline dark:text-brand-300" href="./faq.html">FAQ</a></p>
+    </article>
+  </main>
+
+  <footer class="border-t border-zinc-200 dark:border-zinc-800">
+    <div class="mx-auto flex max-w-3xl flex-col items-center gap-3 px-4 py-8 text-center text-sm">
+      <nav class="flex flex-wrap justify-center gap-x-5 gap-y-2 font-medium">
+        <a href="./index.html" class="hover:text-brand-600 dark:hover:text-brand-300">Início</a>
+        <a href="./termos.html" class="hover:text-brand-600 dark:hover:text-brand-300">Termos de Uso</a>
+        <a href="./suporte.html" class="hover:text-brand-600 dark:hover:text-brand-300">Suporte</a>
+        <a href="./faq.html" class="hover:text-brand-600 dark:hover:text-brand-300">FAQ</a>
+      </nav>
+      <p>Desenvolvido com ❤️ por <a class="font-semibold text-brand-600 hover:underline dark:text-brand-300" href="https://filipeleonelbatista.github.io/" target="_blank" rel="noopener">Filipe Batista</a></p>
+      <p class="text-xs text-zinc-500">© <span data-year>2026</span> Minhas Finanças • Offline-first</p>
+    </div>
+  </footer>
+  <script src="./assets/site.js"></script>
+</body>
+</html>

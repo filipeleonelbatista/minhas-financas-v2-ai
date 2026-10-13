@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Documento — Minhas Finanças</title>
+  <meta name="description" content="Leia a documentação do Minhas Finanças." />
+  <meta name="theme-color" content="#581C87" />
+  <link rel="icon" type="image/png" href="./assets/icon.png" />
+  <script>
+    try {
+      var t = localStorage.getItem("mf-site-theme");
+      if (t === "dark" || (!t && window.matchMedia("(prefers-color-scheme: dark)").matches)) {
+        document.documentElement.classList.add("dark");
+      }
+    } catch (e) {}
+  </script>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              50: "#faf5ff",
+              100: "#f3e8ff",
+              200: "#e9d5ff",
+              300: "#d8b4fe",
+              500: "#a855f7",
+              600: "#9c44dc",
+              700: "#7e22ce",
+              800: "#6b21a8",
+              900: "#581C87",
+              950: "#2e1065"
+            }
+          }
+        }
+      }
+    };
+  </script>
+  <script src="https://cdn.jsdelivr.net/npm/marked@12.0.0/marked.min.js"></script>
+  <link rel="stylesheet" href="./assets/site.css" />
+</head>
+<body class="bg-stone-100 text-zinc-600 dark:bg-zinc-900 dark:text-zinc-300">
+  <header class="sticky top-0 z-50 border-b border-zinc-200 bg-white/90 backdrop-blur dark:border-zinc-800 dark:bg-zinc-900/90">
+    <div class="mx-auto flex max-w-3xl items-center justify-between gap-4 px-4 py-3">
+      <a href="./index.html" class="flex items-center gap-3">
+        <img src="./assets/icon.png" alt="Logo Minhas Finanças" class="h-10 w-10 rounded-2xl" />
+        <span class="text-lg font-bold text-brand-900 dark:text-white">Minhas Finanças</span>
+      </a>
+      <button data-theme-toggle aria-label="Alternar tema claro/escuro" class="rounded-full border border-zinc-300 p-2 hover:border-brand-600 dark:border-zinc-700 dark:hover:border-brand-300">
+        <span data-theme-icon>
+          <svg data-icon="moon" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z" /></svg>
+          <svg data-icon="sun" xmlns="http://www.w3.org/2000/svg" class="hidden h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.36 6.36l-.71-.71M6.34 6.34l-.71-.71m12.02 12.02l-.71.71M6.34 17.66l-.71.71M16 12a4 4 0 11-8 0 4 4 0 018 0z" /></svg>
+        </span>
+      </button>
+    </div>
+  </header>
+
+  <main class="mx-auto max-w-3xl px-4 py-10">
+    <p class="text-sm">
+      <a href="./faq.html" class="text-brand-600 hover:underline dark:text-brand-300">← Voltar à central de ajuda</a>
+    </p>
+    <h1 id="doc-title" class="mt-2 text-3xl font-extrabold text-zinc-900 dark:text-white">Carregando…</h1>
+    <article id="doc-body" class="doc-body mt-4 rounded-2xl border border-zinc-200 bg-white p-6 dark:border-zinc-800 dark:bg-zinc-800 sm:p-8">
+      <p class="text-sm text-zinc-500">Buscando o documento…</p>
+    </article>
+  </main>
+
+  <footer class="border-t border-zinc-200 dark:border-zinc-800">
+    <div class="mx-auto flex max-w-3xl flex-col items-center gap-3 px-4 py-8 text-center text-sm">
+      <nav class="flex flex-wrap justify-center gap-x-5 gap-y-2 font-medium">
+        <a href="./index.html" class="hover:text-brand-600 dark:hover:text-brand-300">Início</a>
+        <a href="./faq.html" class="hover:text-brand-600 dark:hover:text-brand-300">Ajuda</a>
+        <a href="./termos.html" class="hover:text-brand-600 dark:hover:text-brand-300">Termos de Uso</a>
+        <a href="./privacidade.html" class="hover:text-brand-600 dark:hover:text-brand-300">Privacidade</a>
+      </nav>
+      <p>Desenvolvido com ❤️ por <a class="font-semibold text-brand-600 hover:underline dark:text-brand-300" href="https://filipeleonelbatista.github.io/" target="_blank" rel="noopener">Filipe Batista</a></p>
+      <p class="text-xs text-zinc-500">© <span data-year>2026</span> Minhas Finanças • Offline-first</p>
+    </div>
+  </footer>
+
+  <script>
+    (function () {
+      var title = document.getElementById("doc-title");
+      var body = document.getElementById("doc-body");
+
+      function fail(msg) {
+        title.textContent = "Documento não encontrado";
+        body.innerHTML = '<p class="text-sm">' + msg + ' Volte à <a href="./faq.html">central de ajuda</a>.</p>';
+      }
+
+      function byName(list, name) {
+        for (var i = 0; i < list.length; i++) {
+          var file = list[i].file.split("/").pop();
+          if (file.toLowerCase() === String(name).toLowerCase()) return list[i];
+        }
+        return null;
+      }
+
+      var params = new URLSearchParams(window.location.search);
+      var wanted = params.get("doc");
+      if (!wanted) {
+        fail("Nenhum documento informado.");
+        return;
+      }
+
+      fetch("./ajuda/manifest.json")
+        .then(function (r) {
+          if (!r.ok) throw new Error("manifest");
+          return r.json();
+        })
+        .then(function (manifest) {
+          var entry = byName(manifest, wanted);
+          if (!entry) {
+            fail("Este documento não está no índice de ajuda.");
+            return null;
+          }
+          document.title = entry.title + " — Minhas Finanças";
+          title.textContent = entry.title;
+          return fetch("./" + entry.file).then(function (r) {
+            if (!r.ok) throw new Error("doc");
+            return r.text();
+          }).then(function (md) {
+            var html = window.marked ? window.marked.parse(md) : "<pre>" + md.replace(/&/g, "&amp;").replace(/</g, "&lt;") + "</pre>";
+            body.innerHTML = html;
+            // links internos .md viram páginas do visualizador
+            body.querySelectorAll("a").forEach(function (a) {
+              var href = a.getAttribute("href") || "";
+              var m = href.match(/([^/#?]+\.md)(#.*)?$/i);
+              if (m) {
+                var target = byName(manifest, m[1]);
+                if (target) a.setAttribute("href", "./ler.html?doc=" + encodeURIComponent(m[1]));
+              }
+              if (/^https?:/i.test(href)) {
+                a.setAttribute("target", "_blank");
+                a.setAttribute("rel", "noopener");
+              }
+            });
+          });
+        })
+        .catch(function () {
+          fail("Falha ao carregar. Verifique sua conexão e tente de novo.");
+        });
+    })();
+  </script>
+  <script src="./assets/site.js"></script>
+</body>
+</html>

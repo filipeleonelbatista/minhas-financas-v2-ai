@@ -1,10 +1,10 @@
 # Spec — Fase 1 SAF API 29+ — Permissão moderna sem WRITE_EXTERNAL_STORAGE
 
-> Data: 2026-09-15 | Base: `docs/DOSSIE.md:268` + `AGENTS.md:2` regra 10 + `ROADMAP.md:1.7` | Gate B (Play Store + regras offline intactas) | Reports/Tour descoped (Dashboard hero)
+> Data: 2026-09-15 | Base: `DOSSIE.md:268` + `AGENTS.md:2` regra 10 + `ROADMAP.md:1.7` | Gate B (Play Store + regras offline intactas) | Reports/Tour descoped (Dashboard hero)
 
 ## 1. Objetivo
 
-Remover `WRITE_EXTERNAL_STORAGE` (legado, rejeitado Play `targetSdk 36`) mantendo export/import vital de `Configurações` 100% funcional em **API 29-36**, via `StorageAccessFramework` (SAF) já existente em `app/src/pages/AboutUs.js:251`. Cobertura exigida: `Pixel_2_API_29`, `33`, `35` (`docs/project-status.md:58`).
+Remover `WRITE_EXTERNAL_STORAGE` (legado, rejeitado Play `targetSdk 36`) mantendo export/import vital de `Configurações` 100% funcional em **API 29-36**, via `StorageAccessFramework` (SAF) já existente em `app/src/pages/AboutUs.js:251`. Cobertura exigida: `Pixel_2_API_29`, `33`, `35` (`project-status.md:58`).
 
 ## 2. Arquitetura
 
@@ -56,4 +56,4 @@ Remover `WRITE_EXTERNAL_STORAGE` (legado, rejeitado Play `targetSdk 36`) mantend
 
 ## 10. Commit
 
-- `app/app.json:30` + `app/docs/superpowers/specs/2026-09-15-fase1-saf-api29-design.md` + teste `permissions.test.ts`
+- `app/app.json:30` + `docs/documentacao/superpowers/specs/2026-09-15-fase1-saf-api29-design.md` + teste `permissions.test.ts`

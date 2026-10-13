@@ -374,11 +374,13 @@ git commit -m "feat(tithe): JFA, % custom, base Ganhos, R$0 warning"
 
 ---
 
-### Task 11: Tutorial spotlight
+### Task 11: Tutorial spotlight — REMOVIDO DE ESCOPO
+
+> Decisão 2026-09-15 (confirmada 2026-10-13): tour spotlight removido a pedido. Onboarding mantém 7 slides + `Pular`. Passos originais preservados abaixo apenas como histórico (não executar).
 
 **Files:**
-- Create: `src/components/Tour.tsx`
-- Modify: `src/pages/Onboarding.js`, `src/pages/Finances.js`
+- ~~Create: `src/components/Tour.tsx`~~
+- Modify: `src/pages/Onboarding.js` (slides + `Pular` — feito), ~~`src/pages/Finances.js` (anchors)~~
 
 - [ ] **Step 1: Tour shows spotlight**
 
@@ -396,4 +398,4 @@ git commit -m "feat(onboarding): spotlight tour AddButton + Inputs + Pular"
 
 ---
 
-**Self-review:** Spec §1-6 cobertos (DB, NativeWind base, Dashboard, Metas, IA, Dízimo, Tour, hardening Excel/prompt). Types consistentes (`quantityDesired`). Nenhum TBD.
+**Self-review:** Spec §1-6 cobertos (DB, NativeWind base, Dashboard, Metas, IA, Dízimo, hardening Excel/prompt; Tour removido de escopo). Types consistentes (`quantityDesired`). Nenhum TBD.

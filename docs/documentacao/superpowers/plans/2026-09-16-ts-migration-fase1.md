@@ -482,7 +482,7 @@ git commit -m "fix(ts): migrate tests to ts + seed/shimmer/nebula types"
 - Modify: `app/tsconfig.json`
 - Modify: `app/.eslintrc.json`
 - Modify: `app/package.json` (remove `|| echo`)
-- Modify: `app/docs/DOSSIE.md:2.1`
+- Modify: `docs/documentacao/DOSSIE.md:2.1`
 
 - [ ] **Step 1: Write failing gate test**
 
@@ -527,12 +527,12 @@ Run: `npx expo-doctor` → 21/21
 
 - [ ] **Step 5: Update docs**
 
-`app/docs/DOSSIE.md` atualizar `typescript 6.0.3 strict:true` + `zod única validação`.
+`docs/documentacao/DOSSIE.md` atualizar `typescript 6.0.3 strict:true` + `zod única validação`.
 
 - [ ] **Step 6: Commit**
 
 ```bash
-git add app/tsconfig.json app/.eslintrc.json app/package.json app/docs/DOSSIE.md docs/project-status.md
+git add app/tsconfig.json app/.eslintrc.json app/package.json docs/documentacao/DOSSIE.md docs/project-status.md
 git commit -m "chore(ts): harden strict true + lint 0, close Fase1 TS migration"
 ```
 

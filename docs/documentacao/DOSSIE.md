@@ -1,15 +1,15 @@
-# Dossiê Completo — Financas App v2.3.0 (app/ • Managed)
+# Dossiê Completo — Financas App v2.3.1 (app/ • Managed)
 
-> Gerado em 2026-09-16 | Projeto: `app/` | Expo ~57.0.19 + React 19.2.3 + React Native 0.86.3 + expo-sqlite/drizzle + zod 3.23.8 + TypeScript 6.0.3 strict:true (WatermelonDB/NativeBase/Tour removidos, SAF Android-only, doctor 21/21)
+> Atualizado em 2026-10-13 | Projeto: `app/` | Expo ~57.0.19 + React 19.2.3 + React Native 0.86.3 + expo-sqlite/drizzle + zod 3.23.8 + TypeScript strict:true (WatermelonDB/NativeBase/Tour/Reports removidos — Dashboard é a tela oficial de gráficos, SAF Android-only, 35 suites/187 testes PASS)
 
 ---
 
 ## 1. Visão Geral
 
-App React Native (Expo Managed + Prebuild) para **gestão financeira familiar** com 4 domínios integrados: Finanças, Combustível/Hodômetro, Mercado/Estoque e Metas, com Relatórios e IA (OpenAI). Evolução da v2.0.2 (Play Store `com.finances`) para v2.2.2 com migração total de `AsyncStorage` para banco SQLite relacional via WatermelonDB e novo domínio de **Listas de Compras**.
+App React Native (Expo Managed + Prebuild) para **gestão financeira familiar** com 4 domínios integrados: Finanças, Combustível/Hodômetro, Mercado/Estoque e Metas, com painel Início (Dashboard com gráficos) e IA multi-provider. Evolução da v2.0.2 (Play Store `com.finances`) para v2.2.2 com migração total de `AsyncStorage` para banco SQLite relacional via WatermelonDB e novo domínio de **Listas de Compras**; Fase 1 migrou para `expo-sqlite` + `drizzle-orm` (managed puro).
 
 - **Slug/packge:** `finances` / `com.finances` (`app.json:8`)
-- **VersionCode:** 230, **Version:** 2.3.0, **BuildNumber iOS:** 2.3.0, **EAS projectId:** `007d84b9-db5f-4e91-8537-b64bd4edafbe`
+- **VersionCode:** 231, **Version:** 2.3.1, **BuildNumber iOS:** 2.3.1, **EAS projectId:** `cd320c43-f9dd-45c7-91be-b39fa3606fd2` (`app.json`, owner `filipeleonelbatista`)
 - **Orientação:** portrait only, `userInterfaceStyle: automatic` (segue sistema)
 - **Workspace:** `app/` (renomeado de `finances-app-feature-adicionando-watermelondb/` em `ae034a8`; `app/android/` + `app/ios/` ignorados via `.gitignore`, managed puro)
 - **Doctor:** `npx expo-doctor` **21/21** (com `expo.install.exclude: ["expo-sqlite","expo", "expo-*", "eslint-config-expo"]`, `android/ios` removidos)
@@ -42,12 +42,11 @@ App React Native (Expo Managed + Prebuild) para **gestão financeira familiar** 
 |  | `react-native-gesture-handler` | ~2.32.0 |  |
 |  | `react-native-safe-area-context` | ~5.7.0 |  |
 |  | `react-native-reanimated` | 4.5.1 |  |
-|  | `react-native-chart-kit` + `react-native-progress` | 6.12.0 / 5.0.0 | PieChart, LineChart, Progress.Bar em `Reports.js` |
-|  | ~~`react-native-walkthrough-tooltip`~~ | removido 2026-09-15 | Tour spotlight **removido a pedido** (SAF Android-only); Onboarding 7 slides mantido com `CTA glow` |
+|  | `react-native-chart-kit` + `react-native-progress` | 6.12.0 / 5.0.0 | PieChart, LineChart, Progress.Bar no `Dashboard` (painel Início, tela oficial de gráficos) |
 |  | `@expo/vector-icons` (Feather, FontAwesome, MaterialCommunityIcons, Fontisto, Ionicons, Octicons) | bundled | Ícones em toda UI |
 | Forms | `formik` + `zod` | 2.2.9 / 3.23.8 | Validação `zod` única em `src/schemas/*` + `runSchema` em `EditFuelForm.tsx` (yup removido) |
 | Data | `zustand` + `drizzle-orm` + `expo-sqlite` | 5 / 0.45 / 57 | SQLite offline-first (WatermelonDB **removido** em Fase 1 gaps) |
-|  | `@react-native-async-storage/async-storage` | 2.2.0 | `@onboarding` flag + fallback `hasSeenInteractiveTour` |
+|  | `@react-native-async-storage/async-storage` | 2.2.0 | `@onboarding` flag |
 |  | `dayjs` + `date-fns` | 1.11.7 / 2.30.0 | Manipulação datas |
 |  | `@react-native-community/datetimepicker` | 9.1.0 | `DateTimePickerAndroid.open` |
 |  | `@react-native-picker/picker` | 2.11.4 | Dropdowns categoria |
@@ -59,7 +58,7 @@ App React Native (Expo Managed + Prebuild) para **gestão financeira familiar** 
 | IA | `openai` | ^4.28.0 | `new OpenAI({apiKey})` via `src/utils/aiProviders.ts` `chatWithFallback` (openai 3.x `Configuration` removido) |
 |  | `zustand` + `expo-secure-store` | 5 / 57 | `getProviderKey` por provider |
 | Build | `expo-build-properties` | ~57.0.16 | `compileSdk 36/targetSdk 36`, `kotlinVersion 2.1.0` |
-|  | `jest-expo` | ~57.0.5 | Preset `jest-expo` (mock `walkthrough-tooltip` removido) |
+|  | `jest-expo` | ~57.0.5 | Preset `jest-expo` |
 |  | `eslint` / `eslint-config-expo` | ^8.57 / ~57.0.2 | `npm run lint --max-warnings 0` (sem fallback), `typescript 6.0.3` `strict:true` + `noImplicitAny` + `strictNullChecks` |
 | Babel | `nativewind` preset | — | Sem `plugin-proposal-decorators` (WatermelonDB removido), `nativewind/babel` + `react-native-reanimated/plugin` |
 
@@ -77,93 +76,91 @@ App React Native (Expo Managed + Prebuild) para **gestão financeira familiar** 
 
 ### 3.1 Estrutura de Pastas (`src/`)
 
+### 3.1 Estrutura de Pastas (`src/`, TypeScript strict)
+
 ```
 src/
   assets/{icon.png, images/, onboarding/1..7.png}
-  theme.js
-  routes.js                    # Stack root
-  bottom-tab-routes.js         # 5 tabs
-  market-stack-routes.js       # **NOVO** Stack aninhado Stock->Lists->List
-  databases/
-    index.js                   # Database + SQLiteAdapter
-    Model/{financesModel, runsModel, goalsModel, stockModel, listsModel, itemsModel, configModel}.js
-    schemas/{index, financesSchema, runsSchema, goalsSchema, stockScheme, listsSchema, itemShcema, configSchema}.js
-  context/{Settings, Payments, Runs, Market, Goals, Pages, Lists}.js   # Lists é NOVO
-  hooks/{useSettings, usePayments, useRuns, useMarket, useGoals, usePages, useLists, useOpenAi, useIsKeyboardOpen}
-  pages/{Onboarding, Finances, Runs, Market, Lists, List, Reports, AboutUs, IAPage, ActionSheet}
-  components/{Header, EmptyMessage, Loading, ErrorSheet, AIComponent, AddButton, AddItemForm, EditItemForm, AddFuelForm, AutonomyForm, EditVeicleForm, ViewFuelReport, AddShoppingCartItem, EditShoppingCartItem, AddGoalForm, EditGoalForm, EstimativeForm, AddListForm, EditListForm, AddItemListtItem, EdittemListtItem}
-  services/api.js
+  routes.tsx                     # Stack root
+  bottom-tab-routes.tsx          # 4 tabs + FAB central
+  market-stack-routes.tsx        # Stack aninhado Stock->Lists->List
+  db/{schema.ts, index.ts, migrate.ts, seed.ts}
+  db/migrations/                 # 0000 base + 0001 biometric + 0002 tithe
+  repositories/{finance, run, market, list, goal, config, tithe}.ts
+  stores/{settings, finance, runs, market, lists, goals, pages}.ts  # zustand 5
+  schemas/{finance, stock, goal, run, list, config}.zod.ts          # zod única validação
+  utils/{aiProviders, biometry, secureStore, sanitize, excel, prompt, datePicker}.ts
+  hooks/{useSettings, usePages, useIsKeyboardOpen, useOpenAi}
+  pages/{Onboarding, Dashboard, Finances, Runs, Market, Lists, List, Goals, AboutUs, IAPage, AIProviders, TitheSettings, ActionSheet}.tsx
+  components/{Header, EmptyMessage, Loading, ErrorSheet, AIComponent, AddButtton, *Form, SwipeableFinanceRow, nativewindui/, ui/}.tsx
 ```
 
 ### 3.2 Tema, Cores e Tipografia
 
-- **Theme** (`src/theme.js:3`): `extendTheme` com `fontConfig Poppins` (Light 100-300, Regular 400, Medium 500-600). `fonts.heading/body/mono = Poppins`. Cores vêm do `native-base` default + overrides.
+- **Tema** (`tailwind.config.js` + `global.css`): fonte Poppins (`@expo-google-fonts/poppins`), cores via preset NativeWind.
 - **Paleta principal:**
-  - Roxo brand: `theme.colors.purple[600]` (#9c44dc), `purple[900]` (#581C87 — splash e header), `purple[800]`, `purple[500]`, `purple[300]/#D4AEF0/#DBBCF2` (gráficos Reports)
+  - Roxo brand: `#9c44dc` (purple 600), `#581C87` (purple 900 — splash e header), tons `#D4AEF0/#DBBCF2` (gráficos do Dashboard)
   - Background light: `warmGray[50]` (#f0f2f5 / #FAFAFA), dark: `gray[900]` #1c1e21, `gray[800]` card dark
   - Texto light: `gray[600]`, dark: `gray[200]`, header `white` / `gray[800]`
   - Semânticas: `green[500]/600` (#12a454 gastos/entradas), `red[500]/600` (#e83e5a saídas), `yellow[400]` favorito
-- **Dark/Light** (`SettingsContext.js:12` + `AboutUs.js:586`): `useColorMode().toggleColorMode()` + persistência `config.colorModeState` (WatermelonDB). `NavigationContainer theme background` `dark:#1c1e21 light:#f0f2f5` (`routes.js:21`). `auto` por padrão (`app.json:11`). Ícones e `useColorModeValue` trocam bg/text/bgCard dinamicamente em todas as páginas.
+- **Dark/Light** (`src/stores/settings.ts` `colorModeState` + `Appearance`): `NavigationContainer theme background` `dark:#1c1e21 light:#f0f2f5` (`routes.tsx`). `automatic` por padrão (`app.json`). Classes `dark:` do NativeWind trocam bg/text dinamicamente em todas as páginas.
 - **Splash/Icon:** `assets/splash.png` bg `#581C87`, `icon.png`/`adaptive-icon.png` (`app.json:12`).
 - **Header** (`src/components/Header.js`): altura extensa com `bg purple.900`, `title` + `isLeftIconComponent/isRightIconComponent/isShort` variants. Usado em todas as páginas.
 - **Ícones:** Feather (`dollar-sign`, `calendar`, `filter`, `settings`, `trash`, `edit`, `shopping-cart`, `pie-chart`, `arrow-*`), FontAwesome (`car`, `medkit`, `money`, `star`), MaterialCommunityIcons (`fuel`, `lipstick`, `file-plus-outline`, `format-list-bulleted`, `robot-outline`, `account`), Fontisto (`netflix`), Ionicons (`car-sport-outline`, `shirt-outline`), Octicons (`paper-airplane` no chat IA).
 
 ### 3.3 Navegação
 
-- **Root Stack** (`src/routes.js:14`): `Onboarding` (initial) -> `TabNavigator` (BottomTabs) -> `Configuracoes` (AboutUs) -> `IAPage` (chat IA). `headerShown:false`.
-- **Bottom Tabs** (`src/bottom-tab-routes.js:19`): `Finanças` (Feather dollar-sign) | `Combustível` (MaterialCommunityIcons fuel 26px — antes Feather droplet) | `Adicionar` (botão central `AddButton` custom) | `Mercado` (**agora `MarketStackRoutes` não `Market` direto**) | `Relatórios` (pie-chart). `tabBarHideOnKeyboard:true`, `isShowLabelOnNavigation` controla `tabBarShowLabel`.
-- **Market Stack** (`src/market-stack-routes.js:11`) **NOVO:** `Stock` (Market.js) -> `Lists` -> `List`. Permite `navigation.navigate("Lists")` e `navigate("List")` dentro da tab Mercado.
-- **ActionSheet** (`src/pages/ActionSheet.js`): fab central que abre `Actionsheet` com `AddItemForm` / `AddGoalForm` / `AddShoppingCartItem` / `AddFuelForm` / etc. conforme `PagesContext.selectedSheet`.
+- **Root Stack** (`src/routes.tsx`): `Onboarding` (initial) -> `TabNavigator` (BottomTabs) -> `Configuracoes` (AboutUs) -> `IAPage` (chat IA) + `AIProviders` + `TitheSettings` + `Goals`. `headerShown:false`.
+- **Bottom Tabs** (`src/bottom-tab-routes.tsx`): `Início` (Dashboard, Feather home) | `Finanças` (Feather dollar-sign) | `Adicionar` (botão central `AddButtton` custom) | `Combustível` (MaterialCommunityIcons fuel) | `Mercado` (`MarketStackRoutes`). `tabBarHideOnKeyboard:true`, sem labels. A tela de gráficos oficial é o `Dashboard` (painel Início) — não existe tela `Reports`.
+- **Market Stack** (`src/market-stack-routes.tsx`): `Stock` (Market) -> `Lists` -> `List`. Permite `navigation.navigate("Lists")` e `navigate("List")` dentro da tab Mercado.
+- **ActionSheet** (`src/pages/ActionSheet.tsx`): fab central que abre `Modal` com `AddItemForm` / `AddShoppingCartItem` / `AddFuelForm` / `AddListForm` / `AddItemListtItem` conforme `usePagesStore.selectedSheet`.
 
 ---
 
-## 4. Persistência — WatermelonDB (feature central)
+## 4. Persistência — expo-sqlite + drizzle (Fase 1, managed puro)
 
-### 4.1 Adapter
+> Histórico: v2.2.2 usava WatermelonDB (`src/databases/`, 7 tabelas, `version:25`, `android/` ejectado). Fase 1 migrou tudo para `expo-sqlite` + `drizzle-orm`; `src/databases/`, `src/context/` e decorators foram removidos.
 
-`src/databases/index.js:14`:
-```js
-new SQLiteAdapter({ schema: schemas }) + new Database({ adapter, modelClasses: [FinancesModel, RunsModel, GoalsModel, StockModel, ListsModel, ItemsModel, ConfigModel] })
-```
-Sync desativado (offline-first puro). Sem migrations — `version:25` (`schemas/index.js:12`).
+### 4.1 Conexão e migrações
 
-### 4.2 Tabelas (`src/databases/schemas/`)
+`src/db/index.ts`: `SQLite.openDatabaseSync("financas.db")` + `drizzle(expoDb)`. `src/db/migrate.ts` `runMigrations()` via `PRAGMA user_version` (one-shot em `App.tsx`), aplicando `src/db/migrations/0000` (base 8 tabelas) + `0001_add_biometric` (`isBiometricEnabled`) + `0002_add_tithe` (`tithe_payments`). Offline-first puro, sem sync.
 
-| Tabela | Arquivo | Colunas | Notas |
-|---|---|---|---|
-| `finances` | `financesSchema.js:3` | `description:string, amount:number, category:string, date:number, paymentDate:number? , paymentStatus:number, isEnabled:number, isFavorited:number` | `isEnabled 1=saída 0=entrada`, `paymentStatus 1=pago` |
-| `runs` | `runsSchema.js:3` | `currentDistance:number, unityAmount:number (R$/L), amount:number (total), type:string (gasolina/etanol...), date:number, location:string` | Abastecimentos |
-| `goals` | `goalsSchema.js:3` | `description, currentAmount, amount, date` | Metas financeiras |
-| `stock` | `stockScheme.js:3` | `description, category, amount (unitário), quantity, quantityDesired` | Estoque mercado |
-| `lists` | `listsSchema.js:3` | `description, location, quantity (total itens), amount (total R$), date` | Cabeçalho lista de compras |
-| `items` | `itemShcema.js:3` | `list_id:string (FK manual), description, category, amount, quantity, desiredQuantity, location, date` | **BUG:** `desiredQuantity` vs `quantityDesired` no resto do app (ver §7) |
-| `config` | `configSchema.js:3` | 17 cols: `colorModeState, isAiEnabled, apiKey, isShowLabelOnNavigation, isEnableTitheCard, isEnableTotalHistoryCard, willAddFuelToTransactionList, willUsePrefixToRemoveTihteSum, simpleFinancesItem, marketSimplifiedItems, prefixTithe, veicleName/Brand/Year/Color/Plate, veicleAutonomy, selectedFolderToSave` | Singleton (1 row) |
+### 4.2 Tabelas (`src/db/schema.ts`)
 
-### 4.3 Contexts como Repository
+| Tabela | Colunas | Notas |
+|---|---|---|
+| `finances` | `id, description, amount, category, date, paymentDate?, paymentStatus, isEnabled, isFavorited, createdAt` | `isEnabled 1=saída 0=entrada`, `paymentStatus 1=pago` |
+| `runs` | `currentDistance, unityAmount (R$/L), amount (total), type, date, location` | Abastecimentos |
+| `goals` | `description, currentAmount, amount, date, icon, category` | Metas, categoria normalizada (`normalizeCategory`) |
+| `stock` | `description, category, amount (unitário), quantity, quantityDesired` | Estoque mercado |
+| `lists` | `description, location, quantity (total itens), amount (total R$), date` | Cabeçalho lista de compras |
+| `items` | `list_id (FK manual), description, category, amount, quantity, quantityDesired, location, date` | Debt antigo `desiredQuantity` **corrigido** |
+| `config` | singleton: `colorModeState, isAiEnabled, apiKey (legado), ..., isBiometricEnabled, tithePercent, titheCategories, isTitheMenuEnabled, selectedFolderToSave` | 1 row |
+| `tithe_payments` | histórico de dízimos pagos (`markAsPaid`) | Fase 1 |
 
-Cada `*Context.js` encapsula CRUD via `database.write/get/query`:
+### 4.3 Repositories + stores
 
-- `PaymentsContext.js:409` — `addTransaction`, `updateTransaction`, `deleteTransaction`, `handleFavorite` (toggle `isFavorited`), `importTransactions`, `loadTransactions`. Filtros computados em `filteredList` (`useMemo`) + derivados `Incomings/Expenses/Total/Saldo/Tithe`.
-- `RunsContext.js:222` — `addTransaction` (se `willAddFuelToTransactionList` cria também `finances` tipo Transporte), `deleteTransaction`, `handleImportRuns/handleExportRuns`.
-- `MarketContext.js:451` — `addTransaction`, `updateTransaction`, `updateStock(isAdd/isSubtract)`, `handleAddItensOnBuyList` (cria `lists` + `items`), `handleAddFinances` (gera `finances` Mercado).
-- `ListsContext.js:539` — gerencia 2 níveis: `lists` + `selectedListItems` (`Q.where("list_id",id)`), `addTransaction` (lista), `addItemToList`, `updateItemToList`, `updateItemQuantityToList`, `deleteItemToList`, `handleDeleteList` (cascade), `handleSelectList`, `handleImportList/handleExportList`.
-- `GoalsContext.js:11` — `add/update/deleteTransaction` metas.
-- `SettingsContext.js:9` — Singleton config: `loadData` cria row default se `config` vazio, `updateConfiguration` genérico (`data._raw[variable]=value`), `handleCleanStorage` destrói todas as tabelas + `AsyncStorage.clear() + DevSettings.reload()`.
+Cada `src/repositories/*.ts` encapsula acesso via drizzle prepared statements (sem SQL concatenado):
+- `finance.ts` — `getAll/add/update/delete`, `filterFinances` pipeline puro (tipo→busca→período→categoria→status→favoritos→sort) + `calcTithe`/`calcTithePure` com `%` custom e base por categorias.
+- `run/market/list/goal/config/tithe.ts` — CRUD por agregado; `list` com cascade `list_id`; `tithe` com `validateTithePercent`, `getMonthlyTithePreview`, `markAsPaid`, `TITHE_SCRIPTURES` (JFA).
+- Validação `zod` em `src/schemas/*.zod.ts` + sanitização (`sanitizeDescription/sanitizeAmount/...`) nos repos.
+- `src/stores/*.ts` (zustand 5, `useShallow`): `settings/finance/runs/market/lists/goals/pages` — UI consome stores, nunca o db direto.
 
 ---
 
 ## 5. Mapeamento de Telas & Funcionalidades
 
-### 5.1 Onboarding (`src/pages/Onboarding.js:23`)
+### 5.1 Onboarding (`src/pages/Onboarding.tsx`)
 
-7 slides horizontais `FlatList pagingEnabled` com imagens `1..7.png`, títulos em `purple[900]` bg. Último slide tem botão `Vamos começar?!`. Ao sair, `FileSystem.StorageAccessFramework.requestDirectoryPermissionsAsync()` obriga escolha de pasta para export (persistida em `config.selectedFolderToSave`). Flag `@onboarding=true` em AsyncStorage. `Loading` enquanto `waiting`.
+7 slides horizontais `FlatList pagingEnabled` com imagens `1..7.png` + botão `Pular` sempre visível. A pasta de exportação (SAF) é solicitada **sob demanda** no export, sem bloquear o onboarding (`Platform.OS === 'android' ? SAF : documentDirectory` — iOS usa `documentDirectory` direto). Flag `@onboarding=true` em AsyncStorage. `Loading` enquanto `waiting`.
 
-Slides: 1 Organize finanças, 2 Export/Import, 3 Compras, 4 Autonomia veículo, 5 Relatórios, 6 IA, 7 Modo escuro.
+Slides: 1 Organize finanças, 2 Export/Import, 3 Compras, 4 Autonomia veículo, 5 Painel Início, 6 IA, 7 Modo escuro.
 
-### 5.2 Finanças (`src/pages/Finances.js`)
+### 5.2 Finanças (`src/pages/Finances.tsx`)
 
-- **Header:** `Finança` + gear -> `Configuracoes`
-- **Cards horizontais** (Scroll horizontal): Entradas (green arrow-up), Saídas (red arrow-down), Total (purple 900), Saldo histórico (se `isEnableTotalHistoryCard`), Dízimo 10% (se `isEnableTitheCard`).
+- **Header:** `Finança` + `heart` (`header-tithe-heart` → `TitheSettings`, se `isTitheMenuEnabled`) + gear -> `Configuracoes`
+- **Cards horizontais** (Scroll horizontal): Entradas (green arrow-up), Saídas (red arrow-down), Total (purple 900), Saldo histórico (se `isEnableTotalHistoryCard`), Dízimo `%` custom (se `isEnableTitheCard`, via `getTithe({percent, categories})`).
+- **Card mensal do dízimo** (`finances-tithe-monthly`, se `isTitheMenuEnabled`): `Dízimo devido: R$ Y` + CTAs `Configurar` (`finances-tithe-config`) e `Pagar` (`finances-tithe-pay`) → `TitheSettings`.
 - **Extrato:** Título + botão `Filtros`. Filtros colapsáveis (`openFilter`):
   - Período: `Input` + `DateTimePickerAndroid` para `startDate/endDate` (default mês atual via PaymentsContext).
   - Tipo: Picker `Todas/Entradas/Saídas` (`selectedtypeofpayment`).
@@ -207,13 +204,16 @@ Slides: 1 Organize finanças, 2 Export/Import, 3 Compras, 4 Autonomia veículo, 
 - Lista `filteredList` (do `ListsContext`) cards idênticos ao Market mas com `updateItemQuantityToList`. Tap abre `EdittemListtItem`.
 - Total `listTotal`.
 
-### 5.7 Relatórios (`src/pages/Reports.js`)
+### 5.7 Painel Início — Dashboard (`src/pages/Dashboard.tsx`, tela oficial de gráficos)
 
-- **Saúde finanças:** Cards `Ganhos/Despesas` + `Progress.Bar` verde/vermelho proporcional `Incomings/(Incomings+Expenses)`.
-- **Gastos por categoria:** `PieChart` (12 categorias com tons roxo #2D0D45..#DBBCF2) a partir de `expensesByCatData` (filteredList).
-- **Abastecimentos:** Toggle `Por Litro/Pago` + `LineChart` últimos 8 `FuelList` datas. Tap ponto abre `ViewFuelReport`.
-- **Minhas metas:** Lista `goalsList` Pressable -> `EditGoalForm`. Cada meta: `description`, `Prazo: date`, `amount / currentAmount`, `Restam X dias` se <=30, `Progress.Bar` roxo (claro se 100%).
-- **EmptyMessage** se sem dados.
+> A antiga tela `Reports.js` foi **absorvida pelo Dashboard** (descope 2026-09-15, confirmado 2026-10-13). Não existe tela, rota ou tab de Relatórios.
+
+- **Hero:** 4 cards `Saldo/Entradas/Saídas/Dízimo` com `LinearGradient` roxo; Dízimo usa `%` custom + base por categorias (`calcTithePure`, `tithePercent/titheCategories` do settings).
+- **Saúde finanças:** `Ganhos/Despesas` + barra proporcional `Incomings/(Incomings+Expenses)` + saldo.
+- **Gastos por categoria:** `InteractivePieChart` (12 categorias, tons roxo) a partir do mês atual; legenda só categoria, tap mostra tooltip com valor.
+- **Linha:** últimos 6 meses Entradas vs Saídas + série de abastecimentos (toggle Litro/Pago).
+- **Metas urgentes:** top 3 com vencimento ≤30d (`GoalCard` + progress).
+- **Empty states** (`pizza-empty`, `line-empty`) quando sem dados.
 
 ### 5.8 Configurações (`src/pages/AboutUs.js` — ~1200 linhas, com Privacidade/Export iOS)
 
@@ -228,19 +228,17 @@ Seções com `Switch` + `Button` roxos:
 7. **Export SAF iOS branch:** `AboutUs.js` `exportSomeData` e `Onboarding.js` `preleavingOnboarding` usam `Platform.OS === 'android' ? StorageAccessFramework.createFileAsync/writeAsStringAsync : FileSystem.writeAsStringAsync(documentDirectory + fileName)` com `Alert` fallback.
 8. Rodapé link `filipeleonelbatista.vercel.app` + `Constants.manifest.version`.
 
-### 5.9 IA (`src/components/AIComponent.js` + `src/pages/IAPage.js` + `src/hooks/useOpenAi.js`)
+### 5.9 IA (`src/components/AIComponent.tsx` + `src/pages/IAPage.tsx` + `src/pages/AIProviders.tsx` + `src/utils/aiProviders.ts`)
 
-- **Gate:** `isAiEnabled` false => `AIComponent` retorna null. Botão FAB roxo `robot-outline` pulsante (Animated `pulseValue` loop 4s + `tiltValue` loop) + tooltip `Converser com a IA` fadeOut 6s. Aparece em todas as 4 tabs principais.
-- **IAPage:** Chat full-screen. Header `Conversa`. Usa `openai@3.3.0` `Configuration` + `OpenAIApi`. Se `apiKey` vazio abre `Actionsheet` pedindo chave.
-  - **Dados injetados:** `financesList` (CSV header + filteredList), `fuelCostsList` (+ autonomia), `marketCostsList`. Funções `handleAskForFinancialTips / FuelCostsTips / MarketCostsTips` montam prompt `Use esses dados... Limite 1000 chars` e chamam `createChatCompletion gpt-3.5-turbo`.
-  - **Chat livre:** `handleAskToAi` mantém histórico `data: {type:user|assistant, text}` + `inputText`. Render bolhas roxa (user) vs `bgCard` (assistant) com avatares `account/robot-outline`. LoadingDots durante `isLoading`.
-  - **Quick prompts** iniciais: 3 Pressables `Analise meus gastos / combustível / mercado`.
-  - Erros via `openaiErrorHandler` (401/429/500 etc. -> mensagem genérica).
-  - `BackHandler` custom em todas as páginas vai para `goBack`.
+- **Multi-provider (1 ativo + fallback):** `OpenAI` / `Gemini` / `Anthropic` / `OpenRouter` / `Zen` — chaves em `expo-secure-store` (`getProviderKey`), modelos via `fetchModels` dinâmico por chave, `chatWithFallback` tenta ativo + ordem de fallback (1 retry por provider). Fallbacks estáticos vivos (`FALLBACK_MODELS`); modelos Gemini desligados migram sozinhos (`migrateGeminiModel`, ver `aiProviders.ts`).
+- **Tela `AIProviders`:** cards por provider com chave mascarada + `Pesquisar modelos` + radio ativo + ordem de fallback.
+- **Gate:** `isAiEnabled` false => `AIComponent` retorna null. FAB roxo com ORB (`NebulaOrb` Skia + `BorderBeam`).
+- **IAPage:** chat full-screen com `buildPrompt` (`prompt.ts`: delimitadores `<<<DADOS>>>`, bloqueio de injection, `Limite 1000 chars`, rate 3/60s). Injeta `financesList/fuelCostsList/marketCostsList`. Header com ORB + `model-select`, input com `BorderBeam` + `btn-send`, assistant em `Markdown`, user com `Ver tudo/Ver menos`.
+- **Metas na IA:** tela dedicada `Goals.tsx` (filtros Todas/Ativas/Concluídas, `CategoryPicker` + `+ Outra`, `GoalCard` + progress); tela `TitheSettings.tsx` (`%` custom step 0.5 1-100, base por categorias, preview mensal, `markAsPaid`, carrossel 5 escrituras JFA).
 
 ### 5.10 ActionSheet (Adicionar)
 
-`src/pages/ActionSheet.js` + `src/components/AddButtton.js` (typo `Buttton`). FAB central roxo abre sheet com múltiplos `Add*Form` conforme `selectedSheet` do `PagesContext`.
+`src/pages/ActionSheet.tsx` + `src/components/AddButtton.tsx` (typo `Buttton`). FAB central roxo abre sheet com múltiplos `Add*Form` conforme `selectedSheet` do `usePagesStore`.
 
 ---
 
@@ -291,7 +289,7 @@ Seções com `Switch` + `Button` roxos:
 
 1. **Items schema mismatch:** `itemShcema.js:27` coluna `desiredQuantity` vs `ListsContext.js:185`/`Market` usa `quantityDesired` — **corrigido** em Fase 1 com `drizzle` `quantityDesired` (migration 0000) e `ListsContext` normalizado; `stock`/`items` usam `quantityDesired` consistente.
 2. **SAF em iOS:** `StorageAccessFramework` não existe em iOS — **corrigido** com branch `Platform.OS === 'android' ? SAF : FileSystem.documentDirectory` em `AboutUs.js:193-240` e `Onboarding.js:84` (testes `saf-ios` PASS).
-3. **AsyncStorage legado:** `@onboarding` ainda em AsyncStorage enquanto resto em `drizzle`; `saveStorageToExportedFile` exporta AsyncStorage como txt — órfão (mantido para compat, fallback `hasSeenInteractiveTour` também em `config`).
+3. **AsyncStorage legado:** `@onboarding` ainda em AsyncStorage enquanto resto em `drizzle`; `saveStorageToExportedFile` exporta AsyncStorage como txt — órfão (mantido para compat).
 4. **OpenAI SDK deprecated:** `openai@3.3.0` `Configuration/OpenAIApi` — **corrigido** para `openai@^4.28.0` + `src/utils/aiProviders.ts` `chatWithFallback` / `fetchModels` (teste `secureStore-migration` PASS, sem `Configuration` import).
 5. **NativeBase deprecated:** NativeBase 3.4.28 arquivado — **removido**; migrado para `nativewind@4.1` + `tailwindcss@3.4.17`.
 6. **React Native 0.71.8 + Kotlin 1.6.0** desatualizados (2023) — **corrigido** para `RN 0.86.3` + `Kotlin 2.1.0` + `Expo 57` + `compileSdk 36/targetSdk 36` (doctor 21/21).

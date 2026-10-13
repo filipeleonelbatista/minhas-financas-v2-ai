@@ -390,7 +390,7 @@ git commit -m "feat(chat): BorderBeam textarea + model select + send"
 ### Task 7: QA + docs + final
 
 **Files:**
-- Modify: `app/docs/project-status.md` (se necessário)
+- Modify: `docs/documentacao/project-status.md` (se necessário)
 
 - [ ] **Step 1: Run QA**
 
@@ -410,7 +410,7 @@ Expected: 21/21
 - [ ] **Step 3: Commit docs**
 
 ```bash
-git add app/docs/project-status.md
+git add docs/documentacao/project-status.md
 git commit -m "docs: ia chat nebula+borderbeam QA 27/27 doctor 21/21"
 ```
 
@@ -426,7 +426,7 @@ git commit -m "docs: ia chat nebula+borderbeam QA 27/27 doctor 21/21"
 
 ## Execution Handoff
 
-Plan complete and saved to `app/docs/superpowers/plans/2026-09-15-ia-chat-nebula-borderbeam.md`. Two execution options:
+Plan complete and saved to `docs/documentacao/superpowers/plans/2026-09-15-ia-chat-nebula-borderbeam.md`. Two execution options:
 
 1. Subagent-Driven (recommended) - dispatch fresh subagent per task, review between tasks
 2. Inline Execution - execute tasks in this session using executing-plans, batch execution with checkpoints

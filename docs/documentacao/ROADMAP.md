@@ -1,10 +1,10 @@
 # ROADMAP — Financas App v2 (Redesign Offline-First) — A' Managed
 
-> Decisão 2026-08-28: **A' Managed** — sai `WatermelonDB` (eject) → entra `expo-sqlite` + `drizzle-orm`, `NativeWind` + `reacticx` (CTAs/ORB), mantendo cores/formatos, offline-first intacto. Android-first. Base: `docs/DOSSIE.md:1` (Expo 48, 7 tabelas, 4 domínios).
+> Decisão 2026-08-28: **A' Managed** — sai `WatermelonDB` (eject) → entra `expo-sqlite` + `drizzle-orm`, `NativeWind` + `reacticx` (CTAs/ORB), mantendo cores/formatos, offline-first intacto. Android-first. Base: `DOSSIE.md:1` (Expo 48, 7 tabelas, 4 domínios).
 
-> Decisão 2026-08-29: **Zustand padrão sem Context** — 6 `*Context` → 6 stores `zustand` (`src/stores/*`) sobre `drizzle`; `dark theme` via `NativeWind` `dark:` + `settingsStore` (`Appearance`/`setColorScheme`), sem `useColorMode`. Ver plano `app/docs/superpowers/plans/2026-08-29-zustand-standard.md`.
+> Decisão 2026-08-29: **Zustand padrão sem Context** — 6 `*Context` → 6 stores `zustand` (`src/stores/*`) sobre `drizzle`; `dark theme` via `NativeWind` `dark:` + `settingsStore` (`Appearance`/`setColorScheme`), sem `useColorMode`. Ver plano `docs/documentacao/superpowers/plans/2026-08-29-zustand-standard.md`.
 
-> Atualizado pós-entrevista 13 perguntas — todas respondidas. **Fase 1 11/11 implementada em 2026-08-28 (4e6844d, 117 testes PASS) — ver `docs/project-status.md`. Fase 1.1 (Zustand) em execução.**
+> Atualizado pós-entrevista 13 perguntas — todas respondidas. **Fase 1 11/11 implementada em 2026-08-28 (4e6844d, 117 testes PASS) — ver `project-status.md`. Fase 1.1 (Zustand) em execução.**
 
 ---
 
@@ -12,7 +12,7 @@
 
 1. **Offline-first é o produto.** Sem login = 100% local (`expo-sqlite`), export/import CSV via SAF (`selectedFolderToSave`). Nunca exigir rede para CRUD.
 2. **Online é opt-in pago (C).** Workspace `Pessoal` (local) sempre existe; `Família` (Firestore sync) só se `auth + subscription C` ativos (`R$ 14,90/mês` / `R$ 119/ano`, sem trial, via RevenueCat PF).
-3. **Paleta e formatos preservados:** `purple[600] #9c44dc` / `purple[900] #581C87` (`app.json:15`, `src/theme.js:3` Poppins), cards `warmGray[50]`/`gray[800]`, tabs `Finanças | Combustível | Mercado | Relatórios` (`src/bottom-tab-routes.js:19`). Redesign = efeitos (gradiente/blur/glass/skeleton/reanimated/haptics), não quebra de layout.
+3. **Paleta e formatos preservados:** `purple[600] #9c44dc` / `purple[900] #581C87` (`app.json`, Poppins), cards `warmGray[50]`/`gray[800]`, tabs `Início | Finanças | Combustível | Mercado` (`src/bottom-tab-routes.tsx`). Redesign = efeitos (gradiente/blur/glass/skeleton/reanimated/haptics), não quebra de layout. A tela oficial de gráficos é o `Dashboard` (painel Início).
 4. **1 modelo IA ativo por vez + fallback.** Uma chave por provider, seleção na tela de provedores, fallback automático se quota/erro. Chaves em `expo-secure-store`.
 
 ---
@@ -58,7 +58,7 @@ Script de migração one-shot: na primeira abertura Fase 1, se detectar `financa
 ### 1.4 IA Multi-Provider (A+C, 1 ativo + fallback)
 
 **Tela nova `src/pages/AIProviders.js` (acessada via Configurações → IA):**
-- Lista cards por provider: `OpenAI` / `Gemini` / `Anthropic` / `OpenRouter` / `Zen` — cada com `Input` chave (mascarada) + `Picker` modelo (`gpt-4o-mini`, `gemini-1.5-flash`/`pro`, `claude-3.5-sonnet`, `openrouter/free` list, `zen/*`) — flag `grátis`/`pago` por modelo (metadado estático).
+- Lista cards por provider: `OpenAI` / `Gemini` / `Anthropic` / `OpenRouter` / `Zen` — cada com `Input` chave (mascarada) + `Pesquisar modelos` dinâmico via API (`gpt-4o-mini`, `gemini-3.8-flash`, `claude-3.5-sonnet`, lista `openrouter/*`, `zen/*`).
 - 1 `activeProvider` + `activeModel` por vez (radio). Salva em `config` + chaves em `secure-store`.
 - Botão `Testar` por provider (ping `Olá mundo` como `useOpenAi.js:19`).
 
@@ -79,14 +79,8 @@ Script de migração one-shot: na primeira abertura Fase 1, se detectar `financa
 
 ### 1.6 Tutorial Interativo (Onboarding Spotlight)
 
-- Mantém 7 slides `src/pages/Onboarding.js:23` repaginados em NativeWind + ReacticX CTAs (botão `Pular` sempre).
-- Após slides, **spotlight tour** (lib `react-native-walkthrough-tooltip` ou `react-native-copilot` adaptado para NativeWind) guiando happy path:
-  1. Destaque `AddButtton` FAB central → tap abre `ActionSheet`
-  2. Destaque `Input` `description` + `amount` em `AddItemForm` → guia criar 1 **entrada** (`Ganhos`) e 1 **saída** (`Moradia`) com CTA animado reacticx
-  3. Em `Market.js:103` destaca `shopping-bag` + stepper `quantity` → adicionar item no estoque
-  4. Em `Runs.js:159` destaca `car-sport-outline` → lançar abastecimento
-  5. Em `Reports.js:295` destaca `PieChart` para feedback
-- Cada tooltip tem `Próximo`/`Pular`. Flag `hasSeenInteractiveTour` em `config` (além de `@onboarding`).
+- Mantém 7 slides `src/pages/Onboarding.tsx` repaginados em NativeWind + ReacticX CTAs (botão `Pular` sempre). Sem tour spotlight (removido de escopo 2026-09-15, confirmado 2026-10-13).
+- Happy path coberto pelo FAB central `AddButtton` (`add-button-fab`) → `ActionSheet` com forms por domínio; Dashboard (painel Início) concentra gráficos (pizza/linha) e metas urgentes.
 
 ### 1.7 Segurança Hardening — Sanitização, XSS, Prompt Injection
 
@@ -118,7 +112,7 @@ Script de migração one-shot: na primeira abertura Fase 1, se detectar `financa
 
 ### 1.8 Entregáveis Fase 1 — **✅ Concluídos 2026-08-28 + Fase 1.1 Zustand (em execução)**
 
-> **Fase 1.1 — Zustand Standard (2026-08-29):** plano `app/docs/superpowers/plans/2026-08-29-zustand-standard.md` (10 tasks): `Task 1` scaffold `zustand`, `Tasks 2-7` stores `finance/market/lists/runs/goals/settings` (TDD, `filterFinances` puro, `dark:`), `Task 8` migra `App.js:14`/`routes.js:9`/`bottom-tab-routes.js:12` + 34 arquivos `native-base` → `NativeWind`, `Task 9` deleta `src/databases/` + `@nozbe/watermelondb` + decorators, `Task 10` `jest`/`expo-doctor`/`eas` verdes.
+> **Fase 1.1 — Zustand Standard (2026-08-29):** plano `docs/documentacao/superpowers/plans/2026-08-29-zustand-standard.md` (10 tasks): `Task 1` scaffold `zustand`, `Tasks 2-7` stores `finance/market/lists/runs/goals/settings` (TDD, `filterFinances` puro, `dark:`), `Task 8` migra `App.js:14`/`routes.js:9`/`bottom-tab-routes.js:12` + 34 arquivos `native-base` → `NativeWind`, `Task 9` deleta `src/databases/` + `@nozbe/watermelondb` + decorators, `Task 10` `jest`/`expo-doctor`/`eas` verdes.
 
 **Originais 2026-08-28:**
 
@@ -127,9 +121,9 @@ Script de migração one-shot: na primeira abertura Fase 1, se detectar `financa
 - [x] LocalAuthentication gate + secure-store (`fe8eb08`, `NSFaceIDUsageDescription`, `isBiometricEnabled`)
 - [x] Tela provedores IA + fallback + ORB no chat + **prompt hardening §1.7.3** (`00959f5`, dynamic models via API key, `fiction fallback order`)
 - [x] Menu/tela Dízimo + card + escrituras JFA (`674501a`, 5 JFA, R$0 warning, `markAsPaid`)
-- [x] Spotlight tour + slides repaginados (`4e6844d`, walkthrough-tooltip 6 steps + `Pular`, `CTA glow`)
+- [x] Slides repaginados + `Pular` + `CTA glow` (`4e6844d`) — tour spotlight removido de escopo
 - [x] **Sanitização §1.7.1-1.7.2 + testes XSS/SQL/prompt + Excel anti-malware** (`2485a37`, 40 testes security)
-- [x] `docs/DOSSIE.md` + project-status, `targetSdk 36` (SDK 54), pasta renomeada `app/` (`ae034a8`)
+- [x] `DOSSIE.md` + project-status, `targetSdk 36` (SDK 54), pasta renomeada `app/` (`ae034a8`)
 - [ ] Play Store `preview` APK QA em API 29/33/35 — **próximo passo §2.1**
 
 ---
@@ -256,5 +250,5 @@ Respostas viram `AGENTS.md:1` Regras e `firestore.rules`.
 
 ## 8. Próximo Passo
 
-Roadmap travado → gerar `docs/superpowers/specs/YYYY-MM-DD-fase1-design.md` detalhado (seções 1.1-1.6) → `writing-plans` para plano de implementação.
+Roadmap travado → gerar `superpowers/specs/YYYY-MM-DD-fase1-design.md` detalhado (seções 1.1-1.6) → `writing-plans` para plano de implementação.
 

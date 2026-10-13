@@ -41,7 +41,12 @@ export function parsePeriodDate(s: string): Date | null {
   return Number.isNaN(d.getTime()) ? null : d;
 }
 
-/** timestamp de criação (mobile soma offset 12h; no web os inputs já caem meio-dia local). */
+/**
+ * Timestamp de criação. A regra do projeto manda timestamps como number com
+ * offset anti-UTC; os inputs de data do web já caem meio-dia local
+ * (dateInputToTs) e os forms legados somam +43200000, então Date.now() puro
+ * aqui é equivalente e evita duplo deslocamento.
+ */
 export function nowTs(): number {
   return Date.now();
 }

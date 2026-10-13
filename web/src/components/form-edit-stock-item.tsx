@@ -143,7 +143,7 @@ function FormEditStockItem({ selectedTransaction }: { selectedTransaction: Legac
         type="button"
         variant="outline"
         onClick={() => {
-          if (confirm("Deseja realmete excluir este item? Essa ação é permanente.")) {
+          if (confirm("Deseja realmente excluir este item? Essa ação é permanente.")) {
             void deleteTransaction(selectedTransaction).then(() =>
               document.getElementById("close-dialog")?.click()
             );
@@ -158,3 +158,4 @@ function FormEditStockItem({ selectedTransaction }: { selectedTransaction: Legac
 }
 
 export default FormEditStockItem;
+

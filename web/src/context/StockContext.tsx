@@ -82,7 +82,7 @@ export function StockContextProvider({ children }: { children: ReactNode }) {
 
   const deleteTransaction = useCallback(
     async (dto: { id: string }) => {
-      if (!confirm("Deseja realmete excluir este item? Essa ação é permanente.")) return;
+      if (!confirm("Deseja realmente excluir este item? Essa ação é permanente.")) return;
       await useMarketStore.getState().remove(dto.id);
       toast({ description: "Item excluido com sucesso!", variant: "success" });
     },
@@ -90,7 +90,7 @@ export function StockContextProvider({ children }: { children: ReactNode }) {
   );
 
   const deleteAllTransaction = useCallback(async () => {
-    if (confirm("Deseja realmete excluir os dados da tabela Estoque? Essa ação é permanente.")) {
+    if (confirm("Deseja realmente excluir os dados da tabela Estoque? Essa ação é permanente.")) {
       await useMarketStore.getState().clear();
       toast({ description: "Tabela apagada com sucesso!", variant: "success" });
     } else {
@@ -156,3 +156,4 @@ export function StockContextProvider({ children }: { children: ReactNode }) {
     </StockContext.Provider>
   );
 }
+

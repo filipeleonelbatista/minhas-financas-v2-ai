@@ -121,7 +121,7 @@ export function PaymentsContextProvider({ children }: { children: ReactNode }) {
 
   const deleteTransaction = useCallback(
     async (dto: { id: string }) => {
-      if (!confirm("Deseja realmete excluir este item? Essa ação é permanente.")) return;
+      if (!confirm("Deseja realmente excluir este item? Essa ação é permanente.")) return;
       await finance.remove(dto.id);
       toast({ description: "Item excluido com sucesso!", variant: "success" });
     },
@@ -129,7 +129,7 @@ export function PaymentsContextProvider({ children }: { children: ReactNode }) {
   );
 
   const deleteAllTransaction = useCallback(async () => {
-    if (confirm("Deseja realmete excluir os dados da tabela finanças? Essa ação é permanente.")) {
+    if (confirm("Deseja realmente excluir os dados da tabela finanças? Essa ação é permanente.")) {
       await finance.clear();
       toast({ description: "Tabela apagada com sucesso!", variant: "success" });
     } else {
@@ -232,3 +232,4 @@ export function PaymentsContextProvider({ children }: { children: ReactNode }) {
     </PaymentsContext.Provider>
   );
 }
+

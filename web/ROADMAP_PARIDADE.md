@@ -55,9 +55,11 @@
 - [ ] Deprecar `src/context/*`, remover `dayjs/uuid/formik/yup`
 - Critério: `lint 0 warnings`, `build` verde
 
-### Fase 7 — Qualidade final (1 dia)
-- [ ] Coverage 80% stores/schemas/utils, `test:security` (XSS/SQL/prompt/Excel), `npm audit high`, Sonar sem `console/TODO`
-- Critério: CI verde + branch protection
+### Fase 7 — Qualidade final (feita)
+- [x] Coverage 80%+ stores/schemas/utils/lib (`npm run test:coverage` verde: ~90/80/94)
+- [x] `npm run lint` 0 erros/warnings, `npm run build` (`tsc -b`) verde, deps mortas removidas
+- [x] CI: removido por decisão — Vercel cobre build do web
+- [ ] `npm audit` limpo (aberto: 13 high + 3 critical transitivos de vitest/react-router) e suite `test:security` — acompanhar
 
 ## Ordem sugerida
 

@@ -59,8 +59,8 @@ Navegação: `src/App.tsx` BrowserRouter + `src/components/header.tsx` (Finança
 
 - Framework: `vitest` + `@testing-library/react` + `jsdom`. Estrutura `src/__tests__/*.test.ts` espelhando stores/schemas/utils.
 - Regra: sem teste, sem merge. Ciclo: teste falhando → implementa → passa → commit.
-- Gate: `branches 80% lines 80%` em `src/stores/**`, `src/schemas/**`, `src/utils/**`. `npm run test:coverage` no CI.
-- CI `.github/workflows/web-ci.yml`: `lint (eslint --max-warnings 0)` → `typecheck (tsc -b)` → `test:coverage` → `build` → `audit high`. Nenhum step `continue-on-error`.
+- Gate: `branches 80% lines 80%` em `src/stores/**`, `src/schemas/**`, `src/utils/**`, `src/lib/**`. `npm run test:coverage` verde (CI na Vercel roda `npm run build`; sem workflow próprio por decisão do dono).
+- CI: sem workflow próprio — build/lint/typecheck rodam na Vercel (`npm run build` = `tsc -b && vite build`). `npm audit` com high/critical abertos (vitest/react-router transitivos) — acompanhar upgrades.
 - Sem `console.log` prod, sem `TODO` sem ticket, sem `dangerouslySetInnerHTML`.
 
 ## 7. Workflow para Agentes

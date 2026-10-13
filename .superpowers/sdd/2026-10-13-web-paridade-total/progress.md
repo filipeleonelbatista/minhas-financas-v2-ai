@@ -21,6 +21,10 @@ Task 3: note: `xlsx` parse adiado (sem dep no web; `excel.ts` só guards de exte
 Task 4: complete (base 98140a7, tests: 4 files → 22/22 pass; `npx vite build` → sw.js + manifest.webmanifest com maskable/shortcuts/pt-BR, 37 precache)
 Task 4: Ruling: `tsc -b` gerava `vite.config.js` sombra (composite sem noEmit) que o Vite preferia ao `.ts` — manifest saía stale. Fix: deletados artefatos + `noEmit:true` em tsconfig.node.json + `*.tsbuildinfo` no .gitignore. Custo se errado: nenhum (typecheck-only é o padrão do template Vite).
 Task 4: note: basicSSL agora opt-in (`VITE_HTTPS=1`); ícones 192/180/maskable gerados via script puro node em `.superpowers` (não commitado).
-- [ ] Task 5: Features (Dashboard, Metas, Listas, Dízimo)
+- [x] Task 5: Features (Dashboard, Metas, Listas, Dízimo)
+
+Task 5: complete (base 9a9bbce → commit 2dcf226, tests: full suite 5 files → 31/31 pass; `npx vite build` verde)
+Task 5: Ruling: `/` agora é Dashboard e Finanças foi p/ `/financas` (paridade com a tab Início do mobile; links internos atualizados no header). Custo se errado: bookmark da raiz muda de tela.
+Task 5: note: testes de fluxo das stores passaram de primeira (código da Task 2) — valem como caracterização; o RED→GREEN da task foi `lib/dashboard.ts`. Páginas novas usam forms controlados (sem formik); migração RHF dos legados fica na Task 7.
 - [ ] Task 6: IA online
 - [ ] Task 7: Forms RHF+zod + limpeza

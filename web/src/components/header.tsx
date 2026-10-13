@@ -1,4 +1,4 @@
-import { FaBullseye, FaCog, FaHeart, FaListUl, FaWallet } from 'react-icons/fa';
+import { FaBullseye, FaCog, FaHeart, FaListUl, FaRobot, FaWallet } from 'react-icons/fa';
 import { FiHome } from "react-icons/fi";
 import { GiShoppingCart } from "react-icons/gi";
 import { LuLineChart } from "react-icons/lu";
@@ -94,6 +94,12 @@ function Header({ title = "", isShort }: HeaderProps) {
                   Dízimo
                   <DropdownMenuShortcut>
                     <FaHeart />
+                  </DropdownMenuShortcut>
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => navigate("/ia")}>
+                  IA
+                  <DropdownMenuShortcut>
+                    <FaRobot />
                   </DropdownMenuShortcut>
                 </DropdownMenuItem>
                 {/* <DropdownMenuSeparator />

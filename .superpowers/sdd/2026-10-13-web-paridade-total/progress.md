@@ -26,5 +26,8 @@ Task 4: note: basicSSL agora opt-in (`VITE_HTTPS=1`); ícones 192/180/maskable g
 Task 5: complete (base 9a9bbce → commit 2dcf226, tests: full suite 5 files → 31/31 pass; `npx vite build` verde)
 Task 5: Ruling: `/` agora é Dashboard e Finanças foi p/ `/financas` (paridade com a tab Início do mobile; links internos atualizados no header). Custo se errado: bookmark da raiz muda de tela.
 Task 5: note: testes de fluxo das stores passaram de primeira (código da Task 2) — valem como caracterização; o RED→GREEN da task foi `lib/dashboard.ts`. Páginas novas usam forms controlados (sem formik); migração RHF dos legados fica na Task 7.
-- [ ] Task 6: IA online
+- [x] Task 6: IA online
+
+Task 6: complete (base 44c558e, tests: full suite 6 files → 37/37 pass; `npx vite build` verde)
+Task 6: note: teste de fallback precisou de `setFallbackOrder(["gemini"])` — sem ordem, só o ativo é tentado (semântica correta do mobile). Reenvio automático ao trocar de modelo (mobile) não portado — histórico em sessão + presets cobrem. Header ganhou item IA.
 - [ ] Task 7: Forms RHF+zod + limpeza

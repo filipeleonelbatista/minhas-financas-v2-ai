@@ -8,14 +8,16 @@ const html = readFileSync("index.html", "utf8");
 describe("pwa total instalável", () => {
   it("workbox completo com offline fallback", () => {
     for (const key of [
-      "clientsClaim",
-      "skipWaiting",
+      "registerType",
       "cleanupOutdatedCaches",
       "navigateFallback",
       "runtimeCaching",
     ]) {
       expect(config).toContain(key);
     }
+    // prompt de verdade: sem ativação imediata (skipWaiting/clientsClaim)
+    expect(config).not.toContain("skipWaiting");
+    expect(config).not.toContain("clientsClaim");
   });
 
   it("manifest instalável pt-BR com maskable e shortcuts", () => {

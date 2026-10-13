@@ -1,6 +1,8 @@
 /**
  * Migração one-shot das chaves legadas (`finances`, `stock`, `runs`,
  * `@IsEnable*`, `@autonomy`) para `mf-db-v1:*`. Roda uma vez (flag).
+ * Nota: o web legado nunca teve listas/metas/dízimo — não há chaves
+ * antigas para `lists`, `items`, `goals` e `tithe_payments`.
  */
 import { readJSON, readRaw, writeRaw } from "./storage";
 import { normalizeFinanceInput, normalizeRunInput, normalizeStockInput } from "./normalize";

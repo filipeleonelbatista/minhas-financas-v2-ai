@@ -17,6 +17,37 @@ export const STORAGE_KEYS = {
   tithePayments: `${PREFIX}:tithe_payments`,
 } as const;
 
+/** Sync multi-aba: só chaves de dados disparam reload (não chaves de IA/tema). */
+export function isSyncKey(key: string | null): boolean {
+  return typeof key === "string" && key.startsWith(PREFIX + ":");
+}
+
+const BC_NAME = "mf-sync";
+
+function openBroadcast(): BroadcastChannel | null {
+  try {
+    if (typeof BroadcastChannel === "undefined") return null;
+    return new BroadcastChannel(BC_NAME);
+  } catch {
+    return null;
+  }
+}
+
+function postSync(key: string): void {
+  const ch = openBroadcast();
+  if (!ch) return;
+  try {
+    ch.postMessage(key);
+  } catch {
+    /* sem broadcast */
+  } finally {
+    try {
+      ch.close();
+    } catch {
+      /* ignora */
+    }
+  }
+}
 function hasLocalStorage(): boolean {
   try {
     return typeof localStorage !== "undefined" && localStorage !== null;
@@ -42,12 +73,14 @@ export function writeRaw(key: string, value: string): void {
   if (hasLocalStorage()) {
     try {
       localStorage.setItem(key, value);
+      postSync(key);
       return;
     } catch {
       /* cai para memória */
     }
   }
   memory.set(key, value);
+  postSync(key);
 }
 
 export function removeRaw(key: string): void {
@@ -59,6 +92,7 @@ export function removeRaw(key: string): void {
     }
   }
   memory.delete(key);
+  postSync(key);
 }
 
 /** Nunca quebra: JSON corrompido volta o fallback. */
@@ -84,14 +118,43 @@ export function clearAllStorage(): void {
   for (const key of Object.values(STORAGE_KEYS)) removeRaw(key);
 }
 
-/** Sync multi-aba via evento `storage` nativo (dispara nas outras abas). */
+/**
+ * Sync multi-aba: evento `storage` nativo (filtrado por chave de dados) +
+ * `BroadcastChannel('mf-sync')`. Chaves de IA/tema não disparam reload.
+ */
 export function subscribeStorage(cb: () => void): () => void {
-  if (typeof window === "undefined" || typeof window.addEventListener !== "function") {
-    return () => {};
+  const cleanups: (() => void)[] = [];
+  if (typeof window !== "undefined" && typeof window.addEventListener === "function") {
+    const handler = (e: StorageEvent) => {
+      if (e.key !== null && !isSyncKey(e.key)) return;
+      cb();
+    };
+    window.addEventListener("storage", handler);
+    cleanups.push(() => window.removeEventListener("storage", handler));
   }
-  const handler = () => cb();
-  window.addEventListener("storage", handler);
-  return () => window.removeEventListener("storage", handler);
+  const ch = openBroadcast();
+  if (ch) {
+    ch.onmessage = (e: MessageEvent) => {
+      if (typeof e.data === "string" && !isSyncKey(e.data)) return;
+      cb();
+    };
+    cleanups.push(() => {
+      try {
+        ch.close();
+      } catch {
+        /* ignora */
+      }
+    });
+  }
+  return () => {
+    for (const fn of cleanups) {
+      try {
+        fn();
+      } catch {
+        /* ignora */
+      }
+    }
+  };
 }
 
 export function newId(): string {

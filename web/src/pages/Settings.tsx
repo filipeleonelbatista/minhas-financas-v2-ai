@@ -3,7 +3,7 @@ import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import type { ChangeEvent } from "react";
 import { Label } from "@radix-ui/react-label";
-import { readAndParseCsvFile } from "@/utils/csv";
+import { readAndParseCsvFile, buildExportFileName, toSafeCsvValue } from "@/utils/csv";
 import { FaRegFileLines } from "react-icons/fa6";
 import Footer from "../components/footer";
 import Header from "../components/header";
@@ -64,7 +64,19 @@ function Settings() {
 
     const csvContent = [
       headers.join(','),
-      ...transactionsList.map(obj => `${obj.id},${obj._status ?? ""},${obj._changed ?? ""},${obj.description},${obj.amount},${obj.category},${new Date(obj.date).getTime()},${obj.paymentDate instanceof Date ? new Date(obj.paymentDate).getTime() : ""},${obj.paymentStatus ? "1" : "0"},${obj.isEnabled ? "1" : "0"},${obj.isFavorited ? "1" : "0"}`)
+      ...transactionsList.map(obj => [
+        obj.id,
+        obj._status ?? "",
+        obj._changed ?? "",
+        obj.description,
+        obj.amount,
+        obj.category,
+        new Date(obj.date).getTime(),
+        obj.paymentDate instanceof Date ? new Date(obj.paymentDate).getTime() : "",
+        obj.paymentStatus ? "1" : "0",
+        obj.isEnabled ? "1" : "0",
+        obj.isFavorited ? "1" : "0",
+      ].map(toSafeCsvValue).join(','))
     ].join('\n');
     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
 
@@ -77,7 +89,7 @@ function Settings() {
     if (link.download !== undefined) {
       const url = URL.createObjectURL(blob);
       link.setAttribute('href', url);
-      link.setAttribute('download', `financas-${Date.now()}.csv`);
+      link.setAttribute('download', buildExportFileName(`financas`));
       link.style.visibility = 'hidden';
       document.body.appendChild(link);
       link.click();
@@ -140,7 +152,16 @@ function Settings() {
 
     const csvContent = [
       headers.join(','),
-      ...StockList.map(obj => `${obj.id},${obj._status ?? ""},${obj._changed ?? ""},${obj.description},${obj.amount},${obj.category},${obj.quantity},${obj.quantityDesired}`)
+      ...StockList.map(obj => [
+        obj.id,
+        obj._status ?? "",
+        obj._changed ?? "",
+        obj.description,
+        obj.amount,
+        obj.category,
+        obj.quantity,
+        obj.quantityDesired,
+      ].map(toSafeCsvValue).join(','))
     ].join('\n');
     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
 
@@ -153,7 +174,7 @@ function Settings() {
     if (link.download !== undefined) {
       const url = URL.createObjectURL(blob);
       link.setAttribute('href', url);
-      link.setAttribute('download', `estoque-${Date.now()}.csv`);
+      link.setAttribute('download', buildExportFileName(`estoque`));
       link.style.visibility = 'hidden';
       document.body.appendChild(link);
       link.click();
@@ -214,7 +235,17 @@ function Settings() {
 
     const csvContent = [
       headers.join(','),
-      ...FuelList.map(obj => `${obj.id},${obj._status ?? ""},${obj._changed ?? ""},${obj.currentDistance},${obj.unityAmount},${obj.amount ?? ""},${obj.type},${new Date(obj.date).getTime()},${obj.location}`)
+      ...FuelList.map(obj => [
+        obj.id,
+        obj._status ?? "",
+        obj._changed ?? "",
+        obj.currentDistance,
+        obj.unityAmount,
+        obj.amount ?? "",
+        obj.type,
+        new Date(obj.date).getTime(),
+        obj.location,
+      ].map(toSafeCsvValue).join(','))
     ].join('\n');
     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
 
@@ -227,7 +258,7 @@ function Settings() {
     if (link.download !== undefined) {
       const url = URL.createObjectURL(blob);
       link.setAttribute('href', url);
-      link.setAttribute('download', `corridas-${Date.now()}.csv`);
+      link.setAttribute('download', buildExportFileName(`corridas`));
       link.style.visibility = 'hidden';
       document.body.appendChild(link);
       link.click();

@@ -120,6 +120,22 @@ export function buildExportFileName(base: string, now: Date = new Date()): strin
   return `${base}-${stamp}.csv`;
 }
 
+/**
+ * Valor seguro para EXPORTAÇÃO (OWASP CSV formula injection):
+ * célula perigosa → prefixo `'` (marcador de texto do Excel) + aspas;
+ * com vírgula/aspas/quebra → aspas. Sem isso a exportação reabre na
+ * planilha o que o import bloqueia.
+ */
+export function toSafeCsvValue(value: unknown): string {
+  if (value === null || value === undefined) return "";
+  const s = String(value);
+  const dangerous = !isSafeCell(s);
+  const body = dangerous ? `'${s}` : s;
+  const escaped = body.replace(/"/g, '""');
+  if (dangerous || /[",\n\r]/.test(s)) return `"${escaped}"`;
+  return escaped;
+}
+
 /** Exporta linhas para download .csv (guard para SSR/testes). */
 export function downloadCsv(filename: string, rows: Record<string, unknown>[]): void {
   if (typeof document === "undefined") return;

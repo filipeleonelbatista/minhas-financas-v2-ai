@@ -45,7 +45,7 @@ Navegação: `src/App.tsx` BrowserRouter + `src/components/header.tsx` (Finança
 - `src/stores/*.ts` zustand + persist (localStorage primeiro, `idb-keyval` para blobs). UI consome stores, nunca `localStorage` direto.
 - `src/lib/storage.ts` abstrai get/set com versionamento, validação zod, `storage` event + `BroadcastChannel('mf-sync')` para multi-aba.
 - `src/utils/csv.ts` + `src/utils/excel.ts` para import/export seguro. Arquivos `nome-DD-MM-YYYY_HH-mm.csv`.
-- Chaves IA em `finances_secure_ai_*` (localStorage, com aviso — web não tem SecureStore). Modelos/order/active em `mf-ai-*`.
+- Chaves IA em `finances_secure_ai_provider_*` (localStorage, com aviso — web não tem SecureStore). Modelos/order/active em `mf-ai-*` (chaves `ai_activeProvider`, `ai_fallbackOrder`, `ai_model_*`).
 
 ## 5. PWA Offline
 

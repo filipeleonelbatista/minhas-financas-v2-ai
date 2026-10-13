@@ -1,5 +1,15 @@
 # SDD ledger — plan: docs/superpowers/plans/2026-10-13-web-paridade-total.md
 
+Final: fix pass da revisão (reviewer: No → correções):
+- Final: fixed manifest sem 512.png (Critical) — `git add web/public` (assets existiam, nunca commitados; web/ é novo no git) + suite 50/50. Custo se errado: PWA não instala em checkout limpo.
+- Final: fixed data-side prompt injection (Critical) — teste `neutraliza injeção dentro dos DADOS` RED→GREEN, suite 50/50.
+- Final: fixed export CSV reabre fórmula (Critical) — teste `toSafeCsvValue` RED→GREEN (prefixo `'` + aspas OWASP), suite 50/50.
+- Final: fixed sync irrestrito (Important) — teste `isSyncKey` + `BroadcastChannel` RED→GREEN; `subscribeStorage` filtra por `mf-db-v1:*`.
+- Final: fixed nomes de export (Important) — `buildExportFileName` nos 3 exports + teste de formato GREEN.
+- Final: fixed skipWaiting mata prompt (Important) — removidos `skipWaiting/clientsClaim`; teste pwa atualizado GREEN.
+- Final: Ruling: migração lists/goals ausente (Important) → docs: web legado nunca teve essas chaves, nada a migrar (comentário em migrate.ts). Custo se errado: nenhum.
+- Final: minor (deferred): typos "realmete"/"Configuracoe"; index.html sem newline + og:url sem aspas; nowTs sem offset literal; confirm() nativo; acúmulo de prefixo `'` em roundtrip export→import→export.
+
 Ruling: trabalhar no checkout atual (main, dirty) sem worktree/branch — usuário escolheu "aqui mesmo"; commits serão scoped (`git add web/...` + docs) para não arrastar mudanças não relacionadas do `app/`. Custo se errado: commits misturados; mitigado por adds com path explícito.
 
 Pre-flight: interfaces encadeadas Task2→(3,5,6,7) via `schemas/*` + `stores/*` + `lib/storage.ts`. Nomes conferem com o plano (finance/run/stock/list/goal/config). Task4 (PWA) e Task1 (base) independentes. Sem conflitos; ordem do plano mantida.

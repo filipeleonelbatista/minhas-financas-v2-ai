@@ -17,6 +17,10 @@ Task 2: note: adicionados `vitest.config.ts` (alias @ p/ vitest), `lib/goals.ts`
 Task 3: complete (base ed135ee, tests: 3 files → 18/18 pass)
 Task 3: note: `xlsx` parse adiado (sem dep no web; `excel.ts` só guards de extensão); migrador de chaves legadas (`finances`→`mf-db-v1:*`) fica p/ Task 5/7 quando as páginas migrarem p/ stores; `idb*` helpers async com fallback testado.
 - [ ] Task 4: PWA total
+
+Task 4: complete (base 98140a7, tests: 4 files → 22/22 pass; `npx vite build` → sw.js + manifest.webmanifest com maskable/shortcuts/pt-BR, 37 precache)
+Task 4: Ruling: `tsc -b` gerava `vite.config.js` sombra (composite sem noEmit) que o Vite preferia ao `.ts` — manifest saía stale. Fix: deletados artefatos + `noEmit:true` em tsconfig.node.json + `*.tsbuildinfo` no .gitignore. Custo se errado: nenhum (typecheck-only é o padrão do template Vite).
+Task 4: note: basicSSL agora opt-in (`VITE_HTTPS=1`); ícones 192/180/maskable gerados via script puro node em `.superpowers` (não commitado).
 - [ ] Task 5: Features (Dashboard, Metas, Listas, Dízimo)
 - [ ] Task 6: IA online
 - [ ] Task 7: Forms RHF+zod + limpeza

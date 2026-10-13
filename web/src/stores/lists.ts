@@ -20,6 +20,7 @@ type ListsState = {
   filteredList: ListItemRow[];
   load: () => Promise<void>;
   addList: (dto: unknown) => Promise<string>;
+  updateList: (id: string, dto: unknown) => Promise<ListRow | null>;
   addItem: (dto: unknown) => Promise<ListItemRow>;
   handleSelect: (id: string) => Promise<void>;
   deleteList: (id: string) => Promise<void>;
@@ -123,6 +124,24 @@ export const useListsStore = create<ListsState>((set, get) => ({
     writeJSON(STORAGE_KEYS.lists, lists);
     set({ lists });
     return row.id;
+  },
+
+  updateList: async (id: string, dto: unknown) => {
+    const lists = readLists();
+    const found = lists.find((l) => l.id === id);
+    if (!found) return null;
+    const data = (dto ?? {}) as Record<string, unknown>;
+    const merged = { ...data };
+    delete merged.id;
+    const parsed = listSchema.parse({ ...found, ...merged });
+    const next = lists.map((l) => (l.id === id ? { ...parsed, id } : l));
+    writeJSON(STORAGE_KEYS.lists, next);
+    const s = get();
+    set({
+      lists: next,
+      selectedList: s.selectedList?.id === id ? { ...parsed, id } : s.selectedList,
+    });
+    return { ...parsed, id };
   },
 
   addItem: async (dto: unknown) => {

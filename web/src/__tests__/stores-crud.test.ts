@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it } from "vitest";
 import { clearAllStorage, removeRaw } from "@/lib/storage";
 import { useMarketStore } from "@/stores/market";
+import { useListsStore } from "@/stores/lists";
 import { useRunsStore, calcRunEstimative } from "@/stores/runs";
 import { useSettingsStore } from "@/stores/settings";
 
@@ -17,6 +18,14 @@ beforeEach(() => {
     removeRaw(k);
   }
   useMarketStore.setState({ stockList: [], search: "", selectedCategory: "Todos" });
+  useListsStore.setState({
+    lists: [],
+    selectedList: null,
+    selectedListItems: [],
+    search: "",
+    selectedCategory: "Todos os itens",
+    filteredList: [],
+  });
   useRunsStore.setState({ runsList: [] });
 });
 
@@ -54,6 +63,26 @@ describe("market store", () => {
     });
     await useMarketStore.getState().clear();
     expect(useMarketStore.getState().stockList).toHaveLength(0);
+  });
+});
+
+describe("lists store", () => {
+  it("updateList edita cabeçalho e retorna null se inexistente", async () => {
+    const id = await useListsStore.getState().addList({
+      description: "Semana",
+      location: null,
+      quantity: 0,
+      amount: 0,
+      date: NOW,
+    });
+    const updated = await useListsStore.getState().updateList(id, {
+      description: "Mês",
+      location: "Mercado",
+    });
+    expect(updated?.description).toBe("Mês");
+    expect(updated?.location).toBe("Mercado");
+    expect(useListsStore.getState().lists[0].description).toBe("Mês");
+    expect(await useListsStore.getState().updateList("inexistente", { description: "X" })).toBeNull();
   });
 });
 

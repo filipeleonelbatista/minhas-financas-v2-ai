@@ -5,9 +5,13 @@
 </br>
 </br>
 
-<img width="100%" src="../web/public/banner.png">
+<p align="center">
+  <img src="../web/public/icon.png" width="120px" alt="Minhas Finanças logo" />
+</p>
 
-# Minhas Finanças — App Mobile (Expo)
+<h1 align="center">Minhas Finanças — App Mobile (Expo)</h1>
+
+<img width="100%" src="../web/public/banner.png">
 
 > App Expo offline-first, fonte da verdade do monorepo. Stack: Expo SDK 57 • RN 0.86.3 • React 19.2 • NativeWind 4.1 • expo-sqlite + drizzle-orm • Zustand 5 (stores, sem Context) • TypeScript strict.
 

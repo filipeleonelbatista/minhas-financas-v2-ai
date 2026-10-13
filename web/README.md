@@ -6,6 +6,12 @@
 </br>
 
 
+<p align="center">
+  <img src="public/icon.png" width="120px" alt="Minhas Finanças logo" />
+</p>
+
+<h1 align="center">Minhas Finanças v2 — AI</h1>
+
 <img width="100%" src="public/banner.png">
 
 # Indice

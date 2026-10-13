@@ -242,7 +242,7 @@ import Markdown from 'react-native-markdown-display';
 // top: const insets = useSafeAreaInsets();
 ```
 Trocar `KeyboardAvoidingView keyboardVerticalOffset={80}` por `keyboardVerticalOffset={insets.top + 56}` e `behavior={Platform.OS==='ios'?'padding':'height'}`.
-`ScrollView contentContainerStyle={{paddingBottom: insets.bottom + 120}}`
+{% raw %}`ScrollView contentContainerStyle={{paddingBottom: insets.bottom + 120}}`{% endraw %}
 Remover `position: absolute` fixo e usar `BorderBeam` com `marginBottom: insets.bottom+12` (próxima task).
 
 - [ ] **Step 4: Run test to verify it passes**
@@ -290,6 +290,7 @@ Expected: FAIL `Unable to find Ver tudo`
 
 - [ ] **Step 3: Write minimal implementation**
 
+{% raw %}
 ```tsx
 // app/src/pages/IAPage.js dentro do data.map
 const [expanded, setExpanded] = useState(new Set());
@@ -308,6 +309,7 @@ const [expanded, setExpanded] = useState(new Set());
   </View>
 ))}
 ```
+{% endraw %}
 
 Preservar avatar `MaterialCommunityIcons` se desejado, mas assistant sem balão.
 
@@ -348,6 +350,7 @@ Expected: FAIL `Unable to find border-beam`
 
 - [ ] **Step 3: Write minimal implementation**
 
+{% raw %}
 ```tsx
 import { BorderBeam } from '../components/ui/border-beam';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -370,6 +373,7 @@ const insets = useSafeAreaInsets();
   </View>
 </BorderBeam>
 ```
+{% endraw %}
 
 Manter `error` `Text` abaixo.
 

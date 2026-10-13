@@ -11,6 +11,8 @@ import {
   saveProviderModel,
   callProvider,
   chatWithFallback,
+  migrateGeminiModel,
+  DEPRECATED_GEMINI_MODELS,
   _clearAiProvidersMemory,
 } from '../../src/utils/aiProviders';
 import { _clearSecureMemory, saveProviderKey, getProviderKey } from '../../src/utils/secureStore';
@@ -72,6 +74,22 @@ describe('aiProviders storage - active, fallback, model', () => {
     await expect(setActiveProvider('invalid' as any)).rejects.toThrow();
     await expect(saveProviderModel('invalid' as any,'x')).rejects.toThrow();
   });
+
+  test('deprecated gemini models migrate to live default', async () => {
+    expect(DEPRECATED_GEMINI_MODELS.has('gemini-1.5-flash')).toBe(true);
+    expect(DEPRECATED_GEMINI_MODELS.has('gemini-1.5-pro')).toBe(true);
+    expect(DEPRECATED_GEMINI_MODELS.has('gemini-pro')).toBe(true);
+    expect(migrateGeminiModel('gemini-1.5-flash')).toBe(FALLBACK_MODELS.gemini[0]);
+    expect(migrateGeminiModel('gemini-pro')).toBe(FALLBACK_MODELS.gemini[0]);
+    // live models pass through
+    expect(migrateGeminiModel('gemini-3.8-flash')).toBe('gemini-3.8-flash');
+    expect(migrateGeminiModel('')).toBe(FALLBACK_MODELS.gemini[0]);
+  });
+
+  test('stored dead gemini model self-heals on read', async () => {
+    await saveProviderModel('gemini', 'gemini-1.5-flash');
+    expect(await getProviderModel('gemini')).toBe(FALLBACK_MODELS.gemini[0]);
+  });
 });
 
 describe('fetchModels dynamic via API key', () => {
@@ -102,10 +120,10 @@ describe('fetchModels dynamic via API key', () => {
   test('gemini fetch parses models/gemini-*', async () => {
     (global as any).fetch = jest.fn().mockResolvedValue({
       ok:true,
-      json: async () => ({ models: [{name:'models/gemini-1.5-flash'},{name:'models/gemini-pro'}]}),
+      json: async () => ({ models: [{name:'models/gemini-3.8-flash'},{name:'models/gemini-2.5-flash'}]}),
     } as any);
     const models = await fetchModels('gemini','AIza123');
-    expect(models).toEqual(['gemini-1.5-flash','gemini-pro']);
+    expect(models).toEqual(['gemini-3.8-flash','gemini-2.5-flash']);
     expect(global.fetch).toHaveBeenCalledWith(expect.stringContaining('generativelanguage.googleapis.com'), expect.anything());
   });
 
@@ -162,7 +180,7 @@ describe('callProvider per provider', () => {
       ok:true,
       json: async () => ({ candidates:[{content:{parts:[{text:'hello gemini'}]}}]}),
     } as any);
-    const text = await callProvider('gemini',{apiKey:'AIza', model:'gemini-1.5-flash', prompt:'hi'});
+    const text = await callProvider('gemini',{apiKey:'AIza', model:'gemini-3.8-flash', prompt:'hi'});
     expect(text).toBe('hello gemini');
   });
 
@@ -202,7 +220,7 @@ describe('chatWithFallback loop', () => {
     await saveProviderKey('openai','sk-openai');
     await saveProviderKey('gemini','AIza-gemini');
     await saveProviderModel('openai','gpt-3.5-turbo');
-    await saveProviderModel('gemini','gemini-1.5-flash');
+    await saveProviderModel('gemini','gemini-3.8-flash');
     await setActiveProvider('openai');
     await setFallbackOrder(['gemini'] as any);
 
@@ -233,7 +251,7 @@ describe('chatWithFallback loop', () => {
 
   test('skips provider without key', async () => {
     await saveProviderKey('gemini','AIza-ok');
-    await saveProviderModel('gemini','gemini-1.5-flash');
+    await saveProviderModel('gemini','gemini-3.8-flash');
     await setActiveProvider('openai'); // openai has no key, should skip to fallback
     await setFallbackOrder(['gemini'] as any);
     (global as any).fetch = jest.fn().mockResolvedValue({ ok:true, json: async()=>({ candidates:[{content:{parts:[{text:'fallback ok'}]}}]})} as any);

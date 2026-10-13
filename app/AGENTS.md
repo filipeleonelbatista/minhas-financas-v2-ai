@@ -6,7 +6,7 @@
 
 ## 1. Propósito & Features
 
-App offline-first de finanças familiares (100 downloads Play Store, ~10 MAU — `docs/DOSSIE.md:1`). 7 domínios:
+App offline-first de finanças familiares (100 downloads Play Store, ~10 MAU — `../docs/documentacao/DOSSIE.md:1`). 7 domínios:
 
 | Domínio | Arquivos-chave | Resumo |
 |---|---|---|
@@ -14,8 +14,8 @@ App offline-first de finanças familiares (100 downloads Play Store, ~10 MAU —
 | **Combustível** | `src/context/RunsContext.js:1`, `src/pages/Runs.js:1` | Abastecimentos `currentDistance/unityAmount/amount/type/date/location`. Cards: Km Estimado `(autonomia*valor/precoLitro)+kmAtual`, Autonomia (tela `AutonomyForm`), Km Atual. Filtro período. Auto-lança em Finanças se `willAddFuelToTransactionList` |
 | **Mercado/Estoque** | `src/context/MarketContext.js:1`, `src/pages/Market.js:1` | Estoque `description/category/amount/quantity/quantityDesired`. Stepper +/- (`updateStock`), badge `Em estoque/Em falta`, total `amount*quantity`. Gera `finances` Mercado via `handleAddFinances`. Gera `lists` via `handleAddItensOnBuyList` |
 | **Listas de Compras (NOVO)** | `src/context/ListsContext.js:1`, `src/pages/Lists.js:1`, `src/pages/List.js:1` | Cabeçalho `lists` (description/location/quantity/amount/date) + itens `items` (FK `list_id`). CRUD 2 níveis, seleção `Q.where(list_id)`, export individual (long-press), criação a partir do estoque (todos / só em falta) |
-| **Metas** | `src/context/GoalsContext.js:1`, `src/pages/Reports.js:479` | `description/amount/currentAmount/date`. Progress bar + `Restam X dias` se ≤30d |
-| **Relatórios** | `src/pages/Reports.js:1` | Saúde finanças (Progress verde/vermelho), Pizza 12 categorias, Linha últimos 8 abastecimentos (toggle Litro/Pago) |
+| **Metas** | `src/stores/goals.ts`, `src/pages/Goals.tsx` | `description/amount/currentAmount/date/icon/category`. Progress bar + `Restam X dias` se ≤30d. Filtros Todas/Ativas/Concluídas + `CategoryPicker` com `+ Outra` |
+| **Painel Início (Dashboard)** | `src/pages/Dashboard.tsx` | Tela oficial de gráficos (absorveu a antiga `Reports`): saúde finanças, pizza por categoria, linha 6 meses + abastecimentos, metas urgentes. Hero Saldo/Entradas/Saídas/Dízimo |
 | **IA** | `src/hooks/useOpenAi.js:1`, `src/components/AIComponent.js:1`, `src/pages/IAPage.js:1` | Gate `isAiEnabled` + `apiKey` (testado com `createChatCompletion Olá mundo`). FAB pulsante. Chat gpt-3.5-turbo com 3 prompts pré-definidos injetando CSV de cada domínio, limite 1000 chars |
 
 Navegação: `src/routes.js:14` Stack `Onboarding → TabNavigator → Configuracoes → IAPage`. Tabs `src/bottom-tab-routes.js:19` (bottom-tab) + `src/market-stack-routes.js:11` (Stock→Lists→List). FAB central `ActionSheet` com `PagesContext.selectedSheet`.
@@ -44,7 +44,7 @@ Configurações (`src/pages/AboutUs.js:1`, `src/context/SettingsContext.js:1`): 
 
 ## 3. Stacks & Libs (fixas vs candidatas a troca)
 
-**Fixas (manter):** `react-native`, `expo`, `react-navigation`, `dayjs/date-fns`, `watermelondb`, `expo-file-system/media-library/document-picker`, `react-native-csv`.
+**Fixas (manter):** `react-native`, `expo`, `react-navigation`, `dayjs/date-fns`, `expo-sqlite` + `drizzle-orm`, `expo-file-system/document-picker`, `react-native-csv`.
 
 **Candidatas a modernização (RFC obrigatório):**
 
@@ -62,9 +62,9 @@ Configurações (`src/pages/AboutUs.js:1`, `src/context/SettingsContext.js:1`): 
 
 ## 4. Persistência & Schemas
 
-WatermelonDB `src/databases/index.js:14` SQLiteAdapter, `schemas/index.js:11` `version:25`, 7 tabelas (§ docs/DOSSIE.md 4.2). Acesso SEMPRE via `database.write` + `database.get(table).query/fetch/find/create/update/destroyPermanently`. Nunca acessar `_raw` fora de `write`. Model classes apenas definem `table` + `associations` (atualmente usam `_raw` direto — migrar para `@field`/`@date` decorators ao modernizar).
+`expo-sqlite` (`openDatabaseSync("financas.db")`) + `drizzle-orm` (`src/db/schema.ts`, 8 tabelas: finances, runs, goals, stock, lists, items, config, tithe_payments) + migrações (`src/db/migrations/`, runner `src/db/migrate.ts` via `PRAGMA user_version`). Acesso via `src/repositories/*` (prepared statements, nunca SQL concatenado) + `zod` em `src/schemas/*`; UI consome `src/stores/*` (zustand), nunca o db direto.
 
-**Alert:** `itemsSchema` coluna `desiredQuantity` ≠ código `quantityDesired` — corrigir em migration (ver docs/DOSSIE.md 7.1).
+**Histórico:** WatermelonDB (`src/databases/`, 7 tabelas) removido na Fase 1; debt `desiredQuantity`≠`quantityDesired` corrigido para `quantityDesired`.
 
 ---
 
@@ -89,7 +89,7 @@ WatermelonDB `src/databases/index.js:14` SQLiteAdapter, `schemas/index.js:11` `v
 
 **Regra de ouro:** Sem teste, sem merge.
 
-- **Framework:** `jest` + `react-native-testing-library` + `@testing-library/react-hooks` + `jest-mock` para WatermelonDB (`__mocks__/@nozbe/watermelondb`). `msw` para OpenAI.
+- **Framework:** `jest` + `react-native-testing-library` + `jest` mocks de `expo-sqlite`/drizzle (`financeRepo.clearMemory`, config mock em memória). `msw` para OpenAI.
 - **Estrutura:** `__tests__/{unit,integration,e2e}` espelhando `src/`. `src/context/__tests__/PaymentsContext.test.ts` testa `filteredList`, `Tithe`, `handleFavorite` com DB em memória (`SQLiteAdapter({schema, dbName: ':memory:'})`).
 - **Ciclo TDD:** 1) escrever teste falhando (`filteredList` por categoria), 2) implementar, 3) refatorar, 4) coverage gate.
 - **Cobertura:** No `jest.config.js` (a criar) gate `branches 80% lines 80%` em `src/context/**`, `src/hooks/**`. `npm run test:coverage` deve passar no CI antes de `eas build`.
@@ -108,7 +108,7 @@ WatermelonDB `src/databases/index.js:14` SQLiteAdapter, `schemas/index.js:11` `v
 6. `npx expo-doctor` + `eas build --profile preview --non-interactive --no-wait` (dry-run)
 7. SAST mínimo (`npm audit --audit-level=high`) + `XLSX.read` sem `bookVBA` auditado
 
-Nenhum step pode ser `continue-on-error`. Branch protection em `main` exige CI verde + 1 review. Ver `docs/ROADMAP.md:1.7` (sanitização + Excel anti-malware + prompt injection).
+Nenhum step pode ser `continue-on-error`. Branch protection em `main` exige CI verde + 1 review. Ver `../docs/documentacao/ROADMAP.md:1.7` (sanitização + Excel anti-malware + prompt injection).
 
 ### 5.5 Especificidades por OS (obrigatório testar)
 
@@ -120,9 +120,9 @@ Nenhum step pode ser `continue-on-error`. Branch protection em `main` exige CI v
 
 ## 6. Workflow para Agentes
 
-1. Leia `docs/DOSSIE.md` antes de qualquer mudança.
-2. Para nova feature: crie teste falhando → implemente no context/hook → atualize `schemas` com migration se nova coluna → atualize `docs/DOSSIE.md` + este AGENTS.md § Regras.
-3. Para bug (§ docs/DOSSIE.md 7): crie teste reproduzindo → fix → migration se schema.
+1. Leia `../docs/documentacao/DOSSIE.md` antes de qualquer mudança.
+2. Para nova feature: crie teste falhando → implemente no repository/store → atualize `schemas` com migration se nova coluna → atualize `../docs/documentacao/DOSSIE.md` + este AGENTS.md § Regras.
+3. Para bug (§ ../docs/documentacao/DOSSIE.md 7): crie teste reproduzindo → fix → migration se schema.
 4. Não alterar `app.json` `version/versionCode` sem bump semântico + changelog.
 5. Commits: `feat(payments): ...`, `fix(lists): corrige desiredQuantity`, `chore(deps): bump expo 48→53`, `docs: ...`, `test: ...`.
 6. Antes de PR: `npm run lint && npm run test:coverage && npx expo-doctor`.

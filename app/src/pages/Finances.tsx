@@ -286,6 +286,22 @@ export default function Finances(): React.JSX.Element {
           )}
         </ScrollView>
 
+        {isTitheMenuEnabled && (
+          <View testID="finances-tithe-monthly" style={{ marginHorizontal: 16, marginTop: 12, backgroundColor: isDark ? "#3b0764" : "#f3e8ff", borderRadius: 12, padding: 12, borderWidth: 1, borderColor: "#e9d5ff" }}>
+            <Text style={{ fontWeight: "700", color: isDark ? "#e9d5ff" : "#581C87" }}>
+              Dízimo devido: {Tithe.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}
+            </Text>
+            <View style={{ flexDirection: "row", gap: 8, marginTop: 8 }}>
+              <TouchableOpacity testID="finances-tithe-config" onPress={() => navigation.navigate("TitheSettings")} style={{ flex: 1, backgroundColor: "#9c44dc", borderRadius: 8, padding: 10, alignItems: "center" }}>
+                <Text style={{ color: "white", fontWeight: "700" }}>Configurar</Text>
+              </TouchableOpacity>
+              <TouchableOpacity testID="finances-tithe-pay" onPress={() => navigation.navigate("TitheSettings")} style={{ flex: 1, backgroundColor: isDark ? "transparent" : "white", borderWidth: 1, borderColor: "#9c44dc", borderRadius: 8, padding: 10, alignItems: "center" }}>
+                <Text style={{ color: isDark ? "#e9d5ff" : "#9c44dc", fontWeight: "700" }}>Pagar</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        )}
+
         <View style={{ paddingHorizontal: 16, marginTop: -36 }}>
           <Text style={{ fontSize: 14, color: text }}>* Totais apenas dos itens do período selecionado</Text>
           <View style={{ flexDirection: "row", justifyContent: "space-between", marginTop: 8 }}>

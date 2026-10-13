@@ -20,11 +20,38 @@ export const PROVIDER_META: Record<ProviderId, { label: string; placeholder: str
 
 export const FALLBACK_MODELS: Record<ProviderId, string[]> = {
   openai: ['gpt-3.5-turbo', 'gpt-4', 'gpt-4o', 'gpt-4o-mini'],
-  gemini: ['gemini-1.5-flash', 'gemini-1.5-pro', 'gemini-pro'],
+  // 2026-10: gemini-1.5-flash / 1.5-pro / pro (1.0) desligados pelo Google.
+  // Default = geração atual; listagem dinâmica via fetchModels prevalece quando há chave.
+  gemini: ['gemini-3.8-flash', 'gemini-3.5-flash-lite', 'gemini-2.5-flash'],
   anthropic: ['claude-3-haiku-20240307', 'claude-3-sonnet-20240229', 'claude-3-opus-20240229'],
-  openrouter: ['openai/gpt-3.5-turbo', 'google/gemini-flash-1.5', 'anthropic/claude-3-haiku'],
+  openrouter: ['openai/gpt-3.5-turbo', 'google/gemini-2.5-flash', 'anthropic/claude-3-haiku'],
   zen: ['zen-v1', 'zen-chat'],
 };
+
+// Modelos Gemini desligados pelo Google (1.0 + 1.5 + 2.0). Chamadas a eles retornam 404.
+// TODO: revisar periodicamente contra https://ai.google.dev/gemini-api/docs/deprecations
+export const DEPRECATED_GEMINI_MODELS: ReadonlySet<string> = new Set([
+  'gemini-pro',
+  'gemini-1.0-pro',
+  'gemini-1.0-pro-vision',
+  'gemini-1.5-flash',
+  'gemini-1.5-flash-8b',
+  'gemini-1.5-flash-001',
+  'gemini-1.5-flash-002',
+  'gemini-1.5-pro',
+  'gemini-1.5-pro-001',
+  'gemini-1.5-pro-002',
+  'gemini-2.0-flash',
+  'gemini-2.0-flash-lite',
+]);
+
+export function migrateGeminiModel(model: unknown): string {
+  const fallback = FALLBACK_MODELS.gemini[0];
+  if (!model || typeof model !== 'string' || model.trim().length === 0) return fallback;
+  const id = model.trim();
+  if (DEPRECATED_GEMINI_MODELS.has(id)) return fallback;
+  return id;
+}
 
 // AsyncStorage wrapper with memory fallback for jest/node
 let nativeStorage: any = null;
@@ -118,6 +145,13 @@ export async function setFallbackOrder(order: ProviderId[]): Promise<void> {
 export async function getProviderModel(provider: ProviderId): Promise<string | null> {
   const k = `${STORAGE_KEYS.MODEL_PREFIX}${provider}`;
   const v = await getStorageItem(k);
+  if (v === null) return null;
+  // Self-heal: modelo Gemini desligado pelo Google migra para o default vivo
+  if (provider === 'gemini' && DEPRECATED_GEMINI_MODELS.has(v)) {
+    const live = FALLBACK_MODELS.gemini[0];
+    await setStorageItem(k, live);
+    return live;
+  }
   return v;
 }
 
@@ -175,7 +209,7 @@ export async function fetchModels(provider: ProviderId, apiKey: string): Promise
       const models = json.models ?? [];
       const ids: string[] = models.map((m: any) => {
         const name: string = m.name ?? '';
-        // name is like "models/gemini-1.5-flash"
+        // name is like "models/gemini-3.8-flash"
         return name.replace(/^models\//, '');
       }).filter(Boolean);
       return ids.length ? ids : fallback;

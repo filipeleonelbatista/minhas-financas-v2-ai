@@ -1169,7 +1169,7 @@ export default function AboutUs(): React.JSX.Element {
         <View style={{gap:8, paddingHorizontal:16, paddingVertical:8}}>
           <TouchableOpacity
             onPress={() => {
-              Linking.openURL("https://www.linkedin.com/in/filipeleonelbatista");
+              Linking.openURL("https://filipeleonelbatista.github.io/");
             }}
             style={{ backgroundColor: theme.colors.purple[600], borderRadius: 999, paddingVertical: 14, paddingHorizontal: 16, flexDirection: "row", alignItems: "center", justifyContent: "center", elevation: 2, gap: 8 }}
             activeOpacity={0.8}
@@ -1177,6 +1177,29 @@ export default function AboutUs(): React.JSX.Element {
             <Feather name="globe" size={20} color="#FFF" />
             <Text style={{ color: "white", fontSize: 16, fontWeight: "600" }}>Sobre o desenvolvedor</Text>
           </TouchableOpacity>
+
+          <View style={{ flexDirection: "row", gap: 8 }}>
+            <TouchableOpacity
+              onPress={() => {
+                Linking.openURL("https://filipeleonelbatista.github.io/minhas-financas-v2-ai/termos.html");
+              }}
+              style={{ flex: 1, backgroundColor: "transparent", borderRadius: 999, paddingVertical: 12, paddingHorizontal: 16, flexDirection: "row", alignItems: "center", justifyContent: "center", borderWidth: 1, borderColor: theme.colors.purple[600], gap: 8 }}
+              activeOpacity={0.8}
+            >
+              <Feather name="file-text" size={18} color={theme.colors.purple[600]} />
+              <Text style={{ color: theme.colors.purple[600], fontSize: 14, fontWeight: "600" }}>Termos de Uso</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              onPress={() => {
+                Linking.openURL("https://filipeleonelbatista.github.io/minhas-financas-v2-ai/privacidade.html");
+              }}
+              style={{ flex: 1, backgroundColor: "transparent", borderRadius: 999, paddingVertical: 12, paddingHorizontal: 16, flexDirection: "row", alignItems: "center", justifyContent: "center", borderWidth: 1, borderColor: theme.colors.purple[600], gap: 8 }}
+              activeOpacity={0.8}
+            >
+              <Feather name="shield" size={18} color={theme.colors.purple[600]} />
+              <Text style={{ color: theme.colors.purple[600], fontSize: 14, fontWeight: "600" }}>Privacidade</Text>
+            </TouchableOpacity>
+          </View>
 
           <Text style={{ textAlign: "center", fontSize: 12, color: text, marginVertical: 24 }}>
             Versão {Constants.expoConfig?.version ?? Constants.manifest?.version ?? Constants.manifest2?.extra?.expoClient?.version ?? "2.2.2"}

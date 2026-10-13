@@ -9,7 +9,6 @@ import { useIsKeyboardOpen } from "../hooks/useIsKeyboardOpen";
 import { usePagesStore } from "../stores/pages";
 import { useSettingsStore } from "../stores/settings";
 import AddFuelForm from "./AddFuelForm";
-import AddGoalForm from "./AddGoalForm";
 import AddItemForm from "./AddItemForm";
 import AddItemListItem from "./AddItemListtItem";
 import AddListForm from "./AddListForm";
@@ -75,8 +74,6 @@ export default function AddButton() {
         return <AddListForm onClose={onClose} />;
       case "List":
         return <AddItemListItem onClose={onClose} />;
-      case "Relatórios":
-        return <AddGoalForm onClose={onClose} />;
       default:
         return <AddItemForm onClose={onClose} />;
     }

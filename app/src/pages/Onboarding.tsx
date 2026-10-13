@@ -59,8 +59,8 @@ export default function Onboarding(): React.JSX.Element {
     {
       id: "5",
       image: require("../assets/onboarding/5.png"),
-      title: "Veja os relatórios",
-      subtitle: "Explore suas finanças e abastecimentos com relatórios e crie metas para alcançar seus sonhos mais rápido",
+      title: "Acompanhe pelo painel Início",
+      subtitle: "Explore suas finanças e abastecimentos com gráficos no painel Início e crie metas para alcançar seus sonhos mais rápido",
       show: false,
     },
     {

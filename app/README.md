@@ -1,11 +1,11 @@
 # Financas App v2.3.0 — Fase 1 (NativeWind + expo-sqlite) + Gaps 9/9
 
-> **Status 2026-09-03: Fase 1 11/11 + Gaps 9/9 fechados — 27 suites 154 testes PASS, expo-doctor 21/21** (ver `docs/project-status.md`). `app/` **Managed** offline-first (WatermelonDB removido). `com.finances` `2.2.2` → `2.3.0` (`versionCode 230`, `compileSdk 36/targetSdk 36`, Expo SDK 57, RN 0.86.3).
+> **Status 2026-10-13: Fase 1 100% + TS strict — 35 suites 187 testes PASS** (ver `../docs/documentacao/project-status.md`). `app/` **Managed** offline-first (WatermelonDB/NativeBase/Tour/Reports removidos — Dashboard é a tela oficial de gráficos). `com.finances` `2.3.1` (`versionCode 231`, `compileSdk 36/targetSdk 36`, Expo SDK 57, RN 0.86.3).
 
-> 📚 **Dossiê:** `docs/DOSSIE.md` (stacks/telas/schemas) • **Roadmap:** `docs/ROADMAP.md` (Fase 1 ✅) • **Spec:** `docs/superpowers/specs/2026-08-28-fase1-redesign-offline-design.md` + `docs/superpowers/plans/2026-09-03-fase1-gaps.md` • **Status:** `docs/project-status.md`
+> 📚 **Dossiê:** `../docs/documentacao/DOSSIE.md` (stacks/telas/schemas) • **Roadmap:** `../docs/documentacao/ROADMAP.md` (Fase 1 ✅) • **Spec:** `../docs/documentacao/superpowers/specs/2026-08-28-fase1-redesign-offline-design.md` + `../docs/documentacao/superpowers/plans/2026-09-03-fase1-gaps.md` • **Status:** `../docs/documentacao/project-status.md`
 > 🤖 **Guia para agentes/LLM:** `AGENTS.md` (regras, SOLID/TDD, quality gate `test:security`)
 
-> **Gaps entregues 2026-09-03:** splash gate `SplashScreen.preventAutoHideAsync` + `Promise.all` stores, biometria `Privacidade` switch `biometry-switch` com guard `isBiometricAvailable`, dízimo `tithePercent/titheCategories` no hero + header `heart` (`header-tithe-heart`) + card `finances-tithe-monthly`, Reports stack + `cta-ver-relatorios`, tour anchors `add-button-fab` + 6 `tour-*-anchor`, SAF iOS branch `Platform.OS === 'android'`, `openai ^4.28.0`.
+> **Gaps entregues 2026-09-03 + ajustes 2026-10-13:** splash gate `SplashScreen.preventAutoHideAsync` + `Promise.all` stores, biometria `Privacidade` switch `biometry-switch` com guard `isBiometricAvailable`, dízimo `tithePercent/titheCategories` no hero + header `heart` (`header-tithe-heart`) + card mensal `finances-tithe-monthly` (CTAs Configurar/Pagar), SAF iOS branch `Platform.OS === 'android'`, `openai ^4.28.0`, fallbacks Gemini vivos (`3.8-flash` + migração). Tour spotlight e tela Reports dedicada **removidos de escopo** — Dashboard (painel Início) é a tela oficial de gráficos.
 
 ---
 
@@ -25,7 +25,7 @@
 
 ```bash
 # 1. Clonar e entrar
-cd finances-app-feature-adicionando-watermelondb
+cd app
 
 # 2. Instalar (use yarn pois há yarn.lock; npm também funciona)
 yarn install
@@ -131,7 +131,7 @@ yarn android   # ou yarn ios
 - [ ] Onboarding escolhe pasta SAF e Exportar/Importar CSV funciona (testar API 29, 33, 34)
 - [ ] WatermelonDB CRUD em cada domínio (Finanças, Combustível, Estoque, Listas, Goals) persiste após reload
 - [ ] IA chat responde com chave válida
-- [ ] `docs/DOSSIE.md` §2.1 e `app.json` version bump atualizados
+- [ ] `../docs/documentacao/DOSSIE.md` §2.1 e `app.json` version bump atualizados
 
 ---
 
@@ -168,7 +168,7 @@ src/routes.js (Stack) + src/bottom-tab-routes.js (Tabs) + src/market-stack-route
 src/databases/ (WatermelonDB 7 tabelas, version 25)
 src/context/* (Repositories) + src/hooks/* (facades)
 src/pages/* (8 telas) + src/components/* (20+ forms/cards)
-docs/DOSSIE.md (dossiê) + AGENTS.md (regras/SOLID/TDD)
+../docs/documentacao/DOSSIE.md (dossiê) + AGENTS.md (regras/SOLID/TDD)
 ```
 
 ---
@@ -178,7 +178,7 @@ docs/DOSSIE.md (dossiê) + AGENTS.md (regras/SOLID/TDD)
 - **Metro: `Plugin proposal-decorators not found`** → `yarn add -D @babel/plugin-proposal-decorators@^7.22.7` (ou `transform-decorators` em Expo 51+)
 - **Android: `Could not find WatermelonDB`** → `npx expo prebuild --clean` + `yarn android`. Nunca `expo start` puro.
 - **Export falha silenciosamente** → Verifique se `selectedFolderToSave` não está vazio (Onboarding). Em Android 13+ conceda `Allow access to media` quando pedir.
-- **iOS: `StorageAccessFramework is not available`** → Bug conhecido (docs/DOSSIE.md 7.2). Export em iOS precisa fallback para `FileSystem.documentDirectory` (usar `Platform.OS` guard).
+- **iOS: `StorageAccessFramework is not available`** → Bug conhecido (../docs/documentacao/DOSSIE.md 7.2). Export em iOS precisa fallback para `FileSystem.documentDirectory` (usar `Platform.OS` guard).
 - **`openai.createChatCompletion is not a function`** → Você atualizou `openai` para 4+ sem migrar `useOpenAi.js` — veja §3.3.
 
 ---

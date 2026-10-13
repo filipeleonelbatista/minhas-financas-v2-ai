@@ -103,3 +103,54 @@ export function newId(): string {
   }
   return `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 10)}`;
 }
+
+/**
+ * Blob store assíncrono (IndexedDB via idb-keyval, fallback memória/localStorage).
+ * Para valores grandes; o get/set síncrono acima segue para o estado das stores.
+ */
+async function idbModule(): Promise<typeof import("idb-keyval") | null> {
+  try {
+    return await import("idb-keyval");
+  } catch {
+    return null;
+  }
+}
+
+export async function idbSet(key: string, value: unknown): Promise<"idb" | "memory"> {
+  const m = await idbModule();
+  if (m) {
+    try {
+      await m.set(key, value);
+      return "idb";
+    } catch {
+      /* cai para fallback */
+    }
+  }
+  writeJSON(key, value);
+  return "memory";
+}
+
+export async function idbGet<T>(key: string, fallback: T): Promise<T> {
+  const m = await idbModule();
+  if (m) {
+    try {
+      const v = await m.get<T>(key);
+      return v === undefined ? fallback : (v as T);
+    } catch {
+      /* cai para fallback */
+    }
+  }
+  return readJSON<T>(key, fallback);
+}
+
+export async function idbDel(key: string): Promise<void> {
+  const m = await idbModule();
+  if (m) {
+    try {
+      await m.del(key);
+    } catch {
+      /* ignora */
+    }
+  }
+  removeRaw(key);
+}

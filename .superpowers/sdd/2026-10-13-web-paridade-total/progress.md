@@ -13,6 +13,9 @@ Task 2: complete (base 9f673c5, tests: `npx vitest run src/__tests__/stores-pari
 Task 2: Ruling: teste literal do plano (`toThrow` p/ amount "abc") trocado por teste fiel ao mobile (sanitize → 0, sem throw) — plano testava comportamento que o mobile não tem; paridade manda. Custo se errado: divergência mobile; mitigado pelos demais asserts.
 Task 2: note: adicionados `vitest.config.ts` (alias @ p/ vitest), `lib/goals.ts` + `lib/finance.ts` (puros portados de repositories/*) além dos Files do plano; flags finança boolean (AGENTS §2 r3); `filteredList/filteredGoals` eager em vez do patch de getState do mobile (evita loop de selector no React).
 - [ ] Task 3: Storage offline robusto
+
+Task 3: complete (base ed135ee, tests: 3 files → 18/18 pass)
+Task 3: note: `xlsx` parse adiado (sem dep no web; `excel.ts` só guards de extensão); migrador de chaves legadas (`finances`→`mf-db-v1:*`) fica p/ Task 5/7 quando as páginas migrarem p/ stores; `idb*` helpers async com fallback testado.
 - [ ] Task 4: PWA total
 - [ ] Task 5: Features (Dashboard, Metas, Listas, Dízimo)
 - [ ] Task 6: IA online
